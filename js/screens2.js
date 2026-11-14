@@ -601,8 +601,9 @@ function resGeo(boss){ const app=resEl('app'), W=app.clientWidth||390, H=app.cli
 function resLay(mode,G,cardsH){
   if(mode==='win'){ const avail=G.feet-G.hs*0.92-4, compact=232+cardsH>avail, top=compact?154:232;
     return {compact,top,f:compact?Math.max(0.72,Math.min(1,(avail-top)/Math.max(1,cardsH))):1,tt:compact?58:108,th:compact?92:110,cx:compact?292:30,cy:compact?35:86}; }
-  const avail=G.feet-G.hs*0.55-10, fit=74+RES_LOSE_H<=avail, top=fit?74:64;
-  return {compact:!fit,top,f:fit?1:Math.max(0.7,Math.min(1,(avail-top)/RES_LOSE_H)),low:G.Hb-156<G.feet+6}; }
+  const LH=RES_LOSE_H+(cardsH||0);   /* Derrota: cardsH = altura a mais (ou a menos) do quadro do Sys.bossLoss no lugar do "Fique mais forte"; 0 = a tela de hoje */
+  const avail=G.feet-G.hs*0.55-10, fit=74+LH<=avail, top=fit?74:64;
+  return {compact:!fit,top,f:fit?1:Math.max(0.7,Math.min(1,(avail-top)/LH)),low:G.Hb-156<G.feet+6}; }
 const resCardsH=()=>RES.cards.reduce((a,c)=>a+c.h,0)+8*Math.max(0,RES.cards.length-1);
 /* DERROTA: o Kael fica caído e visível enquanto a tela está aberta (protótipo). O canvas desenha o herói tombado e a cena escura sem letreiro
    quando B.deadT > 0 com B.deadBoss ligado (js/battle.js: HM.deadP e o véu da derrota); com B.res o step() não anda, então o valor fica parado em
@@ -669,7 +670,57 @@ function resPaths(){ const p=[]; let fg=false, sm=true;
   if(sm) p.push({id:'summon',bd:'#b45cff',rgb:'180,92,255',ic:'summon',t1:'Invocar',t2:'Novos itens'});
   return p; }
 const RES_FC_W=(390-32-28-4)/2-8;   /* largura de cada número de FC no cartão da Derrota (base 390: margens 16+16, respiro 14+14, borda 2+2, vão) */
-function resLoseHtml(Y,bname,lord){ const fc=RES.fc, rec=RES.rec, pct=Math.max(4,Math.min(100,Math.round(fc/Math.max(1,rec)*100))), miss=Math.max(0,Math.ceil(rec-fc));
+/* ===== DERROTA QUE RENDE (Sys.bossLoss, js/sys/bossloss.js; protótipo aprovado docs/proto/v2/Derrota.html) =====
+   Atrás da chave do módulo (Sys.bossLoss.DATA.on): desligada, nada daqui roda e a Derrota é a de hoje, byte a byte.
+   Ligada: no lugar do bloco "Fique mais forte" entram o PRÊMIO pelo dano (ouro, XP, pedra) e até 3 DICAS com "Ir". Nunca loja, VIP, oferta, gemas ou invocação.
+   resBossLoss() é chamada UMA vez por derrota pelo js/battle.js (quando o herói caído termina de cair no chefe): é ela que credita (onDefeat).
+   A tela só MOSTRA o que veio em o.loss: reabrir ou redesenhar a Derrota não credita de novo. */
+const RES_LOSS_BOX=194;   /* altura do bloco de hoje que o quadro novo substitui: título "Fique mais forte" (12+24+8) + caixa de 150 */
+const RES_TIP={gear:['equipment','Equipamento'],forge:['forge','Forja'],pet:['pets','Pet'],mount:['mounts','Montaria'],titles:['codex','Títulos'],hero:['map','Lutar']};   /* destino da dica → [ícone do menu, nome no cartão]. Destino fora daqui não aparece */
+const RES_XP_IC='<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="10" fill="#7a5aff" stroke="#2a1a6a" stroke-width="2"></circle><text x="12" y="16" text-anchor="middle" font-size="9" font-weight="900" fill="#fff" font-family="Nunito,sans-serif">XP</text></svg>';
+function resBossLoss(){ try{ const M=window.Sys&&Sys.bossLoss; if(!M||!M.DATA||M.DATA.on!==true||typeof M.onDefeat!=='function') return null;
+    /* o chefe continua em B.en enquanto o herói está caído (o step() não anda com B.deadT>0): vida tirada = maxhp - hp. Caiu antes de o chefe entrar = 0 */
+    const b=B.en.find(x=>x.boss)||null, max=b?Math.max(0,+b.maxhp||0):0, dmg=b?Math.max(0,Math.min(max,max-Math.max(0,+b.hp||0))):0, stage=S.stage;
+    const opts={stage,dmgDone:dmg,bossMaxHp:max,era:eraOf(stage),eraBoss:!!(b?b.eraBoss:stage%STAGES_PER_ERA===0)};
+    let z=null; try{ z=M.quote(JSON.parse(JSON.stringify(S)),Sys.host,opts); }catch(e){ z=null; }   /* numa CÓPIA, antes de creditar: qual derrota do dia é esta (só para o texto) */
+    const r=M.onDefeat(S,Sys.host,opts); if(!r||r.on!==true) return null;
+    return Object.assign({},r,{stage,nth:z?z.nth:-1,mult:z?z.mult:0,low:!!(z&&z.low),part:z?M.DATA.share*z.frac*z.mult:0}); }catch(e){ try{ console.error('resBossLoss',e); }catch(e2){} return null; } }
+/* aviso quando a tela da Derrota não pôde abrir (jogador em outra tela): diz o que entrou. '' = sem prêmio */
+function resLossToast(L){ const R=(L&&L.reward)||{}, g=Math.max(0,Math.round(+R.gold||0)), x=Math.max(0,Math.round(+R.xp||0)), s=Math.max(0,Math.round(+R.stones||0)), p=[];
+  if(g) p.push('+'+gNum(g)+' de ouro'); if(x) p.push('+'+gNum(x)+' XP'); if(s) p.push('+'+s+(s===1?' Pedra de Forja':' Pedras de Forja'));
+  return p.length?'Derrotado pelo chefe. Prêmio pelo dano: '+p.join(', '):''; }
+/* dicas do módulo → só as que têm tela (diffRoute do js/diff.js, o mesmo DIFF_ROUTE do cartão "Faltam X de FC"); no máximo 3 */
+function resLossTips(L){ const out=[]; if(typeof diffRoute!=='function') return out; const tx=typeof diffTxt==='function'?diffTxt:(s=>String(s==null?'':s));
+  for(const t of (L&&Array.isArray(L.tips)?L.tips:[])){ if(out.length>=3) break; const m=t&&RES_TIP[t.dest]; if(!m) continue; let route=null; try{ route=diffRoute(t.dest); }catch(e){ route=null; } if(!route) continue;
+    const label=tx(t.label); if(!label) continue; out.push({id:t.id,kind:t.kind,tab:t.dest,label,gainText:tx(t.gainText),ready:!!t.ready,route,ic:m[0],name:m[1]}); }
+  return out; }
+/* o quadro: {h, html}. h = altura estimada na base de 390 (o resOpen confere com a altura real depois de montar). Textos do módulo sempre escapados (esc2). */
+function resLossBox(L,tips,stage){ const D=Sys.bossLoss.DATA, R=L.reward||{}, n=v=>Math.max(0,Math.round(+v||0)), gold=n(R.gold), xp=n(R.xp), st=n(R.stones), has=gold+xp+st>0, pct=n(L.pct);
+  const steps=Array.isArray(D.perStageDay)?D.perStageDay:[], ord=L.nth>=0?Math.min(steps.length+1,L.nth+1):0, dayCap=!!L.capped&&L.nth>=0&&L.nth<steps.length;   /* dayCap = acabou pelo limite do dia inteiro, não pela fase */
+  const fase='Fase '+(eraOf(stage)+1)+'-'+(((stage-1)%STAGES_PER_ERA)+1), em=t=>`<span style="color:#ffc94a;font-weight:900">${t}</span>`, mult=+L.mult||0;
+  const title=has?'Prêmio pelo dano':L.capped&&!L.low?'Prêmio do dia já recebido':'Sem prêmio desta vez', side=has&&ord?ord+'ª derrota hoje nesta fase':fase;
+  const txt=has?`Você tirou ${em(pct+'%')} da vida do chefe: ${em(Math.round((+L.part||0)*100)+'%')} do prêmio da vitória${mult>0&&mult<1&&ord?' (×'+String(mult).replace('.',',')+' por ser a '+ord+'ª)':''}`
+    :esc2(L.text||'')+(L.low?' Esta derrota não gasta a sua vez do dia.':'');
+  const chip=(ic,t)=>`<span style="flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;height:26px;border-radius:13px;background:rgba(0,0,0,.35);border:1px solid rgba(255,236,200,.16);font-weight:900;font-size:12.5px;white-space:nowrap;box-sizing:border-box">${ic}${t}</span>`;
+  const chips=has?`<div style="display:flex;gap:6px;margin-top:5px">${gold?chip('<img src="assets/ui/coin.png" alt="" style="width:18px;height:18px;flex:none;object-fit:contain">','+'+gNum(gold)):''}${xp?chip(RES_XP_IC,'+'+gNum(xp)+' XP'):''}${st?chip(Y_STONE(18),'+'+st+(st===1?' Pedra':' Pedras')):''}</div>`:'';
+  const showRule=ord>0&&!dayCap&&steps.length>0, rule=showRule?`<div style="display:flex;gap:4px;margin-top:5px">${steps.map((m,i)=>(i+1)+'ª: '+Math.round(m*100)+'%').concat([(steps.length+1)+'ª: nada']).map((t,i)=>`<span style="flex:1;min-width:0;height:16px;line-height:16px;text-align:center;font-size:9.5px;font-weight:900;border-radius:7px;white-space:nowrap;${i===ord-1?'background:#ffc94a;color:#2a1403':i<ord-1?'background:rgba(0,0,0,.3);color:#c9b8a2;text-decoration:line-through':'background:rgba(0,0,0,.3);color:#8a7a66'}">${t}</span>`).join('')}</div>`:'';
+  const rwH=4+14+20+2+32+(has?31:0)+(showRule?21:0);
+  let h=8+rwH, html=`<div class="q-cup" id="res_rw" role="group" aria-label="${esc2(title)}" style="flex:none;margin-top:8px;animation-delay:${RES_LOSE_PATH}s;border-radius:16px;border:2px solid ${has?'#ffc94a':'#6a5a48'};background:linear-gradient(180deg,#3a2a18,#24180f);padding:7px 10px;box-sizing:border-box">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;height:20px"><span class="lil" style="font-size:17px;line-height:20px;color:#ffc94a;white-space:nowrap">${title}</span><span style="font-size:10px;font-weight:900;color:#c9b8a2;white-space:nowrap">${side}</span></div>
+      <div style="margin-top:2px;min-height:32px;font-size:12px;font-weight:800;line-height:16px;overflow-wrap:anywhere">${txt}</div>${chips}${rule}</div>`;
+  if(tips.length){ const lines=Math.max.apply(null,tips.map(t=>Math.max(1,Math.ceil(t.label.length/17)))), tipH=Math.max(68,Math.ceil(62+11.5*lines)); h+=6+21+tipH;
+    html+=`<span class="q-cup lil" style="flex:none;margin:6px 2px 3px;font-size:15px;line-height:18px;color:#ffc94a;animation-delay:${RES_LOSE_PATH}s">Fique mais forte</span>
+      <div id="res_tips" style="flex:none;min-height:${tipH}px;display:flex;gap:6px">${tips.map((t,i)=>{ const lk=t.route.lock;
+        return `<button class="q-path" data-q="tip:${i}" aria-label="${esc2(t.name+', '+t.label+': '+t.gainText+'. '+(lk?t.route.why:'Ir para '+t.name))}" style="position:relative;flex:1 1 0;min-width:0;min-height:68px;border-radius:14px;background:#2a1f16;border:2px solid ${i===0&&!lk?'#4aa3ff':'#4a3a2b'};padding:4px 3px;display:flex;flex-direction:column;align-items:center;color:#f6ecdf;box-sizing:border-box;animation-delay:${(RES_LOSE_PATH+0.15+i*0.15).toFixed(2)}s">
+          <span class="lil" style="position:absolute;right:3px;top:3px;padding:0 6px;height:18px;border-radius:9px;font-size:12px;line-height:18px;white-space:nowrap;${lk?'background:#16110d;border:1px solid #4a3a2b;color:#c9b9a2':'background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;box-shadow:0 1px 0 #9a5a10'}">${lk?'Nv '+lk:'Ir'}</span>
+          <img src="assets/icons/menu/${t.ic}.png" alt="" style="width:24px;height:24px;flex:none;object-fit:contain">
+          <span style="font-size:11px;line-height:13px;font-weight:900;text-align:center">${esc2(t.name)}</span>
+          <span style="max-width:100%;font-size:10px;line-height:11.5px;font-weight:800;color:#c9b8a2;text-align:center;overflow-wrap:anywhere">${esc2(t.label)}</span>
+          <span style="max-width:100%;font-size:11px;line-height:13px;font-weight:900;color:#7fe07a;text-align:center;overflow-wrap:anywhere">${esc2(t.gainText)}</span></button>`; }).join('')}</div>`; }
+  return {h,html}; }
+/* toque numa dica: a MESMA rota do cartão do js/diff.js (diffGo): trancada por nível = aviso e a tela fica; senão fecha a Derrota (modo farm atrás) e abre o destino */
+function resTipGo(i){ const a=RES.tips&&RES.tips[i]; if(!a||typeof diffGo!=='function'||typeof DIFF==='undefined') return null; DIFF.card={adv:{actions:RES.tips},from:'lose'}; return diffGo(i,'lose'); }
+function resLoseHtml(Y,bname,lord,lossHtml){ const fc=RES.fc, rec=RES.rec, pct=Math.max(4,Math.min(100,Math.round(fc/Math.max(1,rec)*100))), miss=Math.max(0,Math.ceil(rec-fc));
   /* "SUA FC" e "RECOMENDADA" lado a lado, inteiras: a tela é desenhada na base de 390 px (resGeo), o cartão tem 326 px úteis; cada número fica com
      metade menos o vão. A fonte (base 26) só desce para valores muito longos; '999,9 mil' entra na conta porque a contagem de 0 até a FC passa por ele. */
   const fcPx=typeof xFitPx==='function'?Math.min(xFitPx(fcTxt(fc),RES_FC_W,26,12),xFitPx(fcTxt(rec),RES_FC_W,26,12),xFitPx('999,9 mil',RES_FC_W,26,12)):26;
@@ -684,8 +735,8 @@ function resLoseHtml(Y,bname,lord){ const fc=RES.fc, rec=RES.rec, pct=Math.max(4
         <span style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.1"><span style="font-size:12px;font-weight:900;color:#c9b9a2">RECOMENDADA</span><span class="lil" id="res_rec" style="font-size:${fcPx}px;white-space:nowrap;color:#f6ecdf">${fcTxt(rec)}</span></span></div>
       <div role="progressbar" aria-label="Sua FC é ${pct}% da recomendada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" style="position:relative;height:18px;border-radius:9px;background:#0e0a07;border:1px solid #6a4a1a;overflow:hidden"><div class="q-fcbar" style="width:${pct}%;height:100%;border-radius:9px;background:linear-gradient(90deg,#c0301f,#f2a826 70%,#ffe07a)"></div><span class="q-shine" style="width:${pct}%"></span></div>
       <span style="font-size:13px;line-height:1.2;font-weight:800;color:${miss>0?'#ffb3a8':'#9be89f'}">${miss>0?`Faltam <span style="color:#fff;font-weight:900">${fcTxt(miss)} de FC</span> para a recomendada`:'Sua FC já alcança a recomendada: tente de novo'}</span></div>
-    <span class="q-cup lil" style="flex:none;margin:12px 2px 8px;font-size:20px;line-height:24px;color:#ffc94a;text-shadow:0 2px 0 #000;animation-delay:${RES_LOSE_PATH}s">Fique mais forte</span>
-    ${(typeof diffLoseRows==='function'&&diffLoseRows(rec))||`<div style="flex:none;height:150px;display:flex;gap:8px">${paths}</div>`}</div>`; }   /* dificuldade com paredes (js/diff.js): ligada, as 3 ações do Sys.advice na mesma caixa de 150 px; desligada, os caminhos de sempre */
+    ${lossHtml||`<span class="q-cup lil" style="flex:none;margin:12px 2px 8px;font-size:20px;line-height:24px;color:#ffc94a;text-shadow:0 2px 0 #000;animation-delay:${RES_LOSE_PATH}s">Fique mais forte</span>
+    ${(typeof diffLoseRows==='function'&&diffLoseRows(rec))||`<div style="flex:none;height:150px;display:flex;gap:8px">${paths}</div>`}`}</div>`; }   /* lossHtml = quadro do Sys.bossLoss (chave ligada) no lugar do "Fique mais forte"; sem ele, o bloco de hoje */   /* dificuldade com paredes (js/diff.js): ligada, as 3 ações do Sys.advice na mesma caixa de 150 px; desligada, os caminhos de sempre */
 /* botões da derrota: "Modo farm" é o PRINCIPAL (com a contagem); "Tentar de novo" embaixo. low = tela baixa: os dois encolhem para não encostar no Kael */
 function resLoseBtns(low){
   return `<button class="y-gold q-farm" data-q="farm" style="position:absolute;left:20px;right:20px;bottom:${low?74:90}px;height:${low?58:66}px;border-radius:18px;display:flex;align-items:center;gap:12px;padding:0 16px;box-sizing:border-box;text-align:left">
@@ -723,16 +774,21 @@ function resOpen(mode,o,force){
       <div id="res_p" style="position:absolute;left:16px;right:16px;top:${Y.top}px;display:flex;flex-direction:column;gap:8px;transform-origin:50% 0;transform:scale(${Y.f.toFixed(3)})"></div>
       <div id="res_a" style="position:absolute;left:0;right:0;bottom:0;height:0">${resActHtml(false)}</div></div>`;
   } else {
-    RES.fc=heroFC(); RES.rec=(typeof fcNeed==='function'?fcNeed:recFC)(stage); const Y=RES.lay=resLay('lose',G,0), kx=G.hx-G.hs*0.4, star=dl=>`<svg class="q-orb" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay:${dl}s"><path d="${Q_STAR}" fill="#ffe07a"></path></svg>`;
+    /* Sys.bossLoss: o.loss só vem do js/battle.js com a chave ligada (resBossLoss, já creditado). Sem ele: RES.loseX=0 e a tela de hoje */
+    let lossBox=null; RES.tips=[]; RES.loseX=0; RES.loss=null;
+    if(o.loss&&o.loss.on===true&&window.Sys&&Sys.bossLoss){ try{ RES.tips=resLossTips(o.loss); lossBox=resLossBox(o.loss,RES.tips,stage); RES.loss=o.loss; RES.loseX=lossBox.h-RES_LOSS_BOX; }catch(er){ try{ console.error('resLossBox',er); }catch(e2){} lossBox=null; RES.tips=[]; RES.loseX=0; RES.loss=null; } }
+    RES.fc=heroFC(); RES.rec=(typeof fcNeed==='function'?fcNeed:recFC)(stage); const Y=RES.lay=resLay('lose',G,RES.loseX), kx=G.hx-G.hs*0.4, star=dl=>`<svg class="q-orb" viewBox="0 0 24 24" aria-hidden="true" style="animation-delay:${dl}s"><path d="${Q_STAR}" fill="#ffe07a"></path></svg>`;
     /* escuro por cima do chefe, mais leve em volta do Kael caído (o canvas já escurece a cena enquanto o herói está no chão) */
     h=`<div class="q-dark" style="background:radial-gradient(ellipse at ${(kx/3.9).toFixed(0)}% ${((G.feet-G.hs*0.15)/G.Hb*100).toFixed(0)}%,rgba(20,6,4,.12) 0%,rgba(12,5,4,.72) 45%,rgba(6,3,2,.88) 100%)"></div>
     <div class="rw" id="res_w" style="height:${G.Hb.toFixed(1)}px;transform:scale(${G.s.toFixed(4)})">${top}
       <div class="q-orbs" aria-hidden="true" style="left:${(G.hx-G.hs*0.72-22).toFixed(1)}px;top:${(G.feet-G.hs*0.25-22).toFixed(1)}px">${star(0)}${star(-.37)}${star(-.74)}</div>
-      ${resLoseHtml(Y,bname,lord)}
+      ${resLoseHtml(Y,bname,lord,lossBox?lossBox.html:'')}
       <div id="res_a" style="position:absolute;left:0;right:0;bottom:0;height:0">${resLoseBtns(Y.low)}</div></div>`;
   }
   const el=document.createElement('div'); el.id='res'; el.setAttribute('role','dialog'); el.setAttribute('aria-label',mode==='win'?'Vitória sobre o chefe':'Derrota para o chefe'); el.innerHTML=h;
   app.appendChild(el); RES.el=el;
+  /* quadro do Sys.bossLoss: a altura veio de uma estimativa (as dicas quebram em linhas); com a tela montada vale a altura REAL, para o bloco nunca cobrir o Kael caído */
+  if(mode==='lose'&&RES.loss){ try{ const p=resEl('res_p'), hh=p?p.offsetHeight:0, Y=RES.lay; if(hh>0&&Math.abs(hh-(RES_LOSE_H+RES.loseX))>1){ RES.loseX=hh-RES_LOSE_H; const avail=G.feet-G.hs*0.55-10; Y.f=Y.top+hh>avail?Math.max(0.7,Math.min(1,(avail-Y.top)/hh)):1; p.style.transform=`scale(${Y.f.toFixed(3)})`; } }catch(er){} }
   el.addEventListener('pointerdown',()=>{ RES.autoOn=false; const a=resEl('res_au'); if(a) a.style.width='0'; const c=resEl('res_cd'); if(c) c.style.display='none'; });   // tocou: a tela espera o jogador
   el.addEventListener('click',ev=>{ const b=ev.target.closest('[data-q]'); if(b) resAct(b.dataset.q); else if(RES.mode==='win'&&!RES.end) resAct('skip'); });   // toque fora dos botões durante a apresentação = Pular
   return true;
@@ -765,6 +821,7 @@ function resAct(q){ if(!B.res||!RES.el) return;
   else if(q==='forge'||q==='gear'||q==='summon'){ if(RES.t<RES_LOSE_PATH) return; snd('ui_tap'); resClose('farm');   // o jogo segue no modo farm atrás da tela aberta
     if(q==='forge'){ if(!(window.Screens&&Screens.open('forge'))) setView('gear'); } else setView(q); }
   else if(q.indexOf('adv:')===0){ if(RES.t<RES_LOSE_PATH) return; if(typeof diffGo==='function') diffGo(+q.slice(4),'lose'); }   /* ação do Sys.advice (js/diff.js) */
+  else if(q.indexOf('tip:')===0){ if(RES.t<RES_LOSE_PATH) return; resTipGo(+q.slice(4)); }   /* dica do Sys.bossLoss: "Ir" */
 }
 /* fecha a tela: 'next' (vitória: a batalha segue na fase nova) · 'retry' = desafia o chefe de novo · 'farm' / 'close' = modo farm (repete as ondas 1 a 4) */
 function resClose(how){ const r=B.res; if(!r) return; B.res=null; document.body.classList.remove('resui'); if(RES.el){ RES.el.remove(); RES.el=null; }
@@ -784,7 +841,7 @@ function resTick(dt){ if(!B.res||!RES.el) return; RES.t+=dt; const t=RES.t;
 }
 addEventListener('resize',()=>{ if(!B.res||!RES.el||!RES.geo||!RES.lay) return; const w=resEl('res_w'), p=resEl('res_p'); if(!w) return;
   const G=resGeo(null), Y=RES.lay; G.bx=RES.geo.bx; RES.geo=G; w.style.transform=`scale(${G.s.toFixed(4)})`; w.style.height=G.Hb.toFixed(1)+'px';
-  if(p){ const win=RES.mode==='win', hh=win?resCardsH():RES_LOSE_H, avail=G.feet-G.hs*(win?0.92:0.55)-(win?4:10); Y.f=Y.top+hh>avail?Math.max(win?0.72:0.7,Math.min(1,(avail-Y.top)/Math.max(1,hh))):1; p.style.transform=`scale(${Y.f.toFixed(3)})`; } });
+  if(p){ const win=RES.mode==='win', hh=win?resCardsH():RES_LOSE_H+(RES.loseX||0), avail=G.feet-G.hs*(win?0.92:0.55)-(win?4:10); Y.f=Y.top+hh>avail?Math.max(win?0.72:0.7,Math.min(1,(avail-Y.top)/Math.max(1,hh))):1; p.style.transform=`scale(${Y.f.toFixed(3)})`; } });
 /* debug: abre a tela 10 sem lutar. dbgResult('win') | dbgResult('lose') */
-window.dbgResult=function(mode){ if(!DEBUG) return; if(mode==='lose') return resOpen('lose',{stage:S.stage},true);
+window.dbgResult=function(mode){ if(!DEBUG) return; if(mode==='lose') return resOpen('lose',arguments[1]?{stage:S.stage,loss:arguments[1]}:{stage:S.stage},true);   /* dbgResult('lose', resultado do Sys.bossLoss) = ver o quadro do prêmio sem creditar */
   return resOpen('win',{stage:Math.max(1,S.stage-1),gems:10,newEra:-1,loot:{gold:1860,gems:0,xp:33,items:[{slot:'weapon',r:3,e:eraOf(S.stage),subs:[]}],eggs:[],held:[{r:3,needLevel:70}]}},true); };

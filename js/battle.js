@@ -630,8 +630,11 @@ function step(dt){
   if(B.cd2>0) B.cd2-=dt;
   if(B.deadT>0){ B.deadT-=dt; B.running=false; if(B.deadT<=0){ if(B.inst){ instEnd(false); return; } if(B.deadBoss){ S.farm=true; B.deadBoss=false; save();
       /* TELA 10 (derrota): o chefe fica de pé e o herói volta a ficar parado até o jogador escolher; sem a tela, entra direto no farm */
-      if(typeof resOpen==='function'&&resOpen('lose',{stage:S.stage})){ h.hp=h.maxhp; return; }
-      toast('Derrotado pelo chefe: juntando força. Desafiar acende quando a sua FC chegar perto'); }
+      /* Sys.bossLoss (derrota que rende): UMA vez por derrota, aqui. resBossLoss (js/screens2.js) mede a vida tirada do chefe em B.en e chama onDefeat (credita).
+         Chave do módulo desligada = null: a tela e o aviso ficam exatamente como hoje. A tela só mostra o que vai em loss; reabrir não credita de novo */
+      const loss=typeof resBossLoss==='function'?resBossLoss():null;
+      if(typeof resOpen==='function'&&resOpen('lose',loss?{stage:S.stage,loss}:{stage:S.stage})){ h.hp=h.maxhp; return; }
+      toast((loss&&typeof resLossToast==='function'&&resLossToast(loss))||'Derrotado pelo chefe: juntando força. Desafiar acende quando a sua FC chegar perto'); }
     S.wave=1; startBattle(); if(view!=='battle'){ if(typeof softRender==='function') softRender(); else render(); } } return; }
   // surgimento "aos poucos"
   if(B.waveT>0) B.waveT-=dt;
@@ -1033,7 +1036,6 @@ const ART_ON={
   aura4:true, aura7:true, aura10:true, aura13:true,                                        // auras de fortalecimento (assets/anim/aura): só aparecem com o +N da ARMA no Sys.forge
 };
 for(const E of EN_ANIM_ERAS) for(const kd of ['e0','e1','boss']) for(const st of ['run','attack','hurt','die']){ const k='era'+E+'_'+kd+'_'+st; if(ART_ON[k]===undefined) ART_ON[k]=true; }
-ART_ON.era0_e0_hurt=false;   /* QA lote visual B ("cano cinza com clarão" solto ao lado do herói): a folha de dano do tigre (era0_e0_hurt.png, quadros 3 a 9) traz PINTADO um cano de arma com clarão de tiro à esquerda do bicho; desligada até a Arte refazer (sem ela vale o piscar de dano por código). Religar: apagar esta linha */
 /* QUADRO DO GOLPE/TIRO de cada folha de ataque (contando do 0; medido pela dona da arte: a arma ou o tiro chega mais longe para a esquerda).
    O dano e o projétil saem nesse quadro; a folha toca no fps do .json (12), dentro do intervalo de ataque do balanceamento (que não muda). */
 const EN_HIT_FRAME={ era0_e0:6, era0_e1:6, era0_boss:5, era1_e0:4, era1_e1:6, era1_boss:8, era2_e0:6, era2_e1:8, era2_boss:8, era3_e0:2, era3_e1:1, era3_boss:4,
