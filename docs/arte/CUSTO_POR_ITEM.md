@@ -69,3 +69,8 @@ Notas:
 | Liberado agora: Mecha de Guerra montado (teto 34) + teste pet mamute médio atk2 (4) | teto 38 |
 | Reserva (pela conta do PO) | ~21 |
 Medido 14/11: skin inteira na coreografia do padrão ≈ 4 por estado (+2 se precisar de guia novo); tiro montado ≈ 4 por herói×montaria (+4 por refação).
+| Mecha de Guerra montado (2 guias + 1 refação do guia da Kaia + 6 vídeos) | ~30 |
+| Teste pet mamute médio atk2 | 4 |
+| Molduras do retrato (1 imagem 3×3, as 9) | ~2 |
+| **Reserva que sobrou (teto 38 − 34, + reserva ~21 − molduras 2)** | **~23** |
+| Pendente p/ próximo orçamento: golpes atk2/atk3 dos pets médio/evoluído (19 vídeos restantes) | ~76 |
