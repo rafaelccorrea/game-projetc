@@ -1,0 +1,418 @@
+<title>Eonbound Caminhos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Caminho de luta no Nv 30 com "Testar grátis" (js/sys/pathtry.js, desligado; estilos do js/sys/affinity.js; cores do js/sys/strikes.js).
+   Sobre os PRINTS REAIS de hoje: a folha da escolha copia o Equipamento (a/eq_hoje.png: Voltar | título | ouro | gemas, marrom);
+   o ensaio é a batalha de hoje (a/v5_hoje.png) com só o que é novo: faixa "Ensaio" embaixo da barra da fase, Boneco de Treino no lugar do inimigo,
+   números de dano e nomes dos golpes do caminho, botão "Sair do ensaio". 4 estados: 1 escolha, 2 ensaio, 3 comparação, 4 confirmar.
+   Nenhum ícone na faixa x>=300 entre y 390 e 640 (o boneco é o inimigo da cena, não um ícone). Mesmo padrão de página da Provação. */
+:root{
+  --night:#0b1030; --line:rgba(130,150,255,.28); --line2:rgba(160,180,255,.5);
+  --gold:#ffd25e; --cyan:#5ee7ff; --text:#eef1ff; --muted:#9aa6d6;
+  --fd:'Lilita One',Impact,'Arial Black',sans-serif; --fb:Nunito,'Segoe UI',system-ui,sans-serif;
+  --glass:rgba(22,16,12,.78); --g2:#ffc94a; --cream:#f6ecdf; --mut2:#c9b8a2; --brown:#211812; --brown2:#2c2119;
+  --k-combo:#ffb030; --k-counter:#ff5a4a; --k-stun:#c78bff; --k-dodge:#7fd8ff; --k-life:#5fd068;
+  color-scheme:dark;
+}
+html,body{height:100%;overflow-x:hidden}
+body{background:#070a1f;color:var(--text);font-family:var(--fb);margin:0}
+*{box-sizing:border-box}
+button{font-family:var(--fb);color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+button:disabled{cursor:default;opacity:.45}
+.page{min-height:100%;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:flex-start;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:100vw;overflow:hidden}
+.devwrap{flex:0 0 auto;position:relative;overflow:hidden;border-radius:34px}
+.dev{width:390px;height:844px;transform-origin:top left;position:absolute;left:0;top:0;border-radius:34px;overflow:hidden;background:var(--night);box-shadow:inset 0 0 0 2px #2c3466}
+.side{flex:1 1 300px;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.side h1{font-family:var(--fd);font-weight:400;font-size:28px;margin:0;letter-spacing:.5px;text-wrap:balance}
+.side .sub{color:var(--muted);font-size:14px;margin:0;line-height:1.5}
+.box{background:#11173a;border:1px solid var(--line);border-radius:16px;padding:14px 16px;min-width:0}
+.box h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.box h3{font-size:13px;color:var(--text);margin:10px 0 6px}
+.box ul{margin:0;padding-left:18px;line-height:1.55;font-size:14px}
+.box li b{color:var(--gold)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 110px;min-height:42px;border-radius:12px;border:1px solid var(--line2);background:#0b1030;font-weight:900;font-size:14px;padding:6px 10px}
+.seg.p3 button{flex:1 1 80px}
+.seg button[aria-pressed="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);border-color:#7f93ff}
+.vote{display:flex;gap:8px;flex-wrap:wrap}
+.vbtn{flex:1 1 120px;min-height:46px;border-radius:12px;border:0;font-weight:900;font-size:15px}
+.vbtn.ok{background:linear-gradient(180deg,#7dffb8,#22c47a);color:#05301b}
+.vbtn.no{background:#2a1530;color:#ffb3c4;border:2px solid #ff6b9a}
+.vst{font-size:14px;margin-top:8px;color:var(--muted);display:block}
+.vst b{color:var(--text)}
+textarea{width:100%;min-height:70px;margin-top:8px;border-radius:10px;background:#0b1030;border:1px solid var(--line2);color:var(--text);padding:8px 10px;font:600 14px var(--fb);resize:vertical}
+.stl{font-size:13px;font-weight:800;color:var(--text);margin:8px 0 0;line-height:1.45;overflow-wrap:anywhere}
+.stl b{color:var(--gold)}
+.offs{margin:0;padding:0;list-style:none;font-size:13px;line-height:1.45}
+.offs li{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid rgba(130,150,255,.14);min-width:0}
+.offs li span{min-width:0;overflow-wrap:anywhere}
+.offs li span:last-child{text-align:right}
+
+/* ===== TELA ===== */
+.scr{position:absolute;inset:0;overflow:hidden;background:var(--night);color:var(--cream)}
+.cmpd{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
+.cmpd figcaption{font-family:var(--fd);font-size:18px;letter-spacing:.5px;color:var(--gold);text-align:center;max-width:min(390px,calc(100vw - 32px))}
+.cmpd figcaption small{display:block;font-family:var(--fb);font-size:12px;color:var(--muted);letter-spacing:0}
+.shot{position:absolute;left:0;top:0;width:390px;height:844px;display:block}
+svg.ic{display:block}
+.lvp{position:absolute;z-index:5;left:16px;top:56px;width:48px;height:21px;border-radius:11px;background:linear-gradient(180deg,#ffe07a,#f2b52a);border:2px solid #3a2208;color:#3a2208;font-family:var(--fd);font-size:13px;line-height:17px;text-align:center;pointer-events:none}
+/* 2. ensaio: faixa embaixo da barra da fase (x 80-315) */
+.rband{position:absolute;z-index:6;left:80px;top:122px;width:235px;height:46px;border-radius:14px;background:var(--glass);border:1.5px solid var(--g2);display:flex;align-items:center;gap:6px;padding:0 8px 0 5px;box-shadow:0 6px 16px rgba(0,0,0,.4);overflow:hidden}
+.rband svg{width:30px;height:30px;flex:none}
+.rband .tx{flex:1;min-width:0}
+.rband .tx small{display:block;font-size:10px;font-weight:900;color:var(--mut2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1}
+.rband .tx b{display:block;font-size:14px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.rband .tm{flex:none;font-family:var(--fd);font-size:21px;color:var(--g2);text-shadow:0 2px 0 #000}
+.rband .tm.low{color:#ff8a6a}
+.rband .bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(0,0,0,.5)}
+.rband .bar i{display:block;height:100%;background:linear-gradient(90deg,#ffb04a,#ffe07a)}
+.exit{position:absolute;z-index:6;left:122px;top:174px;width:151px;height:40px;border-radius:13px;background:rgba(26,17,11,.88);border:1.5px solid rgba(255,236,200,.35);color:var(--cream);font-weight:900;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 4px 10px rgba(0,0,0,.35)}
+/* chão pintado por cima do inimigo de hoje (o tigre sai; no ensaio só há o boneco) */
+.patch{position:absolute;z-index:2;left:258px;top:498px;width:136px;height:160px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(64,98,38,0) 0%,#3f6a2a 14%,#557c30 34%,#7f7a36 40%,#c2864a 47%,#c08048 72%,#b47440 100%);
+  -webkit-mask-image:radial-gradient(ellipse 62% 56% at 58% 54%,#000 64%,transparent 100%);mask-image:radial-gradient(ellipse 62% 56% at 58% 54%,#000 64%,transparent 100%)}
+.dummy{position:absolute;z-index:3;left:256px;top:520px;width:80px;height:124px;transform-origin:50% 100%;animation:wob 1.2s ease-in-out infinite}
+.dummy.stun{animation:wob .6s ease-in-out infinite;filter:drop-shadow(0 0 8px #c78bff)}
+@keyframes wob{0%,60%,100%{transform:rotate(0)}68%{transform:rotate(-5deg)}80%{transform:rotate(3deg)}90%{transform:rotate(-1deg)}}
+.dlab{position:absolute;z-index:4;left:236px;top:486px;width:120px;text-align:center;pointer-events:none}
+.dlab b{display:block;font-size:11.5px;font-weight:900;color:#fff;text-shadow:0 1px 0 #000,0 0 4px #000;white-space:nowrap}
+.dlab span{display:block;margin:3px auto 0;width:84px;height:7px;border-radius:4px;background:linear-gradient(90deg,#9ab4d6,#e6eef8,#9ab4d6);border:1px solid #1a110b;position:relative}
+.dlab span::after{content:'imortal';position:absolute;left:0;right:0;top:-1px;font-size:6.5px;line-height:8px;font-weight:900;color:#1a2a44}
+/* números e nomes dos golpes */
+.fx{position:absolute;z-index:7;inset:0;pointer-events:none}
+.fl{position:absolute;white-space:nowrap;font-weight:900;text-shadow:0 2px 0 #000,0 0 3px #000;opacity:0;animation:flt 2.4s ease-out infinite}
+.fl.n{font-family:var(--fd);font-size:20px;color:#fff}
+.fl.c{font-family:var(--fd);font-size:26px;color:#ffd25e}
+.fl.k{font-size:13px;letter-spacing:.4px}
+.fl.h{font-family:var(--fd);font-size:17px;color:#ff6b6b}
+.fl.g{font-family:var(--fd);font-size:17px;color:var(--k-life)}
+@keyframes flt{0%{opacity:0;transform:translateY(8px) scale(.85)}10%{opacity:1;transform:translateY(0) scale(1.06)}20%{transform:scale(1)}70%{opacity:1}100%{opacity:0;transform:translateY(-34px)}}
+/* 1. folha da escolha (como o Equipamento de hoje) */
+.sheet{position:absolute;inset:0;z-index:20;background:var(--brown);display:flex;flex-direction:column;animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+.hd{flex:none;height:56px;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid rgba(255,236,200,.12);background:#1c140f}
+.back{flex:none;height:44px;padding:0 12px 0 8px;border-radius:14px;border:1.5px solid rgba(255,236,200,.18);background:#241a13;font-weight:900;font-size:15px;display:flex;align-items:center;gap:4px}
+.hd h2{flex:1;min-width:0;margin:0;font-family:var(--fd);font-weight:400;font-size:19px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:none;height:32px;padding:0 9px 0 4px;border-radius:16px;background:#2a1f17;border:1.5px solid rgba(255,236,200,.14);display:flex;align-items:center;gap:4px;font-family:var(--fd);font-size:14px;color:#fff}
+.pill img{width:24px;height:24px}
+.bd{flex:1;overflow-y:auto;overflow-x:hidden;padding:9px 12px 10px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.intro{border-radius:14px;background:linear-gradient(180deg,#5a3a10,#3a2508);border:2px solid var(--g2);padding:7px 10px;font-size:12px;font-weight:800;line-height:1.35}
+.intro b{font-family:var(--fd);font-weight:400;font-size:17px;color:#fff;display:block;text-shadow:0 2px 0 #000;line-height:1.15}
+.pc{border-radius:15px;background:var(--brown2);border:1.5px solid #4a3a2b;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.pc.ch{border:2px solid #7fe07a}
+.ph{display:flex;gap:9px;align-items:center;min-width:0}
+.pi{flex:none;width:50px;height:50px;border-radius:13px;background:radial-gradient(circle at 50% 40%,#5a4026,#1a120c 75%);border:2px solid var(--g2);display:grid;place-items:center}
+.pi svg{width:40px;height:40px}
+.pn{flex:1;min-width:0}
+.pn b{display:flex;align-items:center;gap:6px;font-family:var(--fd);font-weight:400;font-size:21px;line-height:1.05;color:var(--g2);text-shadow:0 2px 0 #000}
+.pn b em{font-style:normal;font-family:var(--fb);font-size:10.5px;font-weight:900;color:#0d2410;background:#9cf08f;border-radius:8px;padding:1px 6px;text-shadow:none;white-space:nowrap}
+.pn b em.t{background:rgba(255,236,200,.14);color:var(--cream)}
+.pn small{display:block;font-size:11.5px;font-weight:800;color:var(--cream);line-height:1.3}
+.bon{display:flex;gap:5px;flex-wrap:wrap}
+.bon span{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px 0 7px;border-radius:13px;background:rgba(0,0,0,.35);border:1px solid rgba(255,236,200,.16);font-size:12px;font-weight:900;white-space:nowrap}
+.bon span i{width:9px;height:9px;border-radius:50%;flex:none}
+.fc{display:flex;align-items:center;gap:5px;min-width:0}
+.fc>small{flex:none;font-size:10.5px;font-weight:900;color:var(--mut2);width:52px;line-height:1.1}
+.fc .er{flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;min-width:0}
+.fc .er span{min-width:0;height:24px;border-radius:12px;background:rgba(127,224,122,.13);border:1px solid rgba(127,224,122,.5);color:#d6f7cf;font-size:10.5px;font-weight:900;display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.fc .er span.r{background:rgba(255,120,90,.1);border-color:rgba(255,130,100,.4);color:#ffc4b0}
+.fc .er span.z{background:none;border-color:transparent}
+.pb{display:flex;gap:6px}
+.pb button{flex:1;min-width:0;height:42px;border-radius:13px;font-weight:900;font-size:14px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pb .o{background:rgba(255,236,200,.07);border:1.5px solid rgba(255,236,200,.35);color:var(--cream)}
+.pb .o small{font-size:10.5px;color:var(--mut2);font-weight:800}
+.pb .g{border:0;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;font-family:var(--fd);font-size:18px;font-weight:400;box-shadow:0 3px 0 #1d5a1c}
+.ft{flex:none;padding:7px 12px 12px;background:#1c140f;border-top:1px solid rgba(255,236,200,.12);text-align:center}
+.ft p{margin:0;font-size:12px;font-weight:900;color:var(--cream);line-height:1.35}
+.ft p span{color:var(--mut2);font-weight:800}
+/* 3 e 4. cartões por cima */
+.dim{position:absolute;inset:0;z-index:20;background:rgba(6,4,2,.6);animation:fade .2s ease-out}
+.dim.hi{z-index:30}
+@keyframes fade{from{opacity:0}}
+.res{position:absolute;z-index:21;left:12px;right:12px;top:140px;border-radius:20px;background:linear-gradient(180deg,rgba(42,30,20,.98),rgba(26,18,12,.98));border:2px solid var(--g2);padding:12px 11px 12px;box-shadow:0 14px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:8px;animation:pop .22s ease-out}
+.res.hi{z-index:31;top:170px}
+@keyframes pop{from{opacity:0;transform:scale(.94)}}
+.rh{text-align:center}
+.rh b{display:block;font-family:var(--fd);font-weight:400;font-size:26px;line-height:1.05;color:var(--g2);text-shadow:0 2px 0 #000}
+.rh small{display:block;margin-top:2px;font-size:12px;font-weight:900;color:var(--cream);line-height:1.3}
+.cg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.cc{position:relative;border-radius:14px;background:#2a1f16;border:2px solid #4a3a2b;padding:7px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0;text-align:center}
+.cc.cur{border-color:var(--g2)}
+.cc .pi{width:40px;height:40px;border-radius:11px}
+.cc .pi svg{width:32px;height:32px}
+.cc>b{font-size:12.5px;font-weight:900;color:#fff;margin-top:2px}
+.cc .dp{font-family:var(--fd);font-size:25px;line-height:1.05;color:var(--g2);text-shadow:0 2px 0 #000}
+.cc .dp.no{color:var(--mut2);font-size:20px}
+.cc small{display:block;font-size:10px;font-weight:800;color:var(--mut2);line-height:1.2;max-width:100%}
+.cc small em{font-style:normal;color:#9cf08f;font-weight:900}
+.cc .tb{position:absolute;left:50%;top:-10px;transform:translateX(-50%);padding:0 7px;height:18px;border-radius:9px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;font-size:10px;font-weight:900;line-height:18px;white-space:nowrap}
+.cc .tt{margin-top:4px;width:100%;height:40px;border-radius:11px;border:1.5px solid rgba(255,236,200,.35);background:rgba(255,236,200,.07);color:var(--cream);font-weight:900;font-size:12.5px}
+.note{border-radius:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,236,200,.16);padding:7px 9px;font-size:11.5px;font-weight:800;line-height:1.35}
+.note b{color:var(--g2)}
+.free{border-radius:12px;background:rgba(127,224,122,.12);border:1px solid rgba(127,224,122,.45);padding:7px 9px;font-size:12px;font-weight:900;text-align:center;line-height:1.35}
+.rb{display:flex;gap:6px}
+.rb button{flex:1;min-width:0;height:48px;border-radius:14px;font-weight:900;font-size:14px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb .o{flex:0 0 40%;background:rgba(255,236,200,.06);border:1px solid rgba(255,236,200,.25);color:var(--cream)}
+.rb .g{border:0;background:linear-gradient(180deg,#9cf08f,#3fae3c);color:#0d2410;font-family:var(--fd);font-size:19px;font-weight:400;box-shadow:0 3px 0 #1d5a1c}
+.cf{display:flex;gap:10px;align-items:center}
+.cf .pi{width:62px;height:62px}
+.cf .pi svg{width:50px;height:50px}
+.cl{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.cl li{display:flex;gap:7px;align-items:flex-start;font-size:12px;font-weight:800;line-height:1.35}
+.cl li i{flex:none;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:900;margin-top:1px}
+.cl li i.y{background:#3fae3c;color:#0d2410}
+.cl li i.w{background:#f2a826;color:#2a1403}
+.cl li em{font-style:normal;color:var(--g2);font-weight:900}
+.toast{position:absolute;left:50%;top:236px;z-index:40;transform:translateX(-50%);padding:8px 14px;border-radius:13px;background:rgba(26,17,11,.95);border:1px solid rgba(255,236,200,.25);font-weight:900;font-size:12px;max-width:92%;width:max-content;text-align:center;line-height:1.3;pointer-events:none;color:var(--cream);animation:fade .2s ease-out}
+</style>
+
+<div class="page">
+  <figure class="cmpd"><figcaption id="cap0">Hoje<small id="cap0s">print real do jogo (v0.13.3, Equipamento)</small></figcaption>
+    <div class="devwrap" id="devwrap0"><div class="dev" id="dev0"><div class="scr"><img class="shot" id="shot0" src="a/eq_hoje.png" alt="Print real de hoje"></div></div></div>
+  </figure>
+  <figure class="cmpd"><figcaption id="cap2">Com o Caminho de luta<small id="cap2s">a mesma tela; só o que é novo aparece</small></figcaption>
+  <div class="devwrap" id="devwrap"><div class="dev" id="dev"><div class="scr" id="scr">
+    <img class="shot" src="a/v5_hoje.png" alt="">
+    <div id="hud"></div>
+    <div id="lay"></div>
+  </div></div></div>
+  </figure>
+
+  <aside class="side">
+    <h1>Tela · Caminho de luta com Testar grátis</h1>
+    <p class="sub" id="stgdiag" style="font-size:12px">Palco: pronto</p>
+    <p class="sub">No <b>Nv 30</b> o jogador escolhe um <b>caminho de luta</b>: Lâmina, Disparo ou Arcano. <b>O corpo e a skin do herói não mudam</b>; mudam só golpes especiais e atributos. Antes de escolher, cada caminho tem <b>Testar grátis</b>: 60 s contra o Boneco de Treino. À esquerda, o <b>print real de hoje</b> (Equipamento para as folhas, batalha para o ensaio). À direita, a mesma tela com só o que é novo, em 4 momentos.</p>
+    <div class="box">
+      <h2>Momento</h2>
+      <div class="seg" role="group" aria-label="Momento"><button data-st="pick" aria-pressed="true">1 · Escolha</button><button data-st="fight" aria-pressed="false">2 · Ensaio</button><button data-st="result" aria-pressed="false">3 · Comparar</button><button data-st="confirm" aria-pressed="false">4 · Confirmar</button></div>
+      <h3>Caminho (ensaio e confirmar)</h3>
+      <div class="seg p3" role="group" aria-label="Caminho"><button data-path="blade" aria-pressed="true">Lâmina</button><button data-path="shot" aria-pressed="false">Disparo</button><button data-path="arcane" aria-pressed="false">Arcano</button></div>
+      <h3>Simular</h3>
+      <div class="seg" role="group" aria-label="Simular"><button data-sim="one">Ensaio inteiro (60 s)</button><button data-sim="all">Testar os 3</button><button data-sim="reset">Zerar testes</button></div>
+      <p class="stl" id="stl"></p>
+    </div>
+    <div class="box">
+      <h2>Dano por segundo de exemplo</h2>
+      <ul class="offs" id="offs"></ul>
+      <p class="stl" style="font-weight:700;color:var(--muted)">Herói de exemplo Nv 30: ATQ 420, Vida 3.600, 1,25 ataques/s, crítico 12% com +100% de dano. Só o golpe básico; conta do protótipo, não é o motor do jogo.</p>
+    </div>
+    <div class="box">
+      <h2>Regras (js/sys/pathtry.js, desligado)</h2>
+      <ul>
+        <li>Abre no <b>Nv 30</b>. Três caminhos, <b>sem mudar o corpo</b>: só golpes especiais e atributos</li>
+        <li>Números <b>PROPOSTA</b>: <b>Lâmina</b> contra-ataque 8% + roubo de vida 5% · <b>Disparo</b> combo 8% + velocidade de ataque +10% · <b>Arcano</b> atordoar 3% + dano crítico +20%</li>
+        <li><b>Testar grátis</b>: luta de <b>60 s</b> contra o <b>Boneco de Treino</b> (não morre; bate 4% da sua vida a cada 2 s; você nunca fica abaixo de 1 de vida)</li>
+        <li><b>Grátis e sem limite</b>. O ensaio <b>não dá nada</b>: sem ouro, XP, itens, pedras, progresso de fase, missão ou energia. O bônus vale só durante o ensaio</li>
+        <li>O jogo guarda só quantas vezes testou e o <b>melhor dano/s</b> de cada caminho, para comparar lado a lado</li>
+        <li><b>Forte contra</b> (js/sys/affinity.js, desligado): cada estilo acerta <b>+15%</b> em 3 eras; algumas eras resistem (<b>−10%</b>). Nenhuma era resiste à arma da própria era</li>
+        <li>Trocar depois: o pathtry.js deixa para o futuro Sys.path. Plano do docs/LOM_VS_EONBOUND.md item 7: <b>troca grátis 1 vez por semana</b> (mostrado no passo 4 como PROPOSTA)</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h2>Seu voto</h2>
+      <div class="vote"><button class="vbtn ok" id="vOk">Aprovar</button><button class="vbtn no" id="vNo">Reprovar</button></div>
+      <label for="nota" class="vst">Comentário (opcional): o que mudar</label>
+      <textarea id="nota" placeholder="Ex.: boneco maior, comparação por vida também"></textarea>
+      <div class="vst" id="vst">Carregando o voto…</div>
+    </div>
+  </aside>
+</div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s);
+const scr=$('#scr'), hud=$('#hud'), lay=$('#lay');
+function fit(){ const avail=Math.max(280,Math.min(document.documentElement.clientWidth-32,390)), s=avail/390; for(const k of ['','0']){ const d=$('#dev'+k), wr=$('#devwrap'+k); if(!d||!wr) continue; d.style.transform='scale('+s+')'; wr.style.width=(390*s)+'px'; wr.style.height=(844*s)+'px'; } }
+addEventListener('resize',fit); fit();
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf=v=>String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+const mmss=s=>Math.floor(s/60)+':'+String(Math.max(0,s)%60).padStart(2,'0');
+
+/* ===== regras: cópia fiel de js/sys/pathtry.js (DATA), js/sys/affinity.js (eras) e js/sys/strikes.js (nomes e cores) ===== */
+const DATA={unlockLevel:30,sec:60,afterChoose:false,
+  paths:[
+    {id:'blade', name:'Lâmina', desc:'Contra-ataque e roubo de vida: quanto mais apanha, mais devolve', strikes:{counter:8,lifesteal:5}, stat:{}},
+    {id:'shot',  name:'Disparo',desc:'Combo e velocidade de ataque: muitos golpes rápidos',            strikes:{combo:8},              stat:{aspd:10}},
+    {id:'arcane',name:'Arcano', desc:'Atordoar e crítico de habilidade: golpes especiais fortes',      strikes:{stun:3},               stat:{critDmg:20}},
+  ],
+  dummy:{name:'Boneco de Treino',immortal:true,hitEverySec:2,hitPctHeroHp:4,heroMinHp:1}};
+const STK={name:{combo:'Combo',counter:'Contra-ataque',stun:'Atordoar',dodge:'Esquiva',lifesteal:'Roubo de vida'},
+  battle:{combo:'COMBO',counter:'CONTRA-ATAQUE',stun:'ATORDOADO',dodge:'ESQUIVA',lifesteal:'ROUBO DE VIDA'},
+  color:{combo:'#ffb030',counter:'#ff5a4a',stun:'#c78bff',dodge:'#7fd8ff',lifesteal:'#5fd068'},comboMult:0.5,counterMult:0.6,stunSec:1,stunImmuneSec:3};
+const AFF={weak:0.15,resist:-0.10,eras:[
+  {n:'Pré-História',weak:'blade',resist:null},{n:'Antiguidade',weak:'arcane',resist:'shot'},{n:'Medieval',weak:'shot',resist:'arcane'},
+  {n:'Pólvora',weak:'arcane',resist:'blade'},{n:'Industrial',weak:'blade',resist:'arcane'},{n:'Moderna',weak:'arcane',resist:'blade'},
+  {n:'Futurista',weak:'shot',resist:null},{n:'Submundo',weak:'shot',resist:'arcane'},{n:'Celestial',weak:'blade',resist:'shot'}]};
+const strongVs=id=>AFF.eras.filter(e=>e.weak===id).map(e=>e.n);
+const resistedBy=id=>AFF.eras.filter(e=>e.resist===id).map(e=>e.n);
+const pathOf=id=>DATA.paths.find(p=>p.id===id)||null;
+const bonusList=p=>{ const L=[]; for(const k in p.strikes) L.push({t:STK.name[k]+' '+p.strikes[k]+'%',c:STK.color[k]});
+  if(p.stat.aspd) L.push({t:'Velocidade +'+p.stat.aspd+'%',c:'#f6ecdf'}); if(p.stat.critDmg) L.push({t:'Dano crítico +'+p.stat.critDmg+'%',c:'#ffd25e'}); return L; };
+
+/* ===== simulação do ensaio (60 s, passos de 10 ms, sorte com semente; os golpes especiais têm sorte própria, para o golpe básico sair igual ao "sem caminho" da mesma semente) ===== */
+const HERO={atk:420,hp:3600,aspd:1.25,crit:0.12,critDmg:1.0};
+function rngOf(seed){ let a=seed>>>0; return ()=>{ a=(a+0x6D2B79F5)>>>0; let t=a; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
+function sim(id,seed){ const p=pathOf(id)||{strikes:{},stat:{}}, s=p.strikes, st=p.stat, rng=rngOf(seed==null?1:seed), rk=rngOf((seed==null?1:seed)*7919+17), D=DATA.dummy;
+  const step=Math.round(1000/(HERO.aspd*(1+(st.aspd||0)/100))), cd=HERO.critDmg+(st.critDmg||0)/100;
+  let dmg=0,hits=0,crits=0,combos=0,counters=0,stuns=0,heal=0,hurt=0,hp=HERO.hp,minHp=HERO.hp,stunUntil=-1,immune=0,nextA=0,nextD=D.hitEverySec*1000;
+  for(let ms=0;ms<DATA.sec*1000;ms+=10){
+    if(ms>=nextA){ nextA+=step; let d=HERO.atk*(0.95+rng()*0.1); if(rng()<HERO.crit){ d*=1+cd; crits++; } let tot=d; hits++;
+      if(s.combo&&rk()*100<s.combo){ tot+=d*STK.comboMult; combos++; }
+      if(s.stun&&ms>=immune&&rk()*100<s.stun){ stuns++; stunUntil=ms+STK.stunSec*1000; immune=stunUntil+STK.stunImmuneSec*1000; }
+      dmg+=tot; if(s.lifesteal){ const h=tot*s.lifesteal/100; heal+=h; hp=Math.min(HERO.hp,hp+h); } }
+    if(ms>=nextD){ nextD+=D.hitEverySec*1000; if(ms>=stunUntil){ const h=HERO.hp*D.hitPctHeroHp/100; hurt+=h; hp=Math.max(D.heroMinHp,hp-h); minHp=Math.min(minHp,hp);
+        if(s.counter&&rk()*100<s.counter){ const c=HERO.atk*STK.counterMult; dmg+=c; counters++; if(s.lifesteal){ heal+=c*s.lifesteal/100; hp=Math.min(HERO.hp,hp+c*s.lifesteal/100); } } } } }
+  return {dps:Math.floor(dmg/DATA.sec),damage:Math.round(dmg),hits,crits,combos,counters,stuns,heal:Math.round(heal),hurt:Math.round(hurt),hpEnd:Math.round(hp),minHp:Math.round(minHp)}; }
+const BASE=sim(null,1);
+
+/* ===== estado (espelha S.sys.pathTry.tried e o ensaio em memória do pathtry.js) ===== */
+const ST={st:'pick',path:'blade',left:42,tick:null,tried:{},last:{},cur:null,chosen:null,runs:0};
+function compare(){ const rows=DATA.paths.map(p=>({id:p.id,name:p.name,tried:!!ST.tried[p.id],n:ST.tried[p.id]?ST.tried[p.id].n:0,bestDps:ST.tried[p.id]?ST.tried[p.id].best:null}));
+  let top=null; for(const r of rows) if(r.bestDps!=null&&(!top||r.bestDps>top.bestDps)) top=r; rows.forEach(r=>{ r.top=!!top&&r===top; }); return rows; }
+function startTry(id){ if(ST.chosen&&!DATA.afterChoose) return {ok:false,reason:'chosen'}; if(!pathOf(id)) return {ok:false,reason:'id'}; ST.path=id; ST.cur={id}; setState('fight'); return {ok:true}; }
+function cancelTry(){ const had=!!ST.cur; ST.cur=null; setState('pick'); if(had) toast('Ensaio encerrado: nada foi gasto nem ganho'); return had; }
+function finishTry(){ const id=(ST.cur&&ST.cur.id)||ST.path; ST.cur=null; ST.runs++; const r=sim(id,7+ST.runs*13);
+  r.base=sim(null,7+ST.runs*13).dps; const t=ST.tried[id]||(ST.tried[id]={n:0,best:0}); t.n++; if(r.dps>=t.best){ t.best=r.dps; t.base=r.base; } ST.last[id]=r; ST.path=id; setState('result'); return {ok:true,id,dps:r.dps,best:t.best,rows:compare()}; }
+function choose(id){ ST.path=id; setState('confirm'); }
+function confirmChoice(){ ST.chosen=ST.path; ST.cur=null; setState('pick'); toast('Caminho escolhido: '+pathOf(ST.chosen).name+'. O herói continua igual; os golpes mudam'); }
+
+/* ===== ícones desenhados no código ===== */
+const SV=(inner,vb)=>'<svg class="ic" viewBox="'+(vb||'0 0 48 48')+'" aria-hidden="true">'+inner+'</svg>';
+const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
+const ICON={
+  blade:SV('<path d="M36 5l7 0 0 7-20 20-7-7z" fill="#dfe8f2" '+K+'/><path d="M39 9L21 27" stroke="#9fb0c4" stroke-width="2"/><path d="M12 24l12 12-3 3-12-12z" fill="#ffc94a" '+K+'/><path d="M14 33l-7 7" stroke="#1a110b" stroke-width="7" stroke-linecap="round"/><path d="M14 33l-7 7" stroke="#8a5a2a" stroke-width="3.6" stroke-linecap="round"/><circle cx="6" cy="41" r="3.2" fill="#ffc94a" '+K+'/>'),
+  shot:SV('<path d="M10 6c16 4 26 14 30 30" fill="none" stroke="#1a110b" stroke-width="7" stroke-linecap="round"/><path d="M10 6c16 4 26 14 30 30" fill="none" stroke="#c8873e" stroke-width="3.6" stroke-linecap="round"/><path d="M10 6L40 36" stroke="#f6ecdf" stroke-width="1.6"/><path d="M6 42L34 14" stroke="#1a110b" stroke-width="5" stroke-linecap="round"/><path d="M6 42L34 14" stroke="#e8d2a8" stroke-width="2.4" stroke-linecap="round"/><path d="M38 10l-9 1 8 8z" fill="#ffb030" '+K+'/><path d="M6 42l2-7 5 5z" fill="#ff5a4a" '+K+'/>'),
+  arcane:SV('<circle cx="24" cy="24" r="17" fill="#3a2466" '+K+'/><circle cx="24" cy="24" r="12" fill="none" stroke="#c78bff" stroke-width="2" stroke-dasharray="4 3"/><path d="M24 9l4 11 11 4-11 4-4 11-4-11-11-4 11-4z" fill="#e6d4ff" '+K+'/><circle cx="24" cy="24" r="3.4" fill="#ffd25e"/>'),
+};
+const DUMMY='<svg viewBox="0 0 80 124" aria-hidden="true" style="width:100%;height:100%">'+
+  '<ellipse cx="40" cy="119" rx="28" ry="5" fill="rgba(0,0,0,.35)"/>'+
+  '<rect x="36" y="70" width="8" height="48" fill="#8a5a2a" '+K+'/><path d="M26 118h28" stroke="#1a110b" stroke-width="5" stroke-linecap="round"/><path d="M26 118h28" stroke="#6a4420" stroke-width="2.6" stroke-linecap="round"/>'+
+  '<path d="M6 46h68" stroke="#1a110b" stroke-width="8" stroke-linecap="round"/><path d="M6 46h68" stroke="#a87038" stroke-width="4.4" stroke-linecap="round"/>'+
+  '<path d="M18 38c0-6 10-9 22-9s22 3 22 9v36c0 8-10 12-22 12S18 82 18 74z" fill="#e2c37a" '+K+'/>'+
+  '<path d="M22 44l4 5M30 40l2 6M50 40l-2 6M58 44l-4 5M24 76l3-5M56 76l-3-5" stroke="#b8954a" stroke-width="1.8" stroke-linecap="round"/>'+
+  '<circle cx="40" cy="58" r="12" fill="#f6ecdf" '+K+'/><circle cx="40" cy="58" r="7.5" fill="#ff5a4a"/><circle cx="40" cy="58" r="3.2" fill="#f6ecdf"/>'+
+  '<path d="M18 68c8 3 36 3 44 0" fill="none" stroke="#7a4a20" stroke-width="3.4"/>'+
+  '<circle cx="40" cy="18" r="14" fill="#e2c37a" '+K+'/><path d="M30 8c4-4 16-4 20 0" fill="none" stroke="#b8954a" stroke-width="2"/>'+
+  '<path d="M33 15l4 4M37 15l-4 4M43 15l4 4M47 15l-4 4" stroke="#3a2208" stroke-width="2.2" stroke-linecap="round"/><path d="M35 25q5 3 10 0" fill="none" stroke="#3a2208" stroke-width="2" stroke-linecap="round"/>'+
+  '<path d="M27 26q13 8 26 0" fill="none" stroke="#7a4a20" stroke-width="3"/></svg>';
+const XI='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="#f6ecdf" stroke-width="3.4" stroke-linecap="round"/></svg>';
+const COIN='<img src="a/coin.png" alt="">', GEM='<img src="a/gem.png" alt="">';
+
+/* ===== números e nomes dos golpes no ensaio (laço de 2,4 s com atrasos) ===== */
+function fxHtml(id){ const r=ST.last[id]||sim(id,3), a=HERO.atk, c=STK.color, B=STK.battle, cr=Math.round(a*(2+((pathOf(id).stat.critDmg||0)/100)));
+  const L=[{cl:'n',t:nf(a*1.02),x:236,y:470,d:0},{cl:'n',t:nf(a*0.97),x:268,y:455,d:0.8},{cl:'c',t:nf(cr)+'!',x:230,y:440,d:1.6}];
+  if(id==='blade') L.push({cl:'h',t:'−'+nf(HERO.hp*0.04),x:128,y:432,d:0.3},{cl:'k',t:B.counter,col:c.counter,x:200,y:408,d:0.5},{cl:'n',t:nf(a*STK.counterMult),x:250,y:425,d:0.55},{cl:'k',t:B.lifesteal,col:c.lifesteal,x:90,y:405,d:1.2},{cl:'g',t:'+'+nf(a*0.05),x:150,y:410,d:1.25});
+  if(id==='shot') L.push({cl:'k',t:B.combo,col:c.combo,x:212,y:410,d:0.4},{cl:'n',t:nf(a*STK.comboMult),x:276,y:430,d:0.45},{cl:'k',t:B.combo,col:c.combo,x:208,y:400,d:1.9},{cl:'h',t:'−'+nf(HERO.hp*0.04),x:128,y:432,d:1.1});
+  if(id==='arcane') L.push({cl:'k',t:B.stun,col:c.stun,x:214,y:408,d:0.5},{cl:'k',t:'CRÍTICO +20%',col:'#ffd25e',x:200,y:395,d:1.65},{cl:'h',t:'−'+nf(HERO.hp*0.04),x:128,y:432,d:2.0});
+  return '<div class="fx" aria-hidden="true">'+L.map(f=>'<span class="fl '+f.cl+'" style="left:'+f.x+'px;top:'+f.y+'px;animation-delay:'+f.d+'s'+(f.col?';color:'+f.col:'')+'">'+esc(f.t)+'</span>').join('')+'</div>'; }
+
+/* ===== desenho ===== */
+function renderHud(){ let h='';
+  if(ST.st==='fight'){ const p=pathOf(ST.path), f=Math.max(0,ST.left)/DATA.sec, est=sim(ST.path,3).dps;
+    h+='<div class="lvp">Nv.30</div><div class="patch"></div><div class="dummy'+(ST.path==='arcane'?' stun':'')+'">'+DUMMY+'</div>'+
+      '<div class="dlab"><b>'+esc(DATA.dummy.name)+'</b><span></span></div>'+fxHtml(ST.path)+
+      '<div class="rband" role="status" aria-label="Ensaio do caminho '+esc(p.name)+', faltam '+mmss(ST.left)+'">'+ICON[p.id]+'<span class="tx"><small>Grátis · dano/s ~'+nf(est)+'</small><b>Ensaio · '+esc(p.name)+'</b></span><span class="tm'+(ST.left<=10?' low':'')+'">'+mmss(ST.left)+'</span><span class="bar"><i style="width:'+(f*100).toFixed(1)+'%"></i></span></div>'+
+      '<button class="exit" data-act="exit" aria-label="Sair do ensaio sem guardar">'+XI+'Sair do ensaio</button>'; }
+  else if(ST.st==='result') h+='<div class="lvp">Nv.30</div>';
+  hud.innerHTML=h; }
+
+function cardHtml(p){ const t=ST.tried[p.id], ch=ST.chosen===p.id, locked=!!ST.chosen&&!DATA.afterChoose, sv=strongVs(p.id), rv=resistedBy(p.id);
+  const er=a=>{ const x=a.slice(0,3); while(x.length<3) x.push(''); return x; };
+  return '<div class="pc'+(ch?' ch':'')+'" data-card="'+p.id+'">'+
+    '<div class="ph"><span class="pi">'+ICON[p.id]+'</span><span class="pn"><b>'+esc(p.name)+(ch?'<em>escolhido</em>':t?'<em class="t">seu teste: '+nf(t.best)+' dano/s</em>':'')+'</b><small>'+esc(p.desc)+'</small></span></div>'+
+    '<div class="bon">'+bonusList(p).map(b=>'<span><i style="background:'+b.c+'"></i>'+esc(b.t)+'</span>').join('')+'</div>'+
+    '<div class="fc"><small>Forte contra +15%</small><span class="er">'+er(sv).map(n=>'<span'+(n?'':' class="z"')+'>'+esc(n)+'</span>').join('')+'</span></div>'+
+    (rv.length?'<div class="fc"><small>Resistem −10%</small><span class="er">'+er(rv).map(n=>'<span class="'+(n?'r':'z')+'">'+esc(n)+'</span>').join('')+'</span></div>':'')+
+    (locked?'':'<div class="pb"><button class="o" data-act="try" data-id="'+p.id+'" aria-label="Testar '+esc(p.name)+' grátis, 60 segundos">Testar grátis <small>60 s</small></button><button class="g" data-act="choose" data-id="'+p.id+'" aria-label="Escolher '+esc(p.name)+'">Escolher</button></div>')+
+  '</div>'; }
+function pickSheet(){ const locked=!!ST.chosen;
+  return '<div class="sheet" role="dialog" aria-label="Caminho de luta">'+
+    '<div class="hd"><button class="back" data-act="later" aria-label="Voltar para a batalha"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8" fill="none" stroke="#f6ecdf" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Voltar</button><h2>Caminho de luta</h2><span class="pill">'+COIN+'12</span><span class="pill">'+GEM+'50</span></div>'+
+    '<div class="bd">'+
+      '<div class="intro"><b>'+(locked?'Seu caminho: '+esc(pathOf(ST.chosen).name):'Nv 30: escolha seu caminho')+'</b>'+(locked?'Troca grátis 1 vez por semana (proposta). O herói continua igual.':'O herói continua igual: muda só como ele luta. Teste antes de escolher.')+'</div>'+
+      DATA.paths.map(cardHtml).join('')+
+    '</div>'+
+    '<div class="ft"><p>'+(locked?'Ensaio fechado depois da escolha <span>· a troca é na própria tela</span>':'Testar é grátis e sem limite <span>· 60 s contra o Boneco de Treino · nada é gasto nem ganho</span>')+'</p></div>'+
+  '</div>'; }
+
+function resultCard(){ const rows=compare(), id=ST.path, p=pathOf(id), untested=rows.filter(r=>!r.tried);
+  const col=r=>{ const L=ST.last[r.id], bs=r.tried&&ST.tried[r.id].base||BASE.dps, pct=r.tried?Math.round((r.bestDps/bs-1)*100):0;
+    const ex=!L?'':r.id==='blade'?'vida devolvida '+nf(L.heal):r.id==='shot'?nf(L.combos)+' combos':nf(L.stuns)+' atordoados';
+    return '<div class="cc'+(r.id===id?' cur':'')+'">'+(r.top&&rows.filter(x=>x.tried).length>1?'<span class="tb">maior dano/s</span>':'')+'<span class="pi">'+ICON[r.id]+'</span><b>'+esc(r.name)+'</b>'+
+      (r.tried?'<span class="dp">'+nf(r.bestDps)+'</span><small>dano/s · <em>'+(pct>=0?'+':'−')+Math.abs(pct)+'%</em></small><small>sobre sem caminho</small><small>'+esc(ex)+'</small>':'<span class="dp no">—</span><small>ainda não testou</small><button class="tt" data-act="try" data-id="'+r.id+'">Testar</button>')+'</div>'; };
+  return '<div class="dim"></div><div class="res" role="dialog" aria-label="Resultado do ensaio">'+
+    '<div class="rh"><b>Ensaio de '+esc(p.name)+'</b><small>Melhor dano por segundo de cada caminho contra o '+esc(DATA.dummy.name)+'</small></div>'+
+    '<div class="cg">'+rows.map(col).join('')+'</div>'+
+    '<div class="note">Neste ensaio, sem caminho o mesmo herói faria <b>'+nf(ST.last[id]&&ST.last[id].base||BASE.dps)+' dano/s</b> (a sorte dos críticos muda um pouco a cada teste). Dano/s não é tudo: <b>Lâmina</b> devolve vida e revida quando apanha, <b>Arcano</b> segura o inimigo.</div>'+
+    '<div class="free">O ensaio não dá prêmio nem conta progresso.<br>Testar de novo é grátis e sem limite.</div>'+
+    '<div class="rb"><button class="o" data-act="other">Testar outro</button><button class="g" data-act="choose" data-id="'+id+'">Escolher '+esc(p.name)+'</button></div></div>'; }
+
+function confirmCard(){ const p=pathOf(ST.path);
+  return '<div class="dim hi"></div><div class="res hi" role="dialog" aria-label="Confirmar caminho">'+
+    '<div class="cf"><span class="pi">'+ICON[p.id]+'</span><div class="rh" style="text-align:left"><b>Escolher '+esc(p.name)+'?</b><small>'+esc(p.desc)+'</small></div></div>'+
+    '<div class="bon">'+bonusList(p).map(b=>'<span><i style="background:'+b.c+'"></i>'+esc(b.t)+'</span>').join('')+'</div>'+
+    '<ul class="cl">'+
+      '<li><i class="y">✓</i><span>O corpo e a skin do herói <em>não mudam</em>. Muda só como ele luta.</span></li>'+
+      '<li><i class="y">✓</i><span>Forte contra: <em>'+esc(strongVs(p.id).join(', '))+'</em> (+15%).</span></li>'+
+      '<li><i class="w">!</i><span>Trocar depois: <em>grátis 1 vez por semana</em> (proposta; ainda não definido no jogo).</span></li>'+
+      '<li><i class="w">!</i><span>Depois de escolher, o Testar grátis some.</span></li>'+
+    '</ul>'+
+    '<div class="rb"><button class="o" data-act="back">Voltar</button><button class="g" data-act="confirm">Confirmar</button></div></div>'; }
+
+function renderLayer(){ let h='';
+  if(ST.st==='pick'||ST.st==='confirm') h=pickSheet()+(ST.st==='confirm'?confirmCard():'');
+  else if(ST.st==='result') h=resultCard();
+  lay.innerHTML=h; }
+function renderCaps(){ const bat=ST.st==='fight'||ST.st==='result', s0=$('#shot0');
+  if(s0){ s0.src=bat?'a/v5_hoje.png':'a/eq_hoje.png'; s0.alt=bat?'Print real da batalha de hoje: inimigo à direita, barra da fase em cima, golpes embaixo':'Print real do Equipamento de hoje: cabeçalho Voltar, Equipamento, ouro e gemas, folha marrom'; }
+  $('#cap0s').textContent=bat?'print real do jogo (v0.13.3, batalha)':'print real do jogo (v0.13.3, Equipamento: o estilo que a folha copia)';
+  $('#cap2s').textContent=({pick:'folha da escolha no estilo do Equipamento',fight:'a batalha de hoje com o Boneco de Treino',result:'cartão por cima da batalha',confirm:'confirmação por cima da folha'})[ST.st]; }
+function renderSide(){ const rows=compare(), p=pathOf(ST.path);
+  $('#stl').innerHTML='Caminho <b>'+esc(p.name)+'</b> · testes: '+rows.map(r=>esc(r.name)+' <b>'+r.n+'</b>').join(', ')+(ST.chosen?' · escolhido: <b>'+esc(pathOf(ST.chosen).name)+'</b>':'');
+  $('#offs').innerHTML='<li><span>Sem caminho</span><span>'+nf(BASE.dps)+' dano/s</span></li>'+DATA.paths.map(x=>{ const r=sim(x.id,3);
+    return '<li><span>'+esc(x.name)+'</span><span>'+nf(r.dps)+' dano/s · '+(x.id==='blade'?'vida devolvida '+nf(r.heal):x.id==='shot'?nf(r.combos)+' combos':nf(r.stuns)+' atordoados')+'</span></li>'; }).join(''); }
+function syncPressed(){ document.querySelectorAll('[data-st]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.st===ST.st)));
+  document.querySelectorAll('[data-path]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.path===ST.path))); }
+function render(){ renderHud(); renderLayer(); renderCaps(); renderSide(); syncPressed(); }
+function draw(t){ return t; }
+function toast(t){ scr.querySelectorAll('.toast').forEach(x=>x.remove()); const d=document.createElement('div'); d.className='toast'; d.textContent=t; scr.appendChild(d); setTimeout(()=>d.remove(),2600); }
+
+/* ===== ações ===== */
+function stopTick(){ if(ST.tick){ clearInterval(ST.tick); ST.tick=null; } }
+function setState(s){ stopTick(); ST.st=s;
+  if(s==='fight'){ if(!ST.cur) ST.cur={id:ST.path}; ST.left=42; ST.tick=setInterval(()=>{ if(ST.st!=='fight'){ stopTick(); return; } ST.left--; if(ST.left<=0){ ST.left=0; stopTick(); finishTry(); return; } renderHud(); },1000); }
+  render(); }
+
+scr.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const a=b.dataset.act, id=b.dataset.id;
+  if(a==='try') startTry(id);
+  else if(a==='choose') choose(id||ST.path);
+  else if(a==='exit') cancelTry();
+  else if(a==='other'){ const nx=compare().find(r=>!r.tried); if(nx) startTry(nx.id); else setState('pick'); }
+  else if(a==='back') setState('pick');
+  else if(a==='confirm') confirmChoice();
+  else if(a==='later') toast('No jogo, volta para a batalha; a escolha espera no botão do Nv 30'); });
+
+document.querySelector('.side').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const d=b.dataset;
+  if(d.st){ if(d.st==='fight'){ ST.chosen=null; startTry(ST.path); return; } if(d.st==='result'&&!ST.tried[ST.path]){ ST.cur={id:ST.path}; finishTry(); return; } if(d.st!=='pick') ST.chosen=null; setState(d.st); }
+  else if(d.path){ ST.path=d.path; if(ST.st==='fight'){ ST.cur={id:ST.path}; setState('fight'); } else render(); }
+  else if(d.sim==='one'){ ST.chosen=null; ST.cur={id:ST.path}; finishTry(); }
+  else if(d.sim==='all'){ ST.chosen=null; const keep=ST.path; for(const p of DATA.paths){ ST.cur={id:p.id}; finishTry(); } ST.path=keep; render(); }
+  else if(d.sim==='reset'){ for(const k in ST.tried) delete ST.tried[k]; for(const k in ST.last) delete ST.last[k]; ST.chosen=null; ST.cur=null; setState('pick'); } });
+addEventListener('keydown',e=>{ if(e.key!=='Escape') return; if(ST.st==='confirm') setState('pick'); else if(ST.st==='fight') cancelTry(); });
+
+render();
+window.__caminhosTeste={ST,DATA,AFF,STK,HERO,BASE,render,setState,sim,compare,startTry,cancelTry,finishTry,choose,confirmChoice,strongVs,resistedBy,bonusList};
+
+/* voto */
+(async()=>{ const st=$('#vst'); const DOC='decisoes/tela-caminhos';
+  const timer=setTimeout(()=>{ st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; },10000);
+  let db=null; try{ db=await claude.use('db'); }catch(e){}
+  if(!db){ clearTimeout(timer); st.textContent='Voto indisponível nesta visualização. Diga o voto no chat.'; return; }
+  const ref=db.doc(DOC);
+  const show=d=>{ clearTimeout(timer); if(!d||!d.status){ st.textContent='Ainda sem voto nesta versão.'; return; } st.innerHTML='Seu voto: <b>'+(d.status==='aprovado'?'Aprovado':'Reprovado')+'</b>'+(d.nota?' · “'+String(d.nota).replace(/[<>&]/g,'')+'”':''); };
+  try{ ref.onSnapshot(s=>show(s.exists?s.data():null),()=>{ st.textContent='Não consegui ler o voto agora.'; }); }catch(e){ st.textContent='Não consegui ler o voto agora.'; }
+  async function vote(status){ st.textContent='Salvando…'; try{ await ref.set({status,nota:$('#nota').value.trim(),tela:'Caminho de luta com Testar grátis',em:new Date().toISOString()}); }catch(e){ st.textContent='Não salvou ('+(e&&e.code||'erro')+'). Tente de novo ou diga no chat.'; } }
+  $('#vOk').onclick=()=>vote('aprovado'); $('#vNo').onclick=()=>vote('reprovado'); })();
+</script>
