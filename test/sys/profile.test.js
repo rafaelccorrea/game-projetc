@@ -77,7 +77,7 @@ t('molduras: liberadas por nível, VIP, arena, prêmio e fim das 9 eras; travada
   const prata = P.frames(S, h).find(f => f.id === 'prata'); assert.strictEqual(prata.how, 'Nível 30'); assert.strictEqual(prata.cur, 12);
   let r = P.equip(S, h, 'frame', 'prata'); assert.strictEqual(r.reason, 'falta'); assert.strictEqual(r.how, 'Nível 30');
   assert.ok(P.equip(S, h, 'frame', 'bronze').ok); assert.strictEqual(P.equipped(S, h).frame, 'bronze');
-  S.sys.vip = { level: 3, active: true, points: 800 }; S.sys.arena = { bestRank: 7 }; S.sys.erasEnd = { cos: { owned: ['nine_eras'], eq: {} } };
+  S.sys.vip = { level: 7, active: true, points: 8000 }; S.sys.arena = { bestRank: 7 }; S.sys.erasEnd = { cos: { owned: ['nine_eras'], eq: {} } };
   assert.ok(P.grant(S, 'eterna')); assert.ok(!P.grant(S, 'eterna')); assert.ok(!P.grant(S, 'nao_existe'));
   assert.deepStrictEqual(own(), ['none', 'bronze', 'ouro', 'cristal', 'eterna', 'nine_eras']);
   assert.ok(P.equip(S, h, 'frame', 'nine_eras').ok);
