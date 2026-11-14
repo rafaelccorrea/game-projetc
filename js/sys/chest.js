@@ -105,7 +105,9 @@ function open(S,host){
   if(L){ L.addMat(S,host,'forge',forge); L.addMat(S,host,'food',food); const lo=L.ensure(S); lo.items+=items.length; items.forEach(it=>{ lo.byR[it.r]=(lo.byR[it.r]||0)+1; }); }
   else { const F=root.Sys&&root.Sys.forge, Pt=root.Sys&&root.Sys.pet;
     if(forge&&F&&F.addStones) F.addStones(S,forge,host); if(food&&Pt&&Pt.addFood) Pt.addFood(S,food,host); }
-  return {items,gold,gems,stones,forge,food,left:o.stored};
+  /* Brasas da Fogueira (Sys.bonfire 'chest' = +5 por baú aberto; desligada = 0 e nada muda) */
+  let brasas=0; { const Bf=root.Sys&&root.Sys.bonfire; try{ if(Bf&&typeof Bf.addBrasas==='function') brasas=Math.max(0,Math.floor(+Bf.addBrasas(S,'chest',1)||0)); }catch(e){ brasas=0; } }
+  return {items,gold,gems,stones,forge,food,left:o.stored,brasas};
 }
 
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});

@@ -80,4 +80,13 @@ t('offline: 1 Brasa a cada 18 min, teto de 12 h e 40 por dia, menos de 5 min nã
 t('offline desligado: nada entra, resumo vazio',()=>{ const S={}; const r=BF.offline(S,host(),3600); assert.ok(!r.on&&r.brasas===0); });
 t('fonte thief (Ladrão de Brasas): entra pela quantia e conta no got',()=>on(()=>{ const S={}; assert.strictEqual(BF.addBrasas(S,'thief',12),12); assert.strictEqual(BF.ensure(S).got,12); }));
 t('spendBrasas: tira do estoque, não mexe no got, recusa sem saldo e desligada',()=>{ const S={}; assert.strictEqual(BF.spendBrasas(S,1),false,'desligada'); on(()=>{ BF.addBrasas(S,'stage'); const o=BF.ensure(S), g=o.got; assert.strictEqual(BF.spendBrasas(S,2,'guildFire'),true); assert.strictEqual(o.bra,1); assert.strictEqual(o.got,g); assert.strictEqual(BF.spendBrasas(S,5),false); assert.strictEqual(o.bra,1); }); });
+t('fontes chest e missions ligadas nos módulos: Sys.chest.open +5 e o bônus das diárias (Sys.pass) +20; desligada = 0',()=>{
+  require('../../js/sys/chest.js'); require('../../js/sys/pass.js'); const C=Sys.chest, P=Sys.pass;
+  const run=()=>{ const S={}, h=host(); const co=C.ensure(S); co.stored=1; const r=C.open(S,h);
+    for(const [k,v] of [['kill',150],['ult',3],['chest',1],['instance',1],['boss',2],['forge',15],['summon',1]]) P.track(S,h,k,v);
+    for(const m of P.list(S,h).daily) P.claimMission(S,h,m.id); const b=P.claimMission(S,h,'bonus'); return {S,r,b}; };
+  const off=run(); assert.strictEqual(off.r.brasas,0); assert.strictEqual(off.b.brasas,0); assert.ok(!off.S.sys.bonfire,'desligada não escreve');
+  on(()=>{ const x=run(); assert.strictEqual(x.r.brasas,BF.DATA.brasas.chest); assert.ok(x.b.ok); assert.strictEqual(x.b.brasas,BF.DATA.brasas.missions);
+    assert.strictEqual(BF.ensure(x.S).bra,BF.DATA.brasas.chest+BF.DATA.brasas.missions); assert.strictEqual(P.claimMission(x.S,host(),'bonus').ok,false,'bônus uma vez'); });
+});
 console.log(n+' testes ok');

@@ -18,6 +18,14 @@ t('desligado: nada escreve no save, tabela de títulos e FC iguais, forgeMult = 
   F.ensure(S); S.sys.forge.lv.weapon=12; assert.strictEqual(E.forgeMult(S,'weapon'),F.mult(S,'weapon'));
   assert.deepStrictEqual(Ti.bonus(S),{atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
 });
+t('Sys.stats soma a Forja Astral (itemsTotal usa Sys.erasEnd.forgeMult; desligada = Sys.forge.mult de sempre)',()=>{
+  if(!Sys.stats) require('../../js/sys/stats.js');
+  const St=Sys.stats, S={}, it={id:1,slot:'weapon',r:2,e:0,lvl:10,subs:[]}, h=makeHost(); h.equipped=()=>({weapon:it}); h.level=()=>50;
+  F.ensure(S); S.sys.forge.lv.weapon=20; const base=St.itemsTotal(S,h).atk;
+  E.setOn(true); try{ E.ensure(S).lv.weapon=1; const up=St.itemsTotal(S,h).atk; assert.ok(up>base,'+21 aumenta o ATK ('+base+' -> '+up+')');
+    assert.strictEqual(up,St.itemStats(it,St.itemLevel(it,50),1.65).atk);
+  } finally{ E.setOn(false); } assert.strictEqual(St.itemsTotal(S,h).atk,base,'desligada: igual a antes');
+});
 t('números iguais aos do docs/balance.json (fimDasEras e posEras)',()=>{
   const fd=BAL.fimDasEras, pe=BAL.posEras, D=E.DATA;
   assert.strictEqual(fd.on,false); assert.strictEqual(D.finalStage,fd.trigger.stage);

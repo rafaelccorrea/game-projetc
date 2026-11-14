@@ -273,11 +273,13 @@ function dormantInfo(it,host){ if(!isDormant(it,host)) return {dormant:false}; c
   return {dormant:true,wakeEra:e,eraName:nm||null,label:'Adormecido · acorda na era '+(nm||e+1)}; }
 function dormantView(it,host){ if(!isDormant(it,host)) return it; const F=DATA.futureEra;
   return Object.assign({},it,{e:Math.min(int0(it.e),eraNowOf(host)+F.maxAhead),lvl:F.dormantLevel,look:Number.isInteger(it.look)?it.look:int0(it.e)}); }
+/* multiplicador da forja do espaço: Forja Astral (Sys.erasEnd) quando houver nível astral; senão o Sys.forge.mult de sempre */
+function forgeMultOf(S,slot,E,F){ if(E&&typeof E.forgeMult==='function'&&S&&typeof S==='object'){ try{ return num(E.forgeMult(S,slot),0); }catch(e){} } return F&&F.mult?F.mult(S,slot):0; }
 /* soma dos atributos dos itens equipados (só espaços abertos e itens válidos para o espaço) */
-function itemsTotal(S,host,ov){ const o=zero(), lv=playerLevelOf(S,host), F=root.Sys&&root.Sys.forge, eq=equippedOf(S,host);
+function itemsTotal(S,host,ov){ const o=zero(), lv=playerLevelOf(S,host), F=root.Sys&&root.Sys.forge, eq=equippedOf(S,host), E=root.Sys&&root.Sys.erasEnd;   /* Forja Astral +21..+25 (Sys.erasEnd.forgeMult; desligada ou sem nível astral = Sys.forge.mult exato) */
   if(ov&&ov.item&&isSlot(ov.item.slot)){ if(ov.remove) delete eq[ov.item.slot]; else eq[ov.item.slot]=ov.atLevel!=null?Object.assign({},ov.item,{lvl:ov.atLevel}):ov.item; }
   for(const slot of DATA.slots){ const it=eq[slot]; if(!it||!canEquip(it,lv)) continue;
-    const v=dormantView(it,host), st=itemStats(v,itemLevel(v,lv),F&&F.mult?F.mult(S,slot):0); for(const k of STAT_KEYS) o[k]+=st[k]; }
+    const v=dormantView(it,host), fm=forgeMultOf(S,slot,E,F), st=itemStats(v,itemLevel(v,lv),fm); for(const k of STAT_KEYS) o[k]+=st[k]; }
   return o; }
 function levelBase(lv){ const B=DATA.levelBase; lv=Math.max(1,int0(lv)); return {atk:B.atk+B.atkPer*(lv-1),hp:B.hp+B.hpPer*(lv-1),def:B.def+B.defPer*(lv-1)}; }
 /* atributos finais. pct = bônus % dos módulos Sys (fc.total), já somados; o fc.js passa. Sem host.equipped, usa host.atk/hp (modo antigo). */

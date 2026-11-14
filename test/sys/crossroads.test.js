@@ -138,5 +138,15 @@ t('perks aplicados pelos próprios módulos: Saber das Eras no Sys.level.addXp, 
   PH.DATA.on = false;
 });
 
+t('vencer a última fase da era (Senhor da Era) já apaga as bênçãos da era (protótipo aprovado)', () => {
+  CR.DATA.on = true; PH.DATA.on = true; const S = save(7), h = makeHost(), pe = CR.perEra();
+  CR.onStage(S, h, 10); const a = CR.offers(S, 10)[0].id; CR.choose(S, 10, a, h);
+  assert.strictEqual(CR.active(S).length, 1);
+  const r = CR.onStage(S, h, pe); assert.strictEqual(r.due, false); assert.deepStrictEqual(r.ended.map(x => x.id), [a]); assert.strictEqual(r.endedEra, 0);
+  assert.deepStrictEqual(CR.active(S), []); assert.strictEqual(CR.view(S, h).era, 1); assert.strictEqual(CR.view(S, h).lastEnded.era, 0);
+  assert.strictEqual(CR.onStage(S, h, pe + 1).ended, undefined, 'não apaga duas vezes');
+  PH.DATA.on = false;
+});
+
 CR.DATA.on = false;
 console.log(`crossroads: ${n} testes ok`);

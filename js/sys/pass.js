@@ -136,7 +136,9 @@ function claimMission(S,host,id){
     B=DATA.daily.some(x=>x.id===id)?o.d:o.w; B.c.push(id); m=r; }
   if(m.gems&&host&&host.addGems) host.addGems(m.gems);
   const x=addXp(S,m.pxp); const nd=id==='bonus'?ND(S,host,'missions:daily',{}):null;   // todas as diárias feitas
-  return {ok:true,gems:m.gems||0,xp:x.gained,tier:x.to,tierUp:x.to>x.from,newDrops:nd};
+  /* Brasas da Fogueira (Sys.bonfire 'missions' = +20 quando TODAS as diárias são resgatadas, o bônus; desligada = 0 e nada muda) */
+  let brasas=0; if(id==='bonus'){ const Bf=root.Sys&&root.Sys.bonfire; try{ if(Bf&&typeof Bf.addBrasas==='function') brasas=int0(Bf.addBrasas(S,'missions',1)); }catch(e){ brasas=0; } }
+  return {ok:true,gems:m.gems||0,xp:x.gained,tier:x.to,tierUp:x.to>x.from,newDrops:nd,brasas};
 }
 
 /* ---------------- recompensas ---------------- */

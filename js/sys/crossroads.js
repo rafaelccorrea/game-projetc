@@ -98,7 +98,8 @@ function setEra(o,era){ if(era>o.era){ const old=o.era, ended=Object.keys(o.pick
 /* O Engenheiro chama ao VENCER uma fase (a primeira vez ou de novo: repetir não abre de novo).
    {due:false} | {due:true, stage, key, offers} */
 function onStage(S,host,stage){ if(!on()) return {due:false,reason:'off'}; const w=where(stage); if(!w) return {due:false,reason:'stage'};
-  const o=ensure(S); const moved=setEra(o,w.era); if(moved) changed(host); const ex=moved&&moved.length?{ended:moved,endedEra:w.era-1}:{};
+  /* vencer a ÚLTIMA fase da era (Senhor da Era) já é entrar na era seguinte: as bênçãos apagam AQUI, como o protótipo aprovado mostra (antes só apagavam na 1ª vitória da era nova) */
+  const o=ensure(S), era0=o.era, to=w.n>=perEra()?w.era+1:w.era; const moved=setEra(o,to); if(moved) changed(host); const ex=moved&&moved.length?{ended:moved,endedEra:era0}:{};
   if(!w.point||w.era<o.era||o.picks[w.key]) return Object.assign({due:false,reason:w.point?'done':'none'},ex);
   if(!levelOk(S,host)) return Object.assign({due:false,reason:'level'},ex);
   if(!o.open.includes(w.key)){ o.open.push(w.key); changed(host); }
