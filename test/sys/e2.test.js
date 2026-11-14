@@ -717,7 +717,7 @@ t('guilda (Sys.guild): desligada não muda nada; sem servidor fica fechada; teto
     L.ensure(S).lvl=10; assert.strictEqual(G.status(S,h).reason,'level'); assert.strictEqual(G.status(S,h).needLevel,L.unlockLevel('guild'));
     L.ensure(S).lvl=40; assert.deepStrictEqual([G.status(S,h).open,G.status(S,h).reason],[false,'server'],'sem servidor = fechada');
     assert.strictEqual(G.canCreate(S,h).reason,'server');
-    G.setProvider({online:true,status:()=>({open:true})}); assert.strictEqual(G.status(S,h).open,true); assert.ok(G.canCreate(S,h).ok);
+    G.setProvider({online:true,status:()=>({open:true})}); assert.strictEqual(G.status(S,h).open,true); assert.ok(G.canCreate(S,h,0,0).ok); assert.strictEqual(G.canCreate(S,h).reason,'name');
     // servidor manda a guilda: tetos valem também aqui (estandarte acima do teto do nível é cortado)
     G.applyServer(S,{id:'g1',name:'Lobos',role:'officer',xp:3000,banners:{atk:9,hp:1,def:2.9,gold:4,food:20},territories:[{region:2},{region:3,capital:true}],coin:50,joinedAt:h.t-10*864e5});
     const o=G.ensure(S); assert.strictEqual(o.level,3); assert.strictEqual(o.banners.atk,1.5); assert.strictEqual(o.banners.def,0.9); assert.strictEqual(o.banners.food,3);

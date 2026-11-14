@@ -10,6 +10,27 @@
 const DATA={
   on:false,
   create:{goldk:8000},                                    // ouro de ~8 h de farm (goldk × ouro de um abate da fase); sem 💎
+  // NOME DA GUILDA (decisão do dono, 14/11): sem texto livre entre jogadores (jogo com menores). O nome é MONTADO com uma parte de cada lista
+  // ("Lobos" + "da Aurora"); o save e o servidor guardam os ÍNDICES {nameA, nameB}. REGRA FIXA: a ordem nunca muda, nada sai; só cresce NO FIM
+  // (o servidor copia estas listas: docs/GUILDA_NOME.md). Toda combinação cabe em nameMax (24) caracteres e é única mesmo sem acento/maiúscula
+  // (test/sys/guild-nome.test.js). A: substantivos no plural; B: complementos com da/do/das/dos, que servem para qualquer A (sem concordância).
+  nameMax:24,
+  nameParts:{
+    a:['Lobos','Guardiões','Viajantes','Forjadores','Falcões','Dragões','Leões','Tigres','Corvos','Mamutes',
+      'Navegantes','Arqueiros','Cavaleiros','Escudeiros','Sentinelas','Inventores','Engenheiros','Pioneiros','Andarilhos','Heróis',
+      'Campeões','Titãs','Colossos','Grifos','Fênix','Cometas','Arautos','Sábios','Alquimistas','Mensageiros',
+      'Javalis','Vigias','Errantes','Herdeiros','Defensores','Ursos','Linces','Timoneiros','Búfalos','Albatrozes'],
+    b:['da Aurora','do Vulcão','das Eras','das Cavernas','do Gelo','do Âmbar','do Bronze','do Deserto','do Oásis','das Areias',
+      'do Castelo','da Muralha','do Reino','do Galeão','dos Mares','da Bússola','do Vapor','dos Trilhos','da Fornalha','da Metrópole',
+      'do Futuro','do Plasma','do Cristal','da Órbita','das Sombras','do Abismo','do Submundo','das Estrelas','do Sol','da Lua',
+      'das Nuvens','do Tempo','do Norte','do Trovão','do Eclipse','do Vento','da Chama','da Montanha','da Floresta','do Horizonte']},
+  // ESTILO da guilda: substitui a descrição livre (que SAI). Índice styleIdx; mesma regra das listas (só cresce no fim).
+  styles:['Tranquila','Ativa todo dia','Caça chefes','Foco no Torneio','Amigos e família','Novatos bem-vindos','Rumo ao topo','Ajuda mútua'],
+  // TROCAS (iguais às do servidor): só o líder, sem custo. Nome: renameFree (da migração) vale 1 vez a qualquer hora; depois 1 a cada 30 dias (renamedAt).
+  // Estilo: 1 troca por DIA DE BRASÍLIA (Sys.clock.dayKey; styledAt).
+  rename:{everyDays:30}, restyle:{perDay:1},
+  reasonText:{name:'Escolha as duas partes do nome',name_taken:'Esse nome já existe neste servidor; troque uma das partes',style:'Escolha um estilo da lista',
+    leader:'Só o líder pode fazer essa troca',rename_cooldown:'Você poderá trocar o nome em {n} dias',restyle_cooldown:'Você poderá trocar o estilo amanhã'},
   members:{base:20, perLevel:2, max:30},                  // 20 no nível 1, +2 por nível, até 30
   roles:['leader','officer','member'], maxOfficers:4, roleName:{leader:'Líder',officer:'Oficial',member:'Membro'},
   // PERMISSÕES por cargo (spec §1): quem pode o quê
@@ -88,10 +109,36 @@ const tourneyReward=pos=>{ const p=int0(pos); const r=DATA.tourney.rewards.find(
 const createCost=host=>Math.round(DATA.create.goldk*Math.max(1,num(host&&host.goldUnit&&host.goldUnit(),1)));
 const goldBackOf=item=>Math.floor(int0(item&&item.gold)*DATA.trade.goldBack);
 
+/* ---------- NOME MONTADO e ESTILO (listas fixas; o servidor valida com as mesmas listas) ---------- */
+const isIdx=(i,list)=>typeof i==='number'&&Number.isInteger(i)&&i>=0&&i<list.length;
+const nameValid=(a,b)=>isIdx(a,DATA.nameParts.a)&&isIdx(b,DATA.nameParts.b);
+/* texto do par; '' se o par não vale */
+const nameOf=(a,b)=>nameValid(a,b)?DATA.nameParts.a[a]+' '+DATA.nameParts.b[b]:'';
+/* chave de comparação/busca: sem acento, minúsculas, espaços únicos (a mesma que o servidor usa para busca e para "nome já existe") */
+const nameFold=t=>String(t==null?'':t).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+let parseMap=null, parseLen=0;
+/* texto → {a, b} ou null (aceita maiúsculas/minúsculas, sem acento e espaços a mais) */
+function nameParse(text){ const P=DATA.nameParts; if(!parseMap||parseLen!==P.a.length*1000+P.b.length){ parseMap=new Map(); parseLen=P.a.length*1000+P.b.length;
+    for(let a=0;a<P.a.length;a++) for(let b=0;b<P.b.length;b++){ const k=nameFold(P.a[a]+' '+P.b[b]); if(!parseMap.has(k)) parseMap.set(k,{a,b}); } }
+  if(typeof text!=='string') return null; const r=parseMap.get(nameFold(text)); return r?{a:r.a,b:r.b}:null; }
+/* par sorteado (botão "Sortear" da tela; não gasta nada). rnd opcional para teste */
+function nameRandom(rnd){ const R=typeof rnd==='function'?rnd:Math.random, P=DATA.nameParts; return {a:Math.floor(R()*P.a.length)%P.a.length,b:Math.floor(R()*P.b.length)%P.b.length}; }
+const styleValid=i=>isIdx(i,DATA.styles);
+const styleOf=i=>styleValid(i)?DATA.styles[i]:'';
+/* texto da recusa (reason do módulo ou do servidor); r pode trazer retryAfterMs */
+function reasonText(r){ const k=r&&typeof r==='object'?r.reason:r, t=DATA.reasonText[k]; if(!t) return '';
+  const ms=int0(r&&typeof r==='object'?(r.retryAfterMs!=null?r.retryAfterMs:r.msLeft):0); const d=Math.max(1,Math.ceil(ms/D)); return t.replace('{n} dias',d+(d===1?' dia':' dias')); }
+/* ms até o próximo dia (Sys.clock.dayKey: Brasília com o servidor) */
+function msToNextDay(now){ const k=dayKey(now); let lo=now, hi=now+26*H; if(dayKey(hi)===k) return 26*H;
+  while(hi-lo>1){ const m=Math.floor((lo+hi)/2); if(dayKey(m)===k) lo=m; else hi=m; } return hi-now; }
+
 /* ---------- espelho do servidor no save: S.sys.guild ---------- */
 function ensure(S){ if(!S||typeof S!=='object') throw new Error('Sys.guild.ensure: save inválido'); if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.guild; if(!o||typeof o!=='object') o=S.sys.guild={}; o.v=1;
   o.id=typeof o.id==='string'&&o.id?o.id:null; o.name=typeof o.name==='string'?o.name.slice(0,24):''; o.role=DATA.roles.includes(o.role)?o.role:'member';
+  // nome montado: {nameA, nameB} (índices). Save antigo só com o texto: o par fica null e name(S) mostra o texto antigo até o líder escolher um par
+  if(nameValid(o.nameA,o.nameB)) o.name=nameOf(o.nameA,o.nameB); else { const p=nameParse(o.name); o.nameA=p?p.a:null; o.nameB=p?p.b:null; }
+  o.styleIdx=styleValid(o.styleIdx)?o.styleIdx:null; o.renameFree=o.renameFree===true; o.renamedAt=int0(o.renamedAt); o.styledAt=int0(o.styledAt);
   o.level=clamp(int0(o.level)||1,1,DATA.xpLevel.maxLevel); o.joinedAt=int0(o.joinedAt); o.leftAt=int0(o.leftAt); o.lastGuild=typeof o.lastGuild==='string'?o.lastGuild:'';
   const b=(o.banners&&typeof o.banners==='object')?o.banners:{}; o.banners={}; for(const k of BK) o.banners[k]=clamp(num(b[k],0),0,bannerCap(k,o.level));
   o.territories=Array.isArray(o.territories)?o.territories.filter(t=>t&&typeof t==='object').slice(0,DATA.territory.regions*DATA.territory.perRegion+1).map(t=>({region:clamp(int0(t.region),0,8),capital:t.capital===true})):[];
@@ -102,7 +149,7 @@ function ensure(S){ if(!S||typeof S!=='object') throw new Error('Sys.guild.ensur
   const ct=(o.contrib&&typeof o.contrib==='object')?o.contrib:{}; o.contrib={week:typeof ct.week==='string'?ct.week:'',pts:int0(ct.pts),total:int0(ct.total),log:Array.isArray(ct.log)?ct.log.filter(x=>x&&typeof x.k==='string').slice(-30).map(x=>({k:x.k,n:int0(x.n),t:int0(x.t)})):[]};
   const tr=(o.trade&&typeof o.trade==='object')?o.trade:{}; o.trade={day:typeof tr.day==='string'?tr.day:'',gave:int0(tr.gave),got:int0(tr.got),pairs:Array.isArray(tr.pairs)?tr.pairs.filter(x=>typeof x==='string').slice(0,10):[]};
   const dn=(o.daily&&typeof o.daily==='object')?o.daily:{}; o.daily={day:typeof dn.day==='string'?dn.day:'',done:Array.isArray(dn.done)?dn.done.filter(x=>typeof x==='string'):[]};
-  if(!o.id){ o.members=[]; o.xp=0; o.banners={}; for(const k of BK) o.banners[k]=0; o.territories=[]; }   // sem guilda: sem estandartes nem territórios
+  if(!o.id){ o.nameA=null; o.nameB=null; o.styleIdx=null; o.renameFree=false; o.renamedAt=0; o.styledAt=0; o.members=[]; o.xp=0; o.banners={}; for(const k of BK) o.banners[k]=0; o.territories=[]; }   // sem guilda: sem estandartes nem territórios
   return o; }
 const inGuild=S=>!!ensure(S).id;
 
@@ -116,7 +163,12 @@ function setProvider(p){ provider=p&&typeof p==='object'?Object.assign({},closed
 
 /* aplica o que o servidor mandou (GET /guild/me): {id, name, role, level, xp?, banners, territories, coin, joinedAt} — valida tetos aqui também */
 function applyServer(S,data,host){ const o=ensure(S); if(!data||typeof data!=='object'||!data.id){ if(o.id){ o.lastGuild=o.id; o.leftAt=int0(data&&data.leftAt)||nowOf(host); } o.id=null; ensure(S); return {ok:true,inGuild:false}; }
-  o.id=String(data.id); o.name=String(data.name||''); o.role=data.role; o.level=data.xp!=null?levelOfXp(data.xp).level:int0(data.level)||1; o.joinedAt=int0(data.joinedAt)||o.joinedAt;
+  o.id=String(data.id); o.name=String(data.name||'');
+  // par do servidor ({nameA, nameB}) vale mais que o texto; sem par, tenta ler o texto; texto antigo fora das listas = par null (mostra o texto)
+  if(nameValid(data.nameA,data.nameB)){ o.nameA=data.nameA; o.nameB=data.nameB; o.name=nameOf(data.nameA,data.nameB); } else { const p=nameParse(o.name); o.nameA=p?p.a:null; o.nameB=p?p.b:null; }
+  o.styleIdx=styleValid(data.styleIdx)?data.styleIdx:null; if(data.renameFree!=null) o.renameFree=data.renameFree===true;
+  if(data.renamedAt!=null) o.renamedAt=int0(data.renamedAt); if(data.styledAt!=null) o.styledAt=int0(data.styledAt);
+  o.role=data.role; o.level=data.xp!=null?levelOfXp(data.xp).level:int0(data.level)||1; o.joinedAt=int0(data.joinedAt)||o.joinedAt;
   o.banners=Object.assign({},data.banners||{}); o.territories=Array.isArray(data.territories)?data.territories:[]; if(data.coin!=null) o.coin=int0(data.coin);
   if(data.xp!=null) o.xp=int0(data.xp); if(Array.isArray(data.members)) o.members=data.members;
   ensure(S); return {ok:true,inGuild:true}; }
@@ -127,11 +179,30 @@ function status(S,host){ if(!ON()) return {on:false,open:false,reason:'off'}; co
   const ps=provider.status?provider.status(S,host):{open:false,reason:'server'};
   if(lv<nl) return {on:true,open:false,reason:'level',needLevel:nl};
   if(!ps.open) return {on:true,open:false,reason:ps.reason||'server',needLevel:nl,text:'Em breve: abre com o online'};
-  return {on:true,open:true,reason:'',needLevel:nl,inGuild:!!o.id,name:o.name,role:o.role,level:o.level,members:memberCap(o.level),coin:o.coin}; }
-/* pode criar? {ok, reason: off|server|level|in_guild|cooldown|money, gold} (o servidor confere de novo) */
-function canCreate(S,host){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason,needLevel:st.needLevel}; const o=ensure(S), gold=createCost(host);
+  return {on:true,open:true,reason:'',needLevel:nl,inGuild:!!o.id,name:name(S),nameA:o.nameA,nameB:o.nameB,nameLegacy:!!o.id&&o.nameA==null,
+    styleIdx:o.styleIdx,style:styleOf(o.styleIdx),role:o.role,level:o.level,members:memberCap(o.level),coin:o.coin}; }
+/* nome para mostrar: o par guardado; sem par (save antigo), o texto antigo */
+function name(S){ const o=ensure(S); return nameValid(o.nameA,o.nameB)?nameOf(o.nameA,o.nameB):o.name; }
+/* pode criar? {ok, reason: off|server|level|in_guild|cooldown|name|style|money, gold, body} — EXIGE o par (a, b) das listas; style opcional.
+   body = o que vai no POST /guilds: {nameA, nameB, styleIdx?} (sem texto livre). O servidor confere tudo de novo (e responde name_taken) */
+function canCreate(S,host,a,b,style){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason,needLevel:st.needLevel}; const o=ensure(S), gold=createCost(host);
   if(o.id) return {ok:false,reason:'in_guild'}; const cd=cooldownLeft(S,host,null); if(cd>0) return {ok:false,reason:'cooldown',msLeft:cd};
-  if(host&&typeof host.canSpendGold==='function'&&!host.canSpendGold(gold)) return {ok:false,reason:'money',gold}; return {ok:true,gold}; }
+  if(!nameValid(a,b)) return {ok:false,reason:'name'}; if(style!=null&&!styleValid(style)) return {ok:false,reason:'style'};
+  if(host&&typeof host.canSpendGold==='function'&&!host.canSpendGold(gold)) return {ok:false,reason:'money',gold};
+  const body={nameA:a,nameB:b}; if(style!=null) body.styleIdx=style; return {ok:true,gold,name:nameOf(a,b),body}; }
+/* troca de NOME: só o líder, sem custo. renameFree (migração) vale 1 vez a qualquer hora; depois 1 a cada 30 dias.
+   {ok, reason: off|server|leader|rename_cooldown|name, retryAfterMs, free} — free = esta troca gasta a troca grátis da migração */
+function canRename(S,host,a,b){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason}; const o=ensure(S);
+  if(!o.id||o.role!=='leader') return {ok:false,reason:'leader'};
+  if(!o.renameFree&&o.renamedAt){ const left=DATA.rename.everyDays*D-(nowOf(host)-o.renamedAt); if(left>0) return {ok:false,reason:'rename_cooldown',retryAfterMs:left,free:false}; }
+  if(a!==undefined||b!==undefined){ if(!nameValid(a,b)) return {ok:false,reason:'name'}; }
+  return {ok:true,free:o.renameFree,retryAfterMs:0}; }
+/* troca de ESTILO: só o líder, sem custo, 1 por dia de Brasília. {ok, reason: off|server|leader|restyle_cooldown|style, retryAfterMs} */
+function canRestyle(S,host,i){ const st=status(S,host); if(!st.open) return {ok:false,reason:st.reason}; const o=ensure(S), now=nowOf(host);
+  if(!o.id||o.role!=='leader') return {ok:false,reason:'leader'};
+  if(o.styledAt&&dayKey(o.styledAt)===dayKey(now)) return {ok:false,reason:'restyle_cooldown',retryAfterMs:msToNextDay(now)};
+  if(i!==undefined&&!styleValid(i)) return {ok:false,reason:'style'};
+  return {ok:true,retryAfterMs:0}; }
 /* espera depois de sair: 24 h para qualquer guilda; 7 dias para voltar à MESMA */
 function cooldownLeft(S,host,guildId){ const o=ensure(S); if(!o.leftAt) return 0; const L=DATA.leave, t=nowOf(host)-o.leftAt;
   const need=(guildId&&guildId===o.lastGuild)?L.sameGuildDays*D:L.cooldownH*H; return Math.max(0,need-t); }
@@ -185,6 +256,7 @@ function addContribution(S,host,kind,n){ if(!ON()) return {ok:false,reason:'off'
 /* barra de nível da guilda pelo XP (o servidor manda o XP; local = 0): {level, into, need, frac, max} */
 function xpBar(S){ const o=ensure(S), L=levelOfXp(o.xp); return {level:L.level,into:L.into,need:L.need,frac:L.need?L.into/L.need:1,max:L.level>=DATA.xpLevel.maxLevel}; }
 const API={DATA,can,members,contribRanking,addContribution,xpBar,territoryPoints,canAttackCapital,seasonPhase,xpToNext,levelOfXp,memberCap,bannerCap,territoryBonus,canAttackRegion,tourneyReward,createCost,goldBackOf,
+  nameParts:DATA.nameParts,styles:DATA.styles,nameOf,nameValid,nameParse,nameFold,nameRandom,name,styleOf,styleValid,reasonText,canRename,canRestyle,
   ensure,inGuild,setProvider,applyServer,status,canCreate,canJoin,cooldownLeft,itemTradable,canDonate,received,markDonated,bonus,perks,
   get provider(){ return provider; }};
 root.Sys=root.Sys||{}; root.Sys.guild=API;
