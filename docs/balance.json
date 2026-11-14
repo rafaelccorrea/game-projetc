@@ -1495,6 +1495,8 @@
       "hpShareOfBoss": 0.1,
       "dmgShareOfBoss": 0.05,
       "dmgPostDefShareOfBoss": 0.25,
+      "minHitPctOfRefHp": 0.025,
+      "_minHitPctOfRefHp": "QA no S24 14/11 (save novo, fases 1-1 e 1-2): o golpe do comum voltava a tirar 1 de vida (0,4-0,7%), porque 25% do golpe do chefe é pouco quando a vida do herói é ~140. Piso: cada golpe de comum e escolta, DEPOIS da DEF do herói de referência, tira pelo menos 2,5% da vida dele (o js/diff.js sobe o dano bruto até isso). Nas fases altas o 25% do chefe já passa disso e nada muda.",
       "_uso": "cada inimigo comum (e cada escolta) tem 10% da vida e 5% do dano do chefe da MESMA fase (calculado pela FC pedida). Comum não é parede: com 100% da FC morre em ~3 s; uma onda de 7 comuns tira ~35% do dano do chefe por segundo. O idle continua dando recurso na parede.",
       "_dmgPostDefShareOfBoss": "P0 do dono (14/11, os bots davam -1): o golpe de cada comum e escolta, DEPOIS da DEF do herói de referência, é 25% do golpe do chefe da mesma fase (também depois da DEF). O js/diff.js acha o dano bruto que dá isso; com este campo o dmgShareOfBoss deixa de valer. A conta do dano do chefe já desconta o dano das escoltas."
     },
