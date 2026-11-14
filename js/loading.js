@@ -24,7 +24,9 @@ function loadImgP(path){ return PRE().get(path).p.then(e => e.ok ? e.img : null)
    barra espera é a MESMA instância que a batalha desenha. Sys.assets (manifesto de pacotes, hoje DESLIGADO: needed() devolve {on:false}) entra quando ligar:
    os arquivos dos pacotes hero:/mount:/pet:/enemy: que ele pedir e que não estiverem na lista são somados (só .png/.json desses pacotes da era atual). */
 function sceneList(opt){ opt = opt || {}; const part = opt.part || 'all', era = opt.era != null ? opt.era : eraOf(S.stage), urls = [], tasks = [], add = u => { if (u && urls.indexOf(u) < 0) urls.push(u); };
-  const sheet = s => { if (s && s.base){ add(s.base + '.png'); add(s.base + '.json'); } };
+  /* PERSONAGEM PARADO (dono 14/11): o arquivo decodificado (Preload) NÃO é a folha pronta: a folha só fica ok depois do pino (js/stage.js sheetLoad/sheetPin, até 8 s).
+     A tela de carregamento e o eraReady liberavam com os arquivos prontos e o 1º golpe/dano/morte saía como imagem PARADA. A tarefa 'folhas prontas' espera as folhas. */
+  const sps = [], sheet = s => { if (s && s.base){ add(s.base + '.png'); add(s.base + '.json'); if (s.p && !s.ok && sps.indexOf(s.p) < 0) sps.push(s.p); } };
   if (part !== 'hero'){   /* ---- era: cenário, inimigos e chefe ---- */
     const sc = sceneGet(era); if (sc) tasks.push({ label: 'cenário vivo da era ' + era, p: Promise.resolve(sc.ready).then(() => !sc.fail && !!sc.api && Promise.resolve(sc.api.ready).then(() => true)) }); else { IMG(bgPath(era)); add(bgPath(era)); }
     if (era < ERAS.length) EN_IDS(era).forEach(k => { add(`assets/enemies/${k}.png`); IMG(`assets/enemies/${k}.png`); enPreload(k); const T = ENEMY_SETS[k]; if (T) for (const st in T) if (enOn(k, st)) sheet(sheetLoad(T[st], true)); }); }
@@ -68,6 +70,7 @@ function sceneList(opt){ opt = opt || {}; const part = opt.part || 'all', era = 
   if (part !== 'era'){
     try { const A = window.Sys && Sys.assets, n = A && A.needed ? A.needed(S, Sys.host) : null; if (n && n.on && Array.isArray(n.packs)) for (const id of n.packs) if (/^(hero|mount|pet|enemy):/.test(id) && !/^enemy:/.test(id) || id === 'enemy:' + era) A.filesOf(id).filter(f => /\.(png|json)$/.test(f)).forEach(add); } catch (e) {}
   }
+  if (sps.length) tasks.push({ label: 'folhas prontas (' + sps.length + ')', p: Promise.all(sps.map(q => Promise.resolve(q).catch(() => null))).then(() => true) });
   return { urls, tasks, later }; }
 /* manifesto de pacotes (assets/manifest.json) para o Sys.assets: uma vez, dentro da barra; falhou = segue só com a lista do jogo */
 function loadManifest(){ if (LD.manP) return LD.manP; const A = window.Sys && Sys.assets; if (!A || typeof A.setManifest !== 'function' || typeof A.sceneSet !== 'function') return LD.manP = Promise.resolve(false);
@@ -95,7 +98,10 @@ function loadLater(){ const L = LD.later; LD.later = null; if (L && L.length) PR
    atual e a próxima ficam na memória: sceneTrim solta os cenários vivos das outras. */
 const ERA_P = {}, LOAD_STALL_S = 15;
 function eraReady(era){ if (era < 0 || era >= ERAS.length) return true; let o = ERA_P[era]; if (!o){ o = ERA_P[era] = { ok: false }; const go = () => { let L; try { L = sceneList({ era, part: 'era' }); } catch (e) { console.error('eraReady', e); o.ok = true; return; }
-      Promise.all([PRE().ready(L.urls, { timeout: 25000 }), PRE().all(L.tasks.map(t => t.p), 25000)]).then(r => { o.ok = true; if (r[0] && r[0].failed.length) console.warn('Preload: era ' + era + ' entra com reserva para', r[0].failed); }, () => { o.ok = true; }); };
+      Promise.all([PRE().ready(L.urls, { timeout: 25000 }), PRE().all(L.tasks.map(t => t.p), 25000)]).then(r => { const bad = r[0] && r[0].failed.length ? r[0].failed : null;
+        /* carga (dono 14/11): faltou arquivo = pede DE NOVO os que falharam (até 2 rodadas, 3 s entre elas) antes de deixar a era entrar com a reserva */
+        if (bad && (o.n || 0) < 2){ o.n = (o.n || 0) + 1; setTimeout(() => { PRE().retry(bad).then(() => { try { artDropFailed(); } catch (e) {} go(); }, go); }, 3000); return; }
+        o.ok = true; if (bad) console.warn('Preload: era ' + era + ' entra com reserva para', bad); }, () => { o.ok = true; }); };
     loadManifest().then(go, go); }
   return o.ok; }
 /* solta os cenários vivos que não são da era atual nem da próxima (memória; o celular chegou a ~800 MB) */
@@ -218,18 +224,18 @@ function loadFail(PG, stall){ if (LD.failUI) return; const foot = LD.el.querySel
   box.innerHTML = '<p style="margin:0;font-size:13px;font-weight:800;color:#ffd7a8;text-align:center">' + (stall ? 'O carregamento parou.' : n === 1 ? '1 arquivo não carregou.' : n + ' arquivos não carregaram.') + ' Confira a conexão.</p>' +
     (who ? '<p id="lwho" style="margin:0;font-size:11px;font-weight:700;color:#cfc6ea;text-align:center;word-break:break-word">Falta: ' + who + '</p>' : '') +
     '<div style="display:flex;gap:10px"><button type="button" id="lretry" style="' + bt + 'flex:0 0 auto;white-space:nowrap;border:2px solid #7a4a12;background:#ffc94a;color:#3a2206">Tentar de novo</button>' +
-    '<button type="button" id="lskip" style="' + bt + 'border:2px solid #6a5a48;background:#2a2019;color:#f6ecdf">Continuar mesmo assim</button></div>';
+    ((LD.tries || 0) >= 2 ? '<button type="button" id="lskip" style="' + bt + 'border:2px solid #6a5a48;background:#2a2019;color:#f6ecdf">Continuar mesmo assim</button>' : '') + '</div>';   /* carga (dono 14/11): nunca entrar pela metade; a saída só aparece depois de 2 tentativas (arquivo que não existe não pode prender o jogador para sempre) */
   document.getElementById('lstep').textContent = 'Faltam ' + n + ' de ' + PG.total + ' arquivos'; const tip = document.getElementById('ltip'); if (tip) tip.style.display = 'none'; foot.appendChild(box); loadFailFit();
   console.warn(stall ? 'Carregamento: nada progrediu por ' + LOAD_STALL_S + ' s; pendentes (' + n + '): ' + names.join(' | ') : 'Carregamento: arquivos que faltaram: ' + names.join(' | '));
   const off = ev => ev.stopPropagation();
-  box.querySelector('#lretry').addEventListener('pointerup', off); box.querySelector('#lskip').addEventListener('pointerup', off);
-  box.querySelector('#lretry').addEventListener('click', () => { const wasStall = box.stall; loadFailOff(); document.getElementById('lstep').textContent = 'Tentando de novo…';
+  const skipB = box.querySelector('#lskip'); box.querySelector('#lretry').addEventListener('pointerup', off); if (skipB) skipB.addEventListener('pointerup', off);
+  box.querySelector('#lretry').addEventListener('click', () => { const wasStall = box.stall; LD.tries = (LD.tries || 0) + 1; loadFailOff(); document.getElementById('lstep').textContent = 'Tentando de novo…';
     if (wasStall){ PRE().retry(); PRE().track(Promise.resolve(true), 'nova tentativa'); return; }   /* rede parada: os pedidos pendentes seguem (cada um se refaz sozinho); a tarefa vazia marca progresso e dá mais LOAD_STALL_S s antes de avisar de novo */
     /* só o que falhou: solta as folhas/imagens marcadas com falha nos caches do jogo e pede de novo pela mesma lista */
     artDropFailed();
     LD.retrying = true; const again = () => { PRE().reset(); try { sceneQueue(false); } catch (er) { console.error(er); } LD.retrying = false; };   /* enquanto refaz, o laço não reabre o aviso com a conta do lote anterior */
     PRE().retry().then(again, again); });
-  box.querySelector('#lskip').addEventListener('click', () => { loadFailOff(); LD.skipFail = true; }); }
+  if (skipB) skipB.addEventListener('click', () => { loadFailOff(); LD.skipFail = true; }); }
 function closeLoading(){
   if (LD.closed) return; LD.closed = true; const el = LD.el;
   el.classList.add('out'); setTimeout(() => { LD.scn.forEach(a => { try { if (a) (a.release || a.stop).call(a); } catch (e) {} }); el.remove(); }, 480);   /* cenas da tela de carregamento: descartadas → soltam os bitmaps */

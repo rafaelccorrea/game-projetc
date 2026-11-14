@@ -403,9 +403,15 @@ function drawHeroAnim(H){
   if (F.hero !== 'kael' || F.skin){ drawHeroPhase(H, F.stage); return true; }   /* Engenheiro 10: Kael com SKIN FIXA segue o mesmo caminho (folhas da pasta da skin: parado, corrida, golpe, giro, morte); nunca o corpo padrão */   /* KAIA (Engenheiro 4): sempre as folhas DELA; enquanto carregam não aparece nada por um instante (nunca o Kael no lugar) */
   const L = layNow(H);   /* camadas da roupa-skin (ou null) */
   if (!L && H.main && H.deadP < 0 && H.act && ((H.act.type === 's2' && H.act.spin && H.act.spin.ok) || (H.act.type === 's1' && H.act.trail && H.act.trail.ok))) return drawHeroSpin(H);   /* com roupa-skin em camadas a folha composta (corpo já pintado) não vale: corpo + arma na mão */
-  const set = heroSet(H.sk.e), a = H.deadP >= 0 ? null : H.act, ws = H.ws, gun = wIsGun(ws), t = H.t;
-  const st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle';
-  const sh = SHEET(set[st]); if (!sh) return false;
+  const set = heroSet(H.sk.e), ws = H.ws, gun = wIsGun(ws), t = H.t; let a = H.deadP >= 0 ? null : H.act;
+  let st = a ? 'attack' : (H.walking && H.deadP < 0) ? 'run' : 'idle';
+  /* PERSONAGEM PARADO (dono 14/11: "nunca mostrar o herói congelado"): a folha do estado ainda não ficou pronta (ex.: a de golpe esperando o pino, js/preload.js
+     pin, até 8 s). Antes caía no sprite PARADO antigo (drawHero do js/battle.js). Agora: usa a parado/corrida que estiver pronta (animada, sem o golpe por um
+     instante); nenhuma pronta e nenhuma com falha = não desenha neste quadro (a carga está a caminho); só com FALHA de verdade vale a reserva antiga. */
+  let sh = SHEET(set[st]);
+  if (!sh){ const sI = SHEET(set.idle), sR = sI ? null : SHEET(set.run); sh = sI || sR;
+    if (!sh) return !(sheetLoad(set[st]).fail || sheetLoad(set.idle).fail);
+    st = sI ? 'idle' : 'run'; a = null; }
   const CT = L ? -1 : heroCompTier(H.sk, H.ws), comp = CT >= 0 ? heroCompImg(st, CT) : null, bimg = layBody(sh, L);   // folha composta (ou null = corpo + arma na mão)
   if (CT >= 0){ heroCompImg('run', CT); heroCompImg('idle', CT); heroCompImg('attack', CT); }   // deixa as três carregadas: sem troca de modo no meio da ação
   const M = sh.meta, FW = M.w, FH = M.h, n = M.frames;

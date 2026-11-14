@@ -787,7 +787,7 @@ function step(dt){
   /* Engenheiro 5: ERA NOVA só entra com cenário, inimigos e chefe DECODIFICADOS (eraReady, js/loading.js). Enquanto carrega, o herói segue correndo no cenário
      antigo com um aviso curto; no máximo ERA_HOLD_MAX s de jogo (depois entra com a reserva: nunca trava). */
   B.eraHold=false; if(!B.inst&&typeof eraReady==='function'){ const ne=eraOf(S.stage); if(ne!==B.dispEra&&!eraReady(ne)&&(B.eraWait||0)<ERA_HOLD_MAX){ B.eraHold=true; B.eraWait=(B.eraWait||0)+dt; } else if(ne===B.dispEra) B.eraWait=0; }
-  if(B.toSpawn.length&&!B.eraHold&&!(BOSS_AFTER_ESCORTS&&B.toSpawn[0]==='boss'&&B.en.length)){ B.spawnT-=dt; if(B.spawnT<=0){ const k=B.toSpawn.shift(), e=(B.inst&&typeof instMk==='function')?instMk(k):mkEnemy(S.stage,k); B.en.push(e); if(typeof bpSpawn==='function') bpSpawn(e);   /* js/battlepolish.js: ondas sem buraco (chave desligada = não faz nada) */
+  if(B.toSpawn.length&&!B.eraHold&&!(BOSS_AFTER_ESCORTS&&B.toSpawn[0]==='boss'&&B.en.length)){ B.spawnT-=dt; if(B.spawnT<=0&&enSpawnOk(B.toSpawn[0],dt)){ const k=B.toSpawn.shift(), e=(B.inst&&typeof instMk==='function')?instMk(k):mkEnemy(S.stage,k); B.en.push(e); if(typeof bpSpawn==='function') bpSpawn(e);   /* js/battlepolish.js: ondas sem buraco (chave desligada = não faz nada) */
       B.spawnT=(B.toSpawn[0]==='boss'?1:0)+0.55+Math.random()*0.4;
       if(e.boss){ snd('boss_appear'); vib(60); B.banner={txt:e.eraBoss?'SENHOR DA ERA':'CHEFE',sub:'',t:0,dur:1.4,col:'#ff5252'}; } } }
   layoutHorde();
@@ -838,7 +838,7 @@ function step(dt){
   B.sysT-=dt; if(B.sysT<=0){ B.sysT=1; sysSync(); }   /* 1 vez por segundo: chave dos golpes especiais / caminho mudou? conjunto do Grimório? */
   if(!B.en.length&&!B.toSpawn.length&&B.waveT<=0) waveClear();
 }
-const ERA_HOLD_MAX=20;
+const ERA_HOLD_MAX=45;   /* carga (dono 14/11: nada entra pela metade): 20 -> 45 s de jogo; o eraReady (js/loading.js) agora espera também o pino das folhas e tenta de novo o que falhou */
 
 /* ---------- assets (sprites com cache + fallback) ---------- */
 const IMGS={};
@@ -1202,6 +1202,13 @@ for(const E of EN_ANIM_ERAS) for(const kd of ['e0','e1','boss']){ const key=`era
 const EN_FEET_DEFAULT=243;   // linha dos pés na célula de 256 quando o .json não traz feetY
 const EN_ATK_DUR=1.0, EN_HURT_DUR=0.4, EN_DIE_DUR=1.0;     // reservas (sem .json): cada folha toca no fps do próprio .json (shDur)
 function enSheet(e,st){ const T=ENEMY_SETS[e.key]; if(!T||!T[st]||!enOn(e.key,st)) return null; const sh=sheetLoad(T[st],true); return sh.ok?sh:null; }
+/* PERSONAGEM PARADO (dono 14/11): inimigo só ENTRA EM CENA com todas as folhas dele prontas (corrida, golpe, dano, morte: decodificadas e com o pino resolvido) e o
+   sprite de referência (tamanho). Antes, folha ainda a caminho = o inimigo aparecia como imagem PARADA deslizando (dspr no drawEnemyAt). Folha com FALHA não segura.
+   enSpawnOk(k,dt): k = 'e0'|'e1'|'boss' ou o objeto da instância ({kind}); segura o surgimento no máximo EN_HOLD_MAX s de jogo (nunca trava a luta). */
+const EN_HOLD_MAX=10;
+function enReady(key){ const p=`assets/enemies/${key}.png`; let ok=!!SPR(p,'enemy')||!!(IMGS[p]&&IMGS[p].fail); const T=ENEMY_SETS[key]; if(T) for(const st in T) if(enOn(key,st)){ const s=sheetLoad(T[st],true); if(!s.ok&&!s.fail) ok=false; } return ok; }
+function enSpawnOk(k,dt){ const kind=typeof k==='string'?k:(k&&k.kind)||'e0', key=`era${eraOf(S.stage)}_${kind}`; let ok=true; try{ ok=enReady(key); }catch(er){ ok=true; }
+  if(ok||(B.enWait||0)>=EN_HOLD_MAX){ if(!ok) console.warn('Carga: inimigo '+key+' entrou sem todas as folhas depois de '+EN_HOLD_MAX+' s'); B.enWait=0; return true; } B.enWait=(B.enWait||0)+dt; return false; }
 function enPreload(key){ const T=ENEMY_SETS[key], out=[]; if(T) for(const k in T) if(enOn(key,k)) out.push(sheetLoad(T[k],true).p.then(s=>{ if(s){ try{ enBounds(s); }catch(e){} } return s; })); return out; }   /* os limites opacos de cada folha são medidos AQUI, no carregamento da era (tela de loading), não na 1ª onda */
 /* LIMITES OPACOS POR QUADRO de cada folha (medidos uma vez, na 1ª vez que a folha é desenhada): l, r, t, b em px do quadro (alfa > 40).
    Usados para cumprir o contrato SEM mexer na arte: (1) em combate, golpe, dano e morte nada opaco passa de x=382 nem fica abaixo de x=8: o quadro que
