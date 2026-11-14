@@ -2,6 +2,12 @@
 
 Cada pedido vira uma linha: o que é, quem faz e em que pé está. O PO atualiza na hora. `[x]` feito · `[~]` em andamento · `[ ]` na fila · `[?]` espera decisão do dono
 
+## 14/11/2026 (manhã)
+- [x] **Dificuldade das eras 0-8 na opção A** (meio-termo): com módulos o Senhor cai em ~22-34 s; sem módulos vence com ~115% da FC pedida (0bbd70a, b87e350) · Sistemas
+- [?] **Calendário do jogador grátis**: com módulos chega ao fim das 9 eras no dia ~121 (plano original 178; sem a recalibração seria 74); sem módulos trava na era 7. Para ir a ~178 a FC das eras 6-8 subiria e o chefe com módulos passaria dos 30 s. Recomendação do PO: manter ~121 · dono decide
+- [x] **Pacote da Play Store ≤150 MB** (base estava 161 MB): arte de telas tardias baixa logo após instalar + compressão sem perda (decisão do PO, sem mudança visual) · Engenheiro + Arte + Sistemas
+- [~] **Aquecimento do S24**: batalha para de desenhar atrás de telas cheias (no main); medir antes/depois · Engenheiro
+
 ## 14/11/2026 (madrugada)
 - [x] **Teto de +25% no bônus de ouro** aprovado e aplicado
 - [~] **~40 créditos para as peças pintadas das telas votadas** liberados ("tô ficando meio com medo… dessa vez vou liberar"): teto 38, peças em grade, 1 teste antes de cada grupo, no máximo 1 refação por peça · Arte + PO
