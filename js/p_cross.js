@@ -158,6 +158,10 @@ body.fb.pcx.pcx #toast{top:calc(var(--fbsafe,0px) + var(--pcxt,180px) * var(--fb
 .pc-bb .lb{font-size:10.5px;line-height:12px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000,0 0 5px #000;white-space:nowrap}
 .pc-bb .ct{position:absolute;right:-5px;top:-4px;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403;border:2px solid #1a110b;font-style:normal;font-size:12px;font-weight:900;display:grid;place-items:center}
 .pc-bb .ct.ex{background:linear-gradient(180deg,#ff9a4a,#d8461a);color:#fff}
+.pc-bb.sm{gap:1px}
+.pc-bb.sm .r svg{width:22px;height:22px}
+.pc-bb.sm .lb{font-size:9px;line-height:11px}
+.pc-bb.sm .ct{right:auto;left:-3px;top:-5px;min-width:18px;height:18px;padding:0 3px;border-radius:9px;font-size:11px}
 .pc-bb.bump .r{animation:pc-bump .45s ease-out}
 @keyframes pc-bump{40%{transform:scale(1.18)}}
 @media (prefers-reduced-motion:reduce){.pc-ov,.pc-xm,.pc-badge,.pc-bb.bump .r{animation:none}}`;
@@ -247,11 +251,22 @@ function toastGap(top){ try{ const b=document.body; if(!b||!b.classList) return;
 /* topo do botão Bênçãos: a vaga livre seguinte da coluna da esquerda do HUD (passo de 78 px a partir de 136, tabela FB_MENU do js/fullbattle.js);
    sem a tabela, a posição do protótipo (290) */
 function bbTop(){ try{ if(typeof FB_MENU!=='undefined'&&Array.isArray(FB_MENU)){ let n=0; for(const m of FB_MENU){ if(m.side!=='left') continue; if(typeof fbUnl==='function'&&!fbUnl(m.id)) continue; if(typeof m.show==='function'&&!m.show()) continue; n++; } return 136+78*n; } }catch(e){} return 290; }
+/* NADA COBRE NADA (a mesma ideia do place() do js/grimhud.js): o botão ocupa x 12 a 70 e 74 px de altura; as barras do herói (#fb_kb do js/fullbattle.js, 128 px a partir
+   de x 44, 26 px de altura) passam por ali quando a coluna esquerda tem 4 ícones. Cruzando a altura delas, o botão encolhe para caber à esquerda (x 3 a 41);
+   se nem assim couber (barras coladas na borda), desce para baixo delas. Só LÊ os estilos que o fullbattle escreve; sem eles vale o lugar de sempre. */
+const BB={left:12,w:58,h:74,ring:52,edge:3,min:32,kbH:26,gap:6};
+function bbPlace(top){ const P={top:top,left:BB.left,w:BB.w,h:BB.h,ring:BB.ring,sm:false};
+  try{ const kb=document.getElementById('fb_kb'), ks=kb&&kb.style, kl=ks?parseFloat(ks.left):NaN, kt=ks?parseFloat(ks.top):NaN;
+    if(isFinite(kl)&&isFinite(kt)&&!(ks.display==='none')&&kl<BB.left+BB.w&&kt+BB.kbH>top&&kt<top+BB.h){ const w=Math.floor(kl-2-BB.edge);
+      if(w>=BB.min){ P.sm=true; P.left=BB.edge; P.w=Math.min(BB.w,w); P.ring=P.w-2; P.h=P.ring+1+11; }
+      else P.top=Math.ceil(kt+BB.kbH+BB.gap); } }catch(e){}
+  return P; }
 function hudHtml(o){ o=o||{}; X.le=null; X.bt=null; if(!hudOn()) return ''; const v=viewOf(); if(!v) return ''; X.le=v.lastEnded||null; const act=Array.isArray(v.active)?v.active:[], pend=pendOf(v); if(!act.length&&!pend.length) return '';
   let h='';
   if(pend.length){ const f=pend[0], bt=o.badgeTop!=null?+o.badgeTop:badgeTop(); X.bt=bt; h+='<button class="pc-badge" data-pc="badge" style="top:'+bt+'px" aria-label="Encruzilhada da fase '+esc(lbl(f))+' esperando: toque para escolher">'+CROSS+'<span><b class="pc-lil">Encruzilhada</b><small>fase '+esc(lbl(f))+' · escolha 1 de '+(offersOf(f).length||2)+'</small></span></button>'; }
   const al=act.length===1?'1 ativa':act.length+' ativas';
-  h+='<button class="pc-bb'+(Date.now()-X.bump<600?' bump':'')+'" data-pc="list" style="top:'+(o.bbTop!=null?+o.bbTop:bbTop())+'px" aria-label="Bênçãos da era: '+al+(pend.length?', encruzilhada esperando':'')+'"><span class="r">'+CROSS+(pend.length?'<em class="ct ex">!</em>':act.length?'<em class="ct">'+act.length+'</em>':'')+'</span><span class="lb">Bênçãos</span></button>';
+  const bp=bbPlace(o.bbTop!=null?+o.bbTop:bbTop());
+  h+='<button class="pc-bb'+(bp.sm?' sm':'')+(Date.now()-X.bump<600?' bump':'')+'" data-pc="list" style="top:'+bp.top+'px'+(bp.sm?';left:'+bp.left+'px;width:'+bp.w+'px;height:'+bp.h+'px':'')+'" aria-label="Bênçãos da era: '+al+(pend.length?', encruzilhada esperando':'')+'"><span class="r"'+(bp.sm?' style="width:'+bp.ring+'px;height:'+bp.ring+'px"':'')+'>'+CROSS+(pend.length?'<em class="ct ex">!</em>':act.length?'<em class="ct">'+act.length+'</em>':'')+'</span><span class="lb">Bênçãos</span></button>';
   return h; }
 function hudClick(b){ const a=b&&b.dataset?b.dataset.pc:''; if(a!=='badge'&&a!=='list') return false; sfx('ui_tap');
   try{ if(window.Panels&&typeof Panels.open==='function') Panels.open(N,a==='list'?{mode:'list'}:{}); }catch(e){} return true; }

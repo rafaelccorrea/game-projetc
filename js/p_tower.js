@@ -136,6 +136,7 @@ function twClick(b,ev){
   if(a==='climb'){ if(!tOk()) return; const o=Sys.tower.ensure(S,Sys.host);
     if(o.lossesLeft<=0){ snd('ui_tap'); if(typeof toast==='function') toast('Suas tentativas de hoje acabaram. Voltam amanhã'); return; }
     const r=Sys.tower.fight(S,Sys.host); if(!r||!r.ok){ snd('ui_tap'); if(typeof toast==='function') toast(r&&r.reason==='locked'?'A Torre libera no nível '+(r.level||'?'):'Não foi possível desafiar agora'); render(); return; }
+    try{ if(r.win&&typeof grimSrc==='function') grimSrc('tower',{id:'floor-'+r.floor,floor:r.floor}); }catch(e){}   /* Grimório: tinta a cada 10 andares (o módulo recusa os outros andares) */
     { const sc=document.getElementById('pt_sc'); if(sc&&typeof sc.scrollTop==='number'){ sc.scrollTop=tScrollFor(XTW.best,XTW.best,XTW.n)*XTW.k; tPaint(); if(sc.style) sc.style.overflowY='hidden'; } }   /* câmera no par de andares da luta e sem rolar durante ela */
     XTW.busy=true; XTW.last=r;
     try{ if(typeof statsChanged==='function') statsChanged(); else if(typeof save==='function') save(); }catch(e){}   /* a vitória/derrota e os prêmios JÁ estão no save: grava agora, mesmo que o jogador saia antes do fim da animação */

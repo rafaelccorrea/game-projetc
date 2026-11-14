@@ -85,20 +85,23 @@ function scrMissions(){
 /* XP do JOGADOR: missão diária e bônus das diárias dão XP (Sys.level), como o resgate do Passe antigo (js/screens2.js 'mclaim'); a semanal não dá */
 function mPlayerXp(id){ try{ const P=Sys.pass, daily=id==='bonus'||(P.DATA&&P.DATA.daily||[]).some(x=>x.id===id); if(!daily||!Sys.level) return null;
     const lr=id==='bonus'?Sys.level.onDailyBonus(S,Sys.host):Sys.level.onMission(S,Sys.host); if(lr&&lr.levels>0&&typeof onLevelUp==='function') onLevelUp(lr); return lr; }catch(e){ return null; } }
+/* Grimório, fonte do dia: 1 de tinta por missão DIÁRIA (ou bônus das diárias) resgatada; a semanal não entra. Chamado UMA vez por resgate certo, junto do mPlayerXp */
+function mGrim(id){ try{ if((id==='bonus'||((Sys.pass.DATA&&Sys.pass.DATA.daily)||[]).some(x=>x.id===id))&&typeof grimSrc==='function'){ const g=grimSrc('mission',{id:id},true); return g&&g.ok?g:null; } }catch(e){} return null; }
+const mGrimTxt=(p,i)=>{ try{ return typeof grimSrcTxt==='function'?grimSrcTxt(p|0,i|0):''; }catch(e){ return ''; } };
 function mClaim(src,id){ let r;
   if(src==='guide'){ r=Sys.guide.claim(S,Sys.host); if(!r||!r.ok) return null; return {txt:mGuideRw(r.got&&typeof r.got==='object'?r.got:null)||'Recompensa recebida'}; }
   if(src==='ach'){ const a=(mAch()||[]).find(x=>x.id===id); r=a&&a.claim?a.claim():null; return r&&r.ok?{txt:r.txt||'Recompensa recebida'}:null; }
-  r=Sys.pass.claimMission(S,Sys.host,id); if(!r||!r.ok) return null; mPlayerXp(id); return {txt:[r.gems?'+'+r.gems+' gemas':'', r.xp?'+'+r.xp+' XP do Passe':'', r.tierUp?'Passe subiu de nível':''].filter(Boolean).join(' · ')}; }
+  r=Sys.pass.claimMission(S,Sys.host,id); if(!r||!r.ok) return null; mPlayerXp(id); const gm=mGrim(id); return {txt:[r.gems?'+'+r.gems+' gemas':'', r.xp?'+'+r.xp+' XP do Passe':'', r.tierUp?'Passe subiu de nível':'', gm?mGrimTxt(gm.pages,gm.ink):''].filter(Boolean).join(' · ')}; }
 function miClick(b){
   const a=b.dataset.x; if(!mOk()) return;
   if(a==='tab'){ XMI.tab=b.dataset.t; mSnd('ui_tap'); render(); return; }
   if(a==='claim'){ const r=mClaim(b.dataset.src,b.dataset.id); if(!r){ mSnd('ui_tap'); miToast('Esta missão ainda não pode ser resgatada'); render(); return; } mSnd('claim'); mChanged(); miToast(r.txt); render(); return; }
   if(a==='mark'){ const A=mActOn()?mActivity():null; const r=A&&A.claim?A.claim(b.dataset.id):null; if(!r||!r.ok){ mSnd('ui_tap'); miToast('Este baú ainda não pode ser resgatado'); return; } mSnd('claim'); mChanged(); miToast(r.txt||'Baú resgatado'); render(); return; }
-  if(a==='all'){ mSnd('ui_tap'); let n=0, gems=0, xp=0; const tryOne=(src,id)=>{ const r=src==='guide'?null:Sys.pass.claimMission(S,Sys.host,id); if(r&&r.ok){ mPlayerXp(id); n++; gems+=r.gems||0; xp+=r.xp||0; } };
+  if(a==='all'){ mSnd('ui_tap'); let n=0, gems=0, xp=0, gInk=0; const tryOne=(src,id)=>{ const r=src==='guide'?null:Sys.pass.claimMission(S,Sys.host,id); if(r&&r.ok){ mPlayerXp(id); const gm=mGrim(id); if(gm) gInk+=gm.ink|0; n++; gems+=r.gems||0; xp+=r.xp||0; } };
     if(XMI.tab==='guide'){ const r=Sys.guide.claim(S,Sys.host); if(r&&r.ok) n++; }
     else if(XMI.tab==='ach'){ for(const a of (mAch()||[])) if(!a.claimed&&a.cur>=a.need&&a.claim){ const r=a.claim(); if(r&&r.ok) n++; } }
     else { const P=Sys.pass.list(S,Sys.host), L=XMI.tab==='daily'?P.daily:P.weekly; for(const m of L) if(m.done&&!m.claimed) tryOne('pass',m.id); if(XMI.tab==='daily'){ const B=Sys.pass.list(S,Sys.host).bonus; if(B.ready&&!B.claimed) tryOne('pass','bonus'); } }   /* o bônus só fica pronto depois de resgatar as diárias: relê */
-    if(!n){ miToast('Nenhuma missão pronta para resgatar'); return; } mSnd('claim'); mChanged(); miToast(n+(n>1?' missões resgatadas':' missão resgatada')+(gems?' · +'+gems+' gemas':'')+(xp?' · +'+xp+' XP do Passe':'')); render(); return; }
+    if(!n){ miToast('Nenhuma missão pronta para resgatar'); return; } mSnd('claim'); mChanged(); miToast(n+(n>1?' missões resgatadas':' missão resgatada')+(gems?' · +'+gems+' gemas':'')+(xp?' · +'+xp+' XP do Passe':'')+(gInk&&mGrimTxt(0,gInk)?' · '+mGrimTxt(0,gInk):'')); render(); return; }
   if(a==='go'){ mSnd('ui_tap'); const g=b.dataset.g;
     if(g==='battle'){ if(window.Screens&&Screens.close) Screens.close(); return; }
     if((g==='gear'||g==='summon'||g==='shop')&&typeof setView==='function'){ if(window.Screens&&Screens.close) Screens.close(); setView(g); return; }

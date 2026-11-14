@@ -118,7 +118,7 @@ out.push('ligado sem magias: estado vazio com "como conseguir" do módulo, 18 tr
   tap('sp', { id: 'rollingStone' }); const r = v.eras[0].spells[0], nx = GR.catalog(2).find(c => c.id === 'rollingStone'), s = sheet();
   assert(s.includes('Nv 1/' + D.maxLv)); assert(s.includes(g.esc2(r.effectText))); assert(s.includes('<em>' + g.esc2(nx.effectText) + '</em>'), 'efeito do próximo nível vem do catalog do módulo');
   assert(s.includes(nx.cd.toFixed(1).replace('.', ',') + ' s</em>')); assert(s.includes(g.esc2(r.passiveText))); assert(s.includes('PÁGINAS <b>1/' + r.cost.pages + '</b>')); assert(s.includes('TINTA <b>' + v.ink + '/' + r.cost.ink + '</b>'));
-  assert(s.includes('Pré-História · 1ª magia da era')); assert(s.includes('Senhor da Era de novo')); assert(s.includes('data-x="up">Subir para o Nv 2')); assert(s.includes('data-x="eq">Colocar no espaço 1 · Fases')); check('detalhe');
+  assert(s.includes('Pré-História · 1ª magia da era')); assert(s.includes('Senhor da Era de novo: 1 página por era, por dia')); assert(!s.includes('(pts)')); assert(s.includes('data-x="up">Subir para o Nv 2')); assert(s.includes('data-x="eq">Colocar no espaço 1 · Fases')); check('detalhe');
   tap('close'); tap('sp', { id: 'ancestralFire' }); assert(sheet().includes('2ª magia da era')); assert(sheet().includes('Instância diária da era vencida')); assert(sheet().includes('data-x="up">Faltam 1 página<'), 'sem página: o botão diz o que falta'); check('detalhe B'); tap('close'); }
 out.push('com magias (grant): contagem, tinta, bônus, selo Pode subir, detalhe com efeito, recarga, bônus e custo vindos do módulo');
 
@@ -137,7 +137,11 @@ out.push('com magias (grant): contagem, tinta, bônus, selo Pode subir, detalhe 
   // outro conjunto: começa vazio, não mexe no de Fases
   tap('mode', { m: 'chefe' }); assert(/data-m="chefe" aria-selected="true"/.test(H())); assert.strictEqual(count(/>Vazio<\/b>/g), D.slots); has('Usado contra chefe');
   tap('sp', { id: 'minotaurSpear' }); assert(sheet().includes('Colocar no espaço 1 · Chefe')); tap('eq'); assert.deepStrictEqual(own().sets.chefe, ['minotaurSpear']); assert.deepStrictEqual(own().sets.fases, ['bronzePhalanx', 'rollingStone']); tap('close');
-  has('<i>Chefe</i>'); tap('mode', { m: 'arena' }); has('Usado na Arena e no Torneio.'); assert.deepStrictEqual(own().sets.arena, []); check('arena'); tap('mode', { m: 'nada' }); assert(/data-m="arena" aria-selected="true"/.test(H()), 'conjunto que não existe é ignorado');
+  has('<i>Chefe</i>'); tap('mode', { m: 'arena' }); has('Usado na Arena e no Torneio.'); assert.deepStrictEqual(own().sets.arena, []); check('arena');
+  /* 14/11: o módulo equipa no espaço PEDIDO mesmo com o conjunto vazio; o botão diz o espaço escolhido (antes dizia "espaço 1") */
+  { const s0 = /data-i="(\d)" aria-pressed="true"/.exec(H())[1]; tap('slot', { i: '2' }); tap('sp', { id: 'minotaurSpear' }); assert(sheet().includes('data-x="eq">Colocar no espaço 3 · Arena'), 'o botão diz o espaço escolhido'); assert(!sheet().includes('Colocar no espaço 1 · Arena'));
+    tap('eq'); assert.deepStrictEqual(own().sets.arena, [null, null, 'minotaurSpear'], 'o módulo guarda no espaço pedido'); tap('close'); assert.strictEqual(count(/>Vazio<\/b>/g), D.slots - 1, 'as duas casas da frente continuam vazias na tela'); check('arena, espaço 3 com o conjunto vazio');
+    tap('sp', { id: 'minotaurSpear' }); assert(sheet().includes('data-x="uneq">Tirar do conjunto Arena')); tap('uneq'); assert.deepStrictEqual(own().sets.arena, []); tap('close'); tap('slot', { i: s0 }); } tap('mode', { m: 'nada' }); assert(/data-m="arena" aria-selected="true"/.test(H()), 'conjunto que não existe é ignorado');
   assert.deepStrictEqual(GR.loadout(g.S, GR.modeFor({ boss: true })).map(x => x.id), ['minotaurSpear'], 'a luta lê o conjunto Chefe que a tela montou');
   assert.deepStrictEqual(GR.loadout(g.S, GR.modeFor({ pvp: true })).map(x => x.id), ['bronzePhalanx', 'rollingStone'], 'Arena vazia cai no conjunto Fases (regra do módulo)'); tap('mode', { m: 'fases' }); }
 out.push('conjuntos: colocar, mover, trocar e tirar pelo Sys.grimoire.equip; Fases, Arena e Chefe separados; a luta lê o mesmo conjunto');

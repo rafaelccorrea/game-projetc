@@ -88,7 +88,7 @@ out.push('módulo desligado ou ausente: aviso + Voltar, nenhum toque chama o mó
 T.setOn(true); g.S = newSave(5); open();
 { const row = T.view(g.S, host).list[0], m = row.master, ru = row.rule; assert.strictEqual(row.lvl, 10);
   has('Você está no Nv 5. Faltam 5 níveis para a provação do Nv 10.'); has('>' + g.esc2(m.name) + '<'); has(g.esc2(m.role)); has('era Pré-História'); has('>' + g.esc2(ru.name) + '<'); has(g.esc2(ru.text));
-  has('PROVAÇÃO DO NV 10 · 1ª DE ' + T.marks().length); has('retrato provisório'); not('data-x="go"'); assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['back']);
+  has('PROVAÇÃO DO NV 10 · 1ª DE ' + T.marks().length); not('retrato provisório'); has('class="pt-por"'); not('data-x="go"'); assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['back']);
   tap('go'); assert.strictEqual(starts.length, 0, 'abaixo do nível: Lutar não existe e o toque não chama o módulo'); sane('abaixo do nível');
   g.S = newSave(9); open(); has('Você está no Nv 9. Falta 1 nível para a provação do Nv 10.'); }
 out.push('abaixo do nível: "Faltam N níveis para a provação do Nv 10" com mestre, regra e prêmio do módulo, sem botão de lutar');
@@ -99,22 +99,23 @@ open(); assert(gateSeen.length >= 1 && gateSeen[gateSeen.length - 1].includes('a
 { const v = T.view(g.S, host), row = v.list[0], rw = row.reward, sp = T.spec(10, host);
   has('>' + g.esc2(row.master.name) + '<'); has('>' + g.esc2(row.rule.name) + '<'); has(g.esc2(row.rule.text) + ' Luta de ' + sp.sec + ' s.');
   has('fase mais alta: 3-5'); has('src="assets/enemies/era2_boss.png"'); has('Vida ×' + String(sp.enemy.hpMul).replace('.', ',')); has('e o mesmo dano'); has('Vença antes de <b>1:00</b>');
-  has('+' + rw.stat.atkPct + '% ATK'); has('+' + rw.stat.hpPct + '% Vida'); has('>' + g.kf(rw.gold) + '</span>'); has('+' + rw.stones + ' pedras'); has('+' + rw.food + ' ração');
+  has('+' + rw.stat.atkPct + '% ATQ'); not('% ATK'); has('+' + rw.stat.hpPct + '% Vida'); has('>' + g.kf(rw.gold) + '</span>'); has('+' + rw.stones + ' pedras de forja</span>'); has('+' + rw.food + ' de ração</span>');
   has('Teto sobe para o <em>Nv 20</em> e a XP guardada volta: <em>' + g.n0(bank) + ' XP</em>.'); assert.deepStrictEqual(rw.opens, []); not('abre ao vencer esta provação');   /* 14/11: nada a prometer */
-  has('data-x="go"'); has('>Lutar<'); has('Tentar de novo é grátis'); has('sem limite, sem energia, sem gema'); not('tentativas:'); has('url(assets/bg/era2.png)'); assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['go']); }
+  has('data-x="go"'); has('>Lutar<'); has('Tentar de novo é grátis'); has('sem limite, sem energia, sem diamante'); not('sem gema'); not('tentativas:'); has('url(assets/bg/era2.png)'); assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['go']); }
 sane('no teto');
 // nada inventado: mudar o módulo muda a tela (e o texto do módulo sai escapado)
 { const D = T.DATA, k = { hp: D.enemy.hpMul, dm: D.enemy.dmgMul, st: D.reward.stones, nm: D.rules[0].name, tx: D.rules[0].text, sc: D.sec, at: D.stat.atkPct, gm: D.reward.goldMin, ea: D.enemyAt }; D.enemyAt = {};   /* o ajuste por marco (1ª provação 0,85) sai para o teste ver o DATA.enemy na tela */
   D.enemy.hpMul = 1.5; D.enemy.dmgMul = 1.25; D.reward.stones = 7; D.rules[0].name = 'Regra <b>"X"</b>'; D.rules[0].text = 'Texto & novo.'; D.sec = 45; D.stat.atkPct = 2.5; D.reward.goldMin = 9;
-  try { open(); has('Vida ×1,5'); has('dano ×1,25'); has('+7 pedras'); has('Regra &lt;b&gt;&quot;X&quot;&lt;/b&gt;'); not('Regra <b>"X"'); has('Texto &amp; novo. Luta de 45 s.'); has('Vença antes de <b>0:45</b>'); has('+2,5% ATK'); has('>' + g.kf(T.rewardOf(10, host).gold) + '</span>'); sane('módulo alterado'); }
+  try { open(); has('Vida ×1,5'); has('dano ×1,25'); has('+7 pedras de forja'); has('Regra &lt;b&gt;&quot;X&quot;&lt;/b&gt;'); not('Regra <b>"X"'); has('Texto &amp; novo. Luta de 45 s.'); has('Vença antes de <b>0:45</b>'); has('+2,5% ATQ'); has('>' + g.kf(T.rewardOf(10, host).gold) + '</span>'); sane('módulo alterado'); }
   finally { D.enemy.hpMul = k.hp; D.enemy.dmgMul = k.dm; D.reward.stones = k.st; D.rules[0].name = k.nm; D.rules[0].text = k.tx; D.sec = k.sc; D.stat.atkPct = k.at; D.reward.goldMin = k.gm; D.enemyAt = k.ea; } }
 { const F = Sys.forge.addStones; Sys.forge.addStones = null; open(); not(' pedras'); Sys.forge.addStones = F; open(); has(' pedras'); }
-{ P.ART.portrait = true; open(); has('<img src="' + T.master(10).portrait + '" alt="">'); not('retrato provisório'); assert(P.urls().includes(T.master(10).portrait), 'com a arte ligada o retrato entra na espera de carga'); P.ART.portrait = false; open(); has('retrato provisório'); }
+{ P.ART.portrait = true; open(); has('<img src="' + T.master(10).portrait + '" alt="">'); not('retrato provisório'); assert(P.urls().includes(T.master(10).portrait), 'com a arte ligada o retrato entra na espera de carga'); P.ART.portrait = false; open(); not('retrato provisório'); not('<img src="' + T.master(10).portrait + '"'); has('<div class="pt-por"><svg'); }
+{ const D = T.DATA, st = D.reward.stones; D.reward.stones = 1; try { open(); has('+1 pedra de forja</span>'); } finally { D.reward.stones = st; } open(); }
 out.push('no teto: mestre, regra, tempo, inimigo (Vida ×' + String(T.DATA.enemy.hpMul).replace('.', ',') + '), prêmio, o que libera e a XP guardada vêm do módulo; mudar o módulo muda a tela; texto escapado');
 
 // 4) LUTAR sem a ponte da batalha: explica e NÃO chama o módulo (nada gravado)
 { P.battle = null; const s0 = JSON.stringify(g.S); log.length = 0; tap('go'); assert.strictEqual(starts.length, 0, 'sem a batalha ligada: não chama o Sys.trial.start'); assert.strictEqual(JSON.stringify(g.S), s0);
-  has('A luta da provação ainda não está ligada nesta versão. Nada foi gasto.'); has('role="alert"'); has('data-x="go"'); sane('sem a ponte'); P.battle = hook; }
+  has('A luta da provação ainda não está disponível. Nada foi gasto.'); not('nesta versão'); has('role="alert"'); has('data-x="go"'); sane('sem a ponte'); P.battle = hook; }
 out.push('sem PTrial.battle: o Lutar avisa que a luta não está ligada e não chama o módulo');
 
 // 5) LUTAR: UMA chamada ao Sys.trial.start; o spec do módulo vai para a batalha; toques repetidos não chamam de novo
@@ -157,7 +158,7 @@ tap('retry'); assert.strictEqual(starts.length, 3);
   assert(log.includes('stats'), 'pede para recalcular e gravar'); assert(log.includes('snd:claim'));
   has('Provação vencida!'); has(g.esc2(T.master(10).name) + ' reconhece a sua força · regra ' + g.esc2(T.rule(10).name)); has('Teto liberado: agora até o Nv ' + r.cap); assert.strictEqual(r.cap, 20);
   has('XP guardada liberada: <em>+' + g.n0(r.released) + ' XP</em>'); assert(r.released > 0); assert.strictEqual(LV.level(g.S), 11); has('você subiu para o <em>Nv 11</em>');
-  has('>+' + g.kf(r.reward.gold) + '</span>'); has('+' + r.reward.stones + ' pedras'); has('+' + r.reward.food + ' ração'); has('+' + rw.stat.atkPct + '% ATK'); not('Abriu:'); not('abre ao vencer');
+  has('>+' + g.kf(r.reward.gold) + '</span>'); has('+' + r.reward.stones + ' pedras de forja'); has('+' + r.reward.food + ' de ração'); has('+' + rw.stat.atkPct + '% ATQ'); not('Abriu:'); not('abre ao vencer');
   assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['cont']); sane('vitória'); assert.strictEqual(T.isOpen(g.S, 'bonfireAuto'), true, 'isOpen não tranca nada');
   def.render(); def.render(); def.tick(); assert.strictEqual(host.gold, g0 + rw.gold, 'redesenhar não entrega de novo'); assert.strictEqual(fins.length, 1);
   log.length = 0; tap('cont'); assert(log.includes('close'), 'Continuar volta para o jogo'); assert.strictEqual(X.mode, 'card'); }
@@ -176,7 +177,7 @@ g.S = newSave(25); open(); { const v = T.view(g.S, host); assert.strictEqual(v.c
   has('Provações abertas: escolha qual enfrentar'); has('data-x="sel" data-l="10"'); has('data-x="sel" data-l="20"'); has('>' + g.esc2(T.master(10).name) + '<'); not('Teto sobe'); not('XP guardada volta'); sane('save antigo');
   tap('sel', { l: '20' }); has('>' + g.esc2(T.master(20).name) + '<'); has('>' + g.esc2(T.rule(20).name) + '<'); has('Luta de 30 s.'); has('PROVAÇÃO DO NV 20 · 2ª DE'); tap('sel', { l: '40' }); has('>' + g.esc2(T.master(20).name) + '<');
   const n = starts.length; tap('go'); assert.strictEqual(starts.length, n + 1); assert.strictEqual(starts[n], 20, 'luta a provação escolhida'); P.finish({ won: true, sec: 10 }); has('Provação vencida!'); not('Teto liberado'); sane('vitória de provação antiga'); tap('cont');
-  for (const l of T.marks()) T.ensure(g.S).passed[String(l)] = 1; open(); has('Todas as provações vencidas.'); has('Bônus para sempre: +' + T.bonus(g.S).atkPct + '% ATK e +' + T.bonus(g.S).hpPct + '% Vida.'); assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['back']); sane('todas vencidas'); }
+  for (const l of T.marks()) T.ensure(g.S).passed[String(l)] = 1; open(); has('Todas as provações vencidas.'); has('Bônus para sempre: +' + T.bonus(g.S).atkPct + '% ATQ e +' + T.bonus(g.S).hpPct + '% Vida.'); assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['back']); sane('todas vencidas'); }
 out.push('save antigo: provações antigas abertas com escolha; todas vencidas: aviso com o bônus do módulo');
 
 // 12) SELO "Teto Nv X" no HUD: no teto mostra a XP guardada; cheio muda de cor; toca e abre a tela; some com a tela ou o módulo desligado

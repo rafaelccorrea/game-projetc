@@ -228,14 +228,14 @@ function gSheet(r,v,D){ const G=gM(), sp=G.spell(r.id), g=D.grants||{}, lv=r.own
       ?'<button class="gm-bt b" data-x="upok">Confirmar: gasta '+gPl(r.cost.pages|0,'página','páginas')+' e '+n0(r.cost.ink)+' de tinta</button>'
       :'<button class="gm-bt" data-x="up">Subir para o Nv '+n0(lv+1)+'</button>';
     else h+='<button class="gm-bt o" data-x="up">'+esc2(gWhy(r,v))+'</button>';
-    const at=set.indexOf(r.id), tgt=Math.min(X.slot,set.length), cur=set[X.slot], curN=cur&&cur!==r.id?(G.spell(cur)||{}).name:'';
+    const at=set.indexOf(r.id), tgt=X.slot, cur=set[X.slot], curN=cur&&cur!==r.id?(G.spell(cur)||{}).name:'';
     h+=at>=0&&(at===X.slot||X.slot>=set.length)   /* já está na casa escolhida, ou a casa escolhida está vazia (o módulo junta as magias no começo: mover para lá não muda nada) */
       ?'<button class="gm-bt o" data-x="uneq">Tirar do conjunto '+esc2(mn)+'</button>'
       :'<button class="gm-bt b" data-x="eq">'+(at>=0?'Mover para o':'Colocar no')+' espaço '+n0(tgt+1)+' · '+esc2(mn)+(curN?' (troca com '+esc2(curN)+')':'')+'</button>';
     h+='</div>'; }
   else { const ink=r.first?(g.eraLord&&g.eraLord.ink):(g.chief50&&g.chief50.ink);
     h+='<div class="gm-how"><b>Como conseguir</b><p>'+esc2(r.how)+(ink?' (+'+n0(ink)+' de tinta)':'')+'. Ela entra no Grimório no nível 1.</p></div>'+gMsgHtml('gm_msg2'); }
-  const pg=[]; if(r.first){ if(g.eraLordRepeat) pg.push('Senhor da Era de novo: '+gPl(g.eraLordRepeat.n|0,'página','páginas')+' por dia'); }
+  const pg=[]; if(r.first){ if(g.eraLordRepeat) pg.push('Senhor da Era de novo: '+gPl(g.eraLordRepeat.n|0,'página','páginas')+' por era, por dia'); }
   else if(g.instance) pg.push('Instância diária da era vencida: '+gPl(g.instance.n|0,'página','páginas')+' + '+n0(g.instance.ink)+' de tinta');
   if(g.event) pg.push('Eventos que trazem esta magia: '+gPl(g.event.n|0,'página fixa','páginas fixas'));
   pg.push('Tinta: Torre, missões diárias e instâncias. Nada é vendido');
@@ -261,7 +261,7 @@ function gDraw(){
   /* bônus por ter (Sys.grimoire.view().bonus; o teto é a soma do passiveOf no nível máximo) */
   const mx={}; try{ for(const sp of D.spells) mx[sp.passive]=(mx[sp.passive]||0)+G.passiveOf(sp,D.maxLv); }catch(e){}
   h+='<section class="gm-box"><div class="gm-h5">Bônus por ter<small>Vale para sempre, mesmo fora das '+n0(slots)+' da luta</small></div><div class="gm-b4">'
-    +Object.keys(GM_PN).map(k=>'<div class="'+(b[k]>0?'':'z')+'"><b>+'+gF1(b[k])+(k==='critPct'?'':'%')+'</b><small>'+GM_PN[k]+(k==='critPct'?' (pts)':'')+'</small></div>').join('')+'</div>'
+    +Object.keys(GM_PN).map(k=>'<div class="'+(b[k]>0?'':'z')+'"><b>+'+gF1(b[k])+(k==='critPct'?'':'%')+'</b><small>'+GM_PN[k]+(k==='critPct'?' (pontos)':'')+'</small></div>').join('')+'</div>'
     +'<p class="gm-note">Com as '+n0(v.total)+' no nível '+n0(D.maxLv)+': '+Object.keys(GM_PN).filter(k=>mx[k]>0).map(k=>esc2(gPass(k,mx[k]))).join(', ')+'.</p></section>';
   /* conjuntos */
   h+='<div class="gm-h5">Conjuntos de luta</div><div class="gm-tabs" role="tablist" aria-label="Conjunto">'+v.sets.map(s=>'<button class="gm-tab" role="tab" data-x="mode" data-m="'+esc2(s.mode)+'" aria-selected="'+(s.mode===X.mode)+'">'+esc2(s.name)+'</button>').join('')+'</div>';

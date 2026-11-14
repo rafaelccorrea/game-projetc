@@ -128,6 +128,17 @@ let fail = 0, n = 0; const check = (name, ok, det) => { n++; if (!ok) { fail++; 
   { const r = J(`__n.pfin=0; const ok=PPath.tryStart('shot'); const combo=B.stk?B.stk.normal.combo:-1; for(let i=0;i<30;i++){ step(1/30); instStep(1/30); } Sys.pathTry.cancel(); for(let i=0;i<5&&B.inst;i++){ step(1/30); instStep(1/30); } return {ok,combo,inst:B.inst,n:__n.pfin,stage:S.stage};`);
     const Ps = D.paths.find(p => p.id === 'shot');
     check('outro caminho (Disparo): combo +' + Ps.strikes.combo + ' na luta; ensaio solto por fora devolve a fase sem finish', r.ok && r.combo === Ps.strikes.combo && r.inst == null && r.n === 0 && r.stage === snap0.stage, JSON.stringify(r)); }
+  /* "Sair do ensaio": o selo "Fraco contra" (js/weakseal.js) pode aparecer DEPOIS do começo da luta; o botão se acerta no passo da luta, no máximo 1 vez por segundo */
+  { const r = J(`const gid=document.getElementById, dn=Date.now; let clk=dn.call(Date), wsl=null, reads=0; const btn={style:{},setAttribute(){},addEventListener(){},remove(){}}, o={};
+      document.getElementById=function(id){ if(id==='lig_exit') return btn; if(id==='wsl_root'){ reads++; return wsl; } return gid.call(document,id); }; Date.now=()=>clk;
+      try{ PPath.state.run=null; PPath.state.busy=false; o.ok=PPath.tryStart('shot'); o.top0=btn.style.top; wsl={style:{},offsetHeight:30,offsetTop:122};
+        reads=0; for(let i=0;i<30;i++) instStep(1/30); o.reads1=reads; o.top1=btn.style.top;                 /* 1º passo depois do selo: acerta uma vez; os outros 29 quadros do mesmo instante não leem a tela */
+        clk+=999; reads=0; for(let i=0;i<30;i++) instStep(1/30); o.reads999=reads;                             /* menos de 1 s: nenhuma leitura */
+        wsl.style.display='none'; clk+=1; reads=0; for(let i=0;i<30;i++) instStep(1/30); o.reads2=reads; o.top2=btn.style.top;   /* 1 s: uma leitura; o selo saiu, o botão volta */
+        let big=0; for(let s=0;s<5;s++){ clk+=1000; reads=0; for(let i=0;i<60;i++) instStep(1/60); big=Math.max(big,reads); } o.perSec=big; o.alive=!!B.inst;
+      }catch(e){ o.err=String(e&&e.stack||e).slice(0,300); } finally{ document.getElementById=gid; Date.now=dn; } try{ ligPathExit(); }catch(e){} o.inst=B.inst; return o;`);
+    check('"Sair do ensaio" nasce em y 122 e desce para baixo do selo "Fraco contra" quando ele aparece depois (122 + altura + 6)', !r.err && r.ok && r.top0 === '122px' && r.top1 === '158px' && r.top2 === '122px', JSON.stringify(r));
+    check('o lugar do botão é refeito no máximo 1 vez por segundo (sem leitura da tela por quadro)', r.reads1 === 1 && r.reads999 === 0 && r.reads2 === 1 && r.perSec === 1 && r.alive && r.inst == null, JSON.stringify(r)); }
   check('sem console.error do jogo', G.consoleErrs.length === 0, G.consoleErrs.slice(0, 4).join(' | '));
   console.log(fail ? fail + ' FALHA(S) de ' + n + ' (luta especial)' : 'LUTA ESPECIAL OK (' + n + ' verificações): Provação termina nos três jeitos com um finish; Ensaio soma dano e termina no tempo; fase do jogador intacta');
   process.exit(fail ? 1 : 0);

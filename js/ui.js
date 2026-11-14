@@ -11,6 +11,12 @@ function pager(key,pages){ const p=PG[key]; return pages<=1?'':`<div class="page
 const th2=(slot,e,r)=>`<span class="tb" style="border-color:${RAR[r].c}">${thumb(slot,e,r)}</span>`;
 
 function renderBattle(){ V.innerHTML=''; }
+/* GRIMÓRIO, fontes do dia (docs/LIGACOES_BATALHA.md seção 7): UMA chamada ao Sys.grimoire.onSource por prêmio (o módulo cuida de id repetido e do teto do dia).
+   Quem chama já mostra o próprio aviso logo depois? Passe quiet=true e junte o texto com grimSrcTxt (senão um aviso apagaria o outro). */
+function grimSrcTxt(pages,ink){ const t=[pages>0?'+'+pages+(pages>1?' páginas':' página'):'',ink>0?'+'+ink+' de tinta':''].filter(Boolean).join(' · '); return t?'Grimório: '+t:''; }
+function grimSrc(src,ctx,quiet){ try{ const G=window.Sys&&Sys.grimoire; if(!G||typeof G.onSource!=='function') return null; const g=G.onSource(S,Sys.host,src,ctx);
+  if(g&&g.ok&&!quiet&&typeof toast==='function'){ const t=grimSrcTxt(g.pages|0,g.ink|0); if(t) toast(t); }
+  return g; }catch(er){ console.error('grimoire',er); return null; } }
 function updHudExtra(){   // 4x por segundo: relógios das telas abertas (a faixa da fase e o Desafiar são do js/fullbattle.js)
   if(view==='shop'||view==='summon') updShop(); else if(view==='pass'&&typeof passTick==='function') passTick();
 }

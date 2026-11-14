@@ -248,6 +248,13 @@ const evtSnd=n=>{ try{ if(typeof snd==='function') snd(n); }catch(e){} };
 const evtToast=t=>{ try{ if(typeof toast==='function') toast(t); }catch(e){} };
 const evtChanged=()=>{ try{ if(typeof statsChanged==='function') statsChanged(); else if(typeof save==='function') save(); }catch(e){} };
 const evtTh=id=>EVT_TH[id]||EVT_TH.festival_eras;
+/* TEMA do evento: cada edição tem id próprio (festival_eras_261120); arte, cores e ícones saem do tema (ev.base). Sem ev.base (evento antigo), vale o ev.id */
+const evtBase=ev=>(ev&&typeof ev.base==='string'&&ev.base)||(ev&&ev.id)||'';
+/* CALENDÁRIO: Sys.events.load busca as edições no servidor e guarda no save (abre sem rede depois). Pedido ao ABRIR a tela, sem travar a abertura: a tela desenha
+   com o que tem e o tick redesenha sozinho quando a lista muda (evtSig). No máximo um pedido por minuto e nunca dois ao mesmo tempo */
+function evtLoadCal(){ try{ const E=window.Sys&&Sys.events; if(!E||typeof E.load!=='function'||XEVT.calBusy) return false; const now=Date.now(); if(XEVT.calT&&now-XEVT.calT<60000) return false; XEVT.calT=now;
+    const done=r=>{ XEVT.calBusy=false; if(r&&r.ok){ try{ if(typeof save==='function') save(); }catch(e){} } };
+    const p=E.load(S,evtHost()); if(p&&typeof p.then==='function'){ XEVT.calBusy=true; p.then(done,()=>{ XEVT.calBusy=false; }); } else done(p); return true; }catch(e){ XEVT.calBusy=false; return false; } }
 /* datas do DATA (AAAA-MM-DD, hora local), lidas igual ao Sys.events */
 function evtMs(d){ if(typeof d==='number') return d; const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d||'')); return m?new Date(+m[1],+m[2]-1,+m[3]).getTime():NaN; }
 /* o item com 'needs' só aparece com as chaves do Prismático (igual ao Sys.events.shop) */
@@ -265,7 +272,7 @@ function evtModel(){
     const o=open.find(x=>x.id===ev.id), st=on?(ph==='ativo'?'on':ph==='loja'?'gr':'soon'):'soon';
     return {ev,ph,st,live:!!o,pts:o?o.pts:0,endsAt:o?o.endsAt:(on&&ph==='antes'?evtMs(ev.start):null)}; }).filter(x=>x.ph!=='fim'||x.live);
   if(!evs.length) return {on,evs,cur:null};
-  const cur=evs.find(x=>x.ev.id===XEVT.ev)||evs.find(x=>x.st==='on')||evs.find(x=>x.st==='gr')||evs[0];
+  const cur=evs.find(x=>x.ev.id===XEVT.ev)||evs.find(x=>x.live&&evtBase(x.ev)===XEVT.ev)||evs.find(x=>x.st==='on')||evs.find(x=>x.st==='gr')||evs[0];
   XEVT.ev=cur.ev.id;
   let mis, shop;
   if(cur.live){ try{ mis=E.missions(S,host,cur.ev.id)||[]; }catch(e){ mis=[]; } try{ shop=E.shop(S,host,cur.ev.id)||[]; }catch(e){ shop=[]; } }
@@ -286,7 +293,7 @@ function evtModel(){
 }
 /* Sys.evtrail ligado? e a configuração do evento (o que não estiver lá usa 'default', igual ao módulo) */
 const etOn=()=>!!(window.Sys&&Sys.evtrail&&Sys.evtrail.DATA&&Sys.evtrail.DATA.on===true&&Sys.evtrail.trail&&Sys.evtrail.boss);
-const etCfg=id=>{ const E=(Sys.evtrail.DATA&&Sys.evtrail.DATA.events)||{}; return E[id]||E.default||null; };
+const etCfg=id=>{ const E=(Sys.evtrail.DATA&&Sys.evtrail.DATA.events)||{}; let b=null; try{ b=Sys.events&&typeof Sys.events.base==='function'?Sys.events.base(id):null; }catch(e){ b=null; } return E[id]||(b&&E[b])||E.default||null; };   /* a mesma busca do módulo: a edição, depois o tema, depois o padrão */
 const evtAbbr=v=>{ try{ if(window.Sys&&Sys.stats&&typeof Sys.stats.abbr==='function') return Sys.stats.abbr(v); }catch(e){} try{ if(typeof kf==='function') return kf(v); }catch(e){} return evtN(v); };
 /* texto do prêmio de um marco */
 function etRw(rw){ const a=[]; if(!rw) return ''; if(rw.goldk) a.push('Ouro'); if(rw.forge) a.push(rw.forge+' Pedras de forja'); if(rw.food) a.push(rw.food+' Ração'); if(rw.essence) a.push(rw.essence+' Essência'); if(rw.frame) a.push('Moldura do evento'); return a.join(' · '); }
@@ -472,7 +479,7 @@ function scrEvents(){
   if(!evtOk()){ V.innerHTML=xWrap(d,'',`<div role="alert" style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:800;color:#c9b9a2">Eventos indisponíveis agora.</div>`); XEVT.sig='x'; return; }
   const M=evtModel();
   if(!M.cur){ V.innerHTML=xWrap(d,XEVT.anim?'f-in':'',`<div class="pz" style="align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center"><img src="assets/icons/menu/events.png" alt="" style="width:96px;height:96px;object-fit:contain"><span class="pz-lil" style="font-size:22px">Nenhum evento agora</span><span class="pz-note" style="font-size:14px">O próximo evento aparece aqui quando for anunciado.</span></div>`); XEVT.anim=false; XEVT.sig=evtSig(M); return; }
-  const c=M.cur, th=evtTh(c.ev.id), tag={on:'ATIVO',gr:'CARÊNCIA',soon:'EM BREVE'};
+  const c=M.cur, th=evtTh(evtBase(c.ev)), tag={on:'ATIVO',gr:'CARÊNCIA',soon:'EM BREVE'};
   if(!c.live&&XEVT.buy) XEVT.buy=null;
   /* decisão do PO: dentro da tela o nome do evento aparece UMA vez, no banner (que agora leva o selo ATIVO / CARÊNCIA / EM BREVE). A fileira de eventos só
      existe quando há mais de um evento (é o seletor: sem ela não daria para trocar); com um só, ela não é desenhada. */
@@ -511,18 +518,21 @@ function evtTryBuy(M,id){ const x=M.shop.find(y=>y.id===id); if(!x) return;
 /* ---------- trilha e chefe (só pelo Sys.evtrail) ---------- */
 const ET_WHY={off:'A trilha chega em breve',id:'Marco indisponível',done:'Prêmio já resgatado',closed:'O evento já fechou',tries:'Volte amanhã',dead:'Chefe derrotado!'};
 const etGotTxt=g=>{ const t=evtGot(g); return (g&&g.frame?(t?t+' · ':'')+'moldura do evento':t); };
+/* Grimório, fonte do dia: UMA chamada por marco da trilha resgatado (id = evento + marco); o módulo cuida do teto do dia e do id repetido */
+function etGrim(M,m){ try{ if(typeof grimSrc!=='function') return null; const g=grimSrc('event',{id:M.cur.ev.id+':'+m.at,spell:M.cur.ev.grimSpell||null},true); return g&&g.ok?g:null; }catch(e){ return null; } }
+const etGrimTxt=(p,i)=>{ try{ return typeof grimSrcTxt==='function'?grimSrcTxt(p|0,i|0):''; }catch(e){ return ''; } };
 function etNode(M,at){ const T=M.tr; if(!T) return; const m=T.milestones.find(x=>x.at===at); if(!m) return;
   if(!M.cur.live){ evtSnd('ui_tap'); evtToast(m.name+' · '+evtN(m.at)+' pts (prévia)'); return; }
   if(m.claimed){ evtSnd('ui_tap'); evtToast(m.name+': já resgatado'); return; }
   if(!m.reached){ evtSnd('ui_tap'); evtToast(m.name+': faltam '+evtN(m.at-T.earned)+' pontos'); return; }
   let r=null; try{ r=Sys.evtrail.claimTrail(S,evtHost(),M.cur.ev.id,m.at); }catch(e){ r=null; }
-  if(r&&r.ok){ const g=etGotTxt(r.got); evtSnd(m.reward&&m.reward.frame?'legendary':'claim'); evtChanged(); evtToast(m.name+' foi para a sua mochila'+(g?' · '+g:'')); }
+  if(r&&r.ok){ const g=etGotTxt(r.got), gr=etGrim(M,m), gt=gr?etGrimTxt(gr.pages,gr.ink):''; evtSnd(m.reward&&m.reward.frame?'legendary':'claim'); evtChanged(); evtToast(m.name+' foi para a sua mochila'+(g?' · '+g:'')+(gt?' · '+gt:'')); }
   else { evtSnd('ui_tap'); evtToast(r&&r.reason==='points'?m.name+': faltam '+evtN(m.at-T.earned)+' pontos':(r&&ET_WHY[r.reason])||'Resgate indisponível agora'); }
   render(); }
-function etClaimAll(M){ const T=M.tr; if(!T||!M.cur.live) return; let n=0, big=false, why='';
+function etClaimAll(M){ const T=M.tr; if(!T||!M.cur.live) return; let n=0, big=false, why='', gP=0, gI=0;
   for(const m of T.milestones){ if(!m.reached||m.claimed) continue; let r=null; try{ r=Sys.evtrail.claimTrail(S,evtHost(),M.cur.ev.id,m.at); }catch(e){ r=null; }
-    if(r&&r.ok){ n++; if(m.reward&&m.reward.frame) big=true; } else if(r&&!why) why=ET_WHY[r.reason]||''; }
-  if(n){ evtSnd(big?'legendary':'claim'); evtChanged(); evtToast(n+(n>1?' prêmios da trilha resgatados':' prêmio da trilha resgatado')); } else { evtSnd('ui_tap'); if(why) evtToast(why); }
+    if(r&&r.ok){ n++; if(m.reward&&m.reward.frame) big=true; const gr=etGrim(M,m); if(gr){ gP+=gr.pages|0; gI+=gr.ink|0; } } else if(r&&!why) why=ET_WHY[r.reason]||''; }
+  if(n){ const gt=etGrimTxt(gP,gI); evtSnd(big?'legendary':'claim'); evtChanged(); evtToast(n+(n>1?' prêmios da trilha resgatados':' prêmio da trilha resgatado')+(gt?' · '+gt:'')); } else { evtSnd('ui_tap'); if(why) evtToast(why); }
   render(); }
 function etAttack(M){ const b=M.bs; if(!b) return;
   if(!M.cur.live||!b.open){ evtSnd('ui_tap'); evtToast('O chefe aparece com o evento ativo'); return; }
@@ -567,6 +577,6 @@ Panels.add('events',{title:'Eventos',render:scrEvents,click:evtClick,
       if(M.cur&&M.cur.endsAt){ const k=evtClock(M.cur.endsAt-evtNow()); if(k.sec!==XEVT.sec){ XEVT.sec=k.sec; const el=document.getElementById('pz_sec'); if(el) el.textContent=k.sec; }
         if(k.head!==XEVT.hd){ XEVT.hd=k.head; const eh=document.getElementById('pz_hd'); if(eh) eh.textContent=k.head; } } }catch(e){} },
   busy(){ return false; },
-  onOpen(o){ etStop(); XEVT.tab=etOn()?0:2; XEVT.mPage=0; XEVT.sPage=0; XEVT.mis=false; XEVT.buy=null; XEVT.hit=null; XEVT.mkEv=null; XEVT.anim=true;
+  onOpen(o){ etStop(); XEVT.tab=etOn()?0:2; XEVT.mPage=0; XEVT.sPage=0; XEVT.mis=false; XEVT.buy=null; XEVT.hit=null; XEVT.mkEv=null; XEVT.anim=true; evtLoadCal();
     if(o&&o.event) XEVT.ev=o.event; if(o&&o.missions) XEVT.mis=true; if(o&&(o.tab===0||o.tab===1||o.tab===2)) XEVT.tab=o.tab; },
   onClose(){ etStop(); XEVT.mis=false; XEVT.buy=null; XEVT.hit=null; } });

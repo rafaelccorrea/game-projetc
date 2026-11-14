@@ -64,7 +64,7 @@ function bankFull(v){ try{ const L=window.Sys.level, D=TR().DATA; if(!v||!v.atCa
 
 const WHY={off:'A Provação do Mestre está desligada agora.',lvl:'Este nível não tem provação.',done:'Você já venceu esta provação.',
   level:'Você ainda não chegou ao nível desta provação.',none:'Não há provação em andamento.'};
-const NO_BATTLE='A luta da provação ainda não está ligada nesta versão. Nada foi gasto.';
+const NO_BATTLE='A luta da provação ainda não está disponível. Nada foi gasto.';
 
 /* ---------- ícones desenhados no código (os do protótipo) ---------- */
 const K='stroke="#1a110b" stroke-width="2.4" stroke-linejoin="round"';
@@ -191,7 +191,7 @@ const wrap=(body,foot)=>'<div class="pt'+(X.anim?' pt-in':'')+'" style="backgrou
 const msgHtml=()=>X.msg?'<p class="pt-msg '+(X.tone==='ok'?'ok':'bad')+'" role="'+(X.tone==='ok'?'status':'alert')+'">'+esc(X.msg)+'</p>':'';
 const backRow='<div class="pt-row"><button class="pt-o wide" data-x="back">Voltar</button></div>';
 function offHtml(){ return wrap('<div class="pt-note" role="alert">Provação do Mestre indisponível agora.</div>',backRow); }
-function portrait(m){ return '<div class="pt-por">'+(ART.portrait&&m.portrait?'<img src="'+esc(m.portrait)+'" alt="">':SIL+'<span>retrato provisório</span>')+'</div>'; }
+function portrait(m){ return '<div class="pt-por">'+(ART.portrait&&m.portrait?'<img src="'+esc(m.portrait)+'" alt="">':SIL)+'</div>'; }
 function masterHtml(M){ const r=M.row, m=r.master||{}, en=eraName(m.era);
   return '<div class="pt-ms">'+portrait(m)+'<div class="pt-mn"><small>PROVAÇÃO DO NV '+nT(r.lvl)+' · '+M.idx+'ª DE '+M.list.length+'</small><b class="pt-lil">'+esc(m.name)+'</b>'
     +'<i>'+esc(m.role)+(en?(m.role?' · ':'')+'era '+esc(en):'')+'</i><q>Mostre a sua força para passar do Nv '+nT(r.lvl)+'.</q></div></div>'; }
@@ -203,10 +203,10 @@ function enemyHtml(sp){ if(!sp||!sp.enemy) return ''; const e=sp.enemy, si=stage
 /* prêmio em etiquetas: só o que o módulo dono entrega (sem o Sys.forge ou o Sys.pet carregado, a etiqueta não aparece) */
 function chipsHtml(rw,given){ const Y=window.Sys||{}, c=[];
   if(num(rw.gold)>0) c.push('<span class="pt-chip"><img src="'+IC.coin+'" alt="">'+(given?'+':'')+esc(kfT(rw.gold))+'</span>');
-  if(num(rw.stones)>0&&(given||(Y.forge&&typeof Y.forge.addStones==='function'))) c.push('<span class="pt-chip">'+STONE+'+'+nT(rw.stones)+' '+(rw.stones===1?'pedra':'pedras')+'</span>');
-  if(num(rw.food)>0&&(given||(Y.pet&&typeof Y.pet.addFood==='function'))) c.push('<span class="pt-chip">'+FOOD+'+'+nT(rw.food)+' ração</span>');
+  if(num(rw.stones)>0&&(given||(Y.forge&&typeof Y.forge.addStones==='function'))) c.push('<span class="pt-chip">'+STONE+'+'+nT(rw.stones)+' '+(rw.stones===1?'pedra de forja':'pedras de forja')+'</span>');
+  if(num(rw.food)>0&&(given||(Y.pet&&typeof Y.pet.addFood==='function'))) c.push('<span class="pt-chip">'+FOOD+'+'+nT(rw.food)+' de ração</span>');
   return c.length?'<div class="pt-chips">'+c.join('')+'</div>':''; }
-function permHtml(st){ st=st||{}; const p=[]; if(num(st.atkPct)) p.push('<em class="pt-lil">+'+dec(st.atkPct)+'% ATK</em>'); if(num(st.hpPct)) p.push('<em class="pt-lil">+'+dec(st.hpPct)+'% Vida</em>');
+function permHtml(st){ st=st||{}; const p=[]; if(num(st.atkPct)) p.push('<em class="pt-lil">+'+dec(st.atkPct)+'% ATQ</em>'); if(num(st.hpPct)) p.push('<em class="pt-lil">+'+dec(st.hpPct)+'% Vida</em>');
   return p.length?'<div class="pt-perm">Para sempre:'+p.join('')+'</div>':''; }
 function opensHtml(op){ return (Array.isArray(op)?op:[]).map(x=>'<div class="pt-op"><span class="oi">'+KEY+'</span><span>'+esc(x&&x.name)+'<small>abre ao vencer esta provação</small></span></div>').join(''); }
 function rewardHtml(M){ const r=M.row, rw=r.reward||{};
@@ -222,8 +222,8 @@ function cardHtml(M){ const r=M.row, sp=specOf(r.lvl), tries=Math.floor(num(r.tr
   if(M.kind==='next'){ const lv=Math.floor(num(M.v.level)), miss=Math.max(1,r.lvl-lv);
     return wrap('<div class="pt-note" role="status">Você está no Nv '+nT(lv)+'. '+(miss===1?'Falta 1 nível':'Faltam '+nT(miss)+' níveis')+' para a provação do Nv '+nT(r.lvl)+'.</div>'+body,backRow+msgHtml()); }
   return wrap(body,'<div class="pt-row"><button class="pt-go pt-lil" data-x="go" aria-label="Lutar contra '+esc(r.master&&r.master.name)+', grátis">Lutar</button></div>'
-    +(msgHtml()||'<p class="pt-ln">Tentar de novo é grátis <span>· sem limite, sem energia, sem gema'+(tries?' · tentativas: '+nT(tries):'')+'</span></p>')); }
-function doneHtml(M){ const b=M.v.bonus||{}, p=[]; if(num(b.atkPct)) p.push('+'+dec(b.atkPct)+'% ATK'); if(num(b.hpPct)) p.push('+'+dec(b.hpPct)+'% Vida');
+    +(msgHtml()||'<p class="pt-ln">Tentar de novo é grátis <span>· sem limite, sem energia, sem diamante'+(tries?' · tentativas: '+nT(tries):'')+'</span></p>')); }
+function doneHtml(M){ const b=M.v.bonus||{}, p=[]; if(num(b.atkPct)) p.push('+'+dec(b.atkPct)+'% ATQ'); if(num(b.hpPct)) p.push('+'+dec(b.hpPct)+'% Vida');
   return wrap('<div class="pt-note" role="status">Todas as provações vencidas.'+(p.length?'<br>Bônus para sempre: '+esc(p.join(' e '))+'.':'')+'</div>',backRow); }
 const TIPS=[{d:'gear',img:IC.gear,label:'Equipamento',sub:'Use o melhor'},{d:'forge',img:IC.forge,label:'Forja',sub:'Suba a arma',un:'forge'},{d:'pets',img:IC.pets,label:'Pet',sub:'Evolua o pet',un:'pet'}];
 function tipList(ruleId){ return TIPS.filter(t=>{ if(t.d==='pets'&&ruleId==='nopet') return false; try{ if(t.un&&typeof xUnlocked==='function'&&!xUnlocked(t.un)) return false; }catch(e){} return true; }); }

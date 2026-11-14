@@ -307,6 +307,7 @@ function challenge(){ if(X.busy||!tOk()) return; const T=TW(), o=st();
   const best0=o.best, left0=o.lossesLeft; let r=null; try{ r=T.fight(S,host()); }catch(e){ r=null; }
   try{ if(r&&r.ok&&r.win&&r.floor%10===0&&window.Sys&&Sys.relics) Sys.relics.grant(S,host(),'tower'); }catch(e){}   /* Relíquias: 2 fragmentos a cada 10 andares */
   if(!r||!r.ok){ sfx('ui_tap'); say(r&&r.reason==='locked'?'A Torre libera no nível '+(r.level||'?'):r&&r.reason==='tries'?NO_TRY:'Não foi possível desafiar agora'); redraw(); return; }
+  try{ if(r.win&&typeof grimSrc==='function') grimSrc('tower',{id:'floor-'+r.floor,floor:r.floor}); }catch(e){}   /* Grimório: tinta a cada 10 andares (o módulo recusa os outros andares) */
   /* a vitória ou a derrota e os prêmios JÁ estão no save: grava agora, mesmo que o jogador saia antes do fim da animação */
   call(typeof statsChanged==='function'?statsChanged:typeof save==='function'?save:null);
   clearTimeout(X.timer); clearTimeout(X.hold); X.fx=[]; X.res=null; X.pick=false;

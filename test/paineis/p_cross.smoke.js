@@ -173,6 +173,36 @@ assert(/class="pc-badge"[^>]*style="top:122px"/.test(hud.innerHTML), 'selo logo 
   out.push('selo: 6 px ou mais abaixo do chip de FC recomendada (com e sem a linha do teto de XP) e do selo Fraco contra, x 82 a 318, avisos do jogo abaixo dele'); }
 g.FB_MENU = [{ id: 'gear', side: 'left' }, { id: 'summon', side: 'left' }, { id: 'shop', side: 'left' }, { id: 'pass', side: 'left' }, { id: 'chest', side: 'right' }]; g.fbUnl = id => id !== 'pass' && id !== 'summon';
 assert(/class="pc-bb[^"]*"[^>]*style="top:292px"/.test(P.hudHtml()), 'Bênçãos na vaga livre seguinte da coluna da esquerda (abaixo da Loja)'); delete g.FB_MENU; delete g.fbUnl;
+/* NADA COBRE NADA: com os 4 ícones da coluna esquerda o botão cairia em cima das barras do herói (#fb_kb). Posições LIDAS do js/fullbattle.js */
+{ const FB_SRC = fs.readFileSync(path.join(R, 'js/fullbattle.js'), 'utf8'), km = /id="fb_kb" style="position:absolute;left:(\d+)px;top:(\d+)px;width:(\d+)px/.exec(FB_SRC); assert(km, 'o js/fullbattle.js mudou o #fb_kb: releia a posição das barras do herói');
+  const KL = +km[1], KT = +km[2], KW = +km[3], KH = 26, lefts = []; { const re = /\{ id: '(\w+)',[^}]*?side: 'left',\s*x: (\d+), y: (\d+)/g; let m; while ((m = re.exec(FB_SRC))) lefts.push({ id: m[1], side: 'left', x: +m[2], y: +m[3] }); }
+  assert(lefts.length >= 4 && lefts.every((m, i) => m.y === 136 + 78 * i), 'coluna esquerda do fullbattle: passo de 78 a partir de 136 (' + JSON.stringify(lefts) + ')');
+  const cssBB = /\.pc-bb,\.xs \.pc-bb\{position:absolute;left:(\d+)px;width:(\d+)px;height:(\d+)px/.exec(SRC); assert(cssBB, 'CSS do botão Bênçãos'); const BL = +cssBB[1], BW = +cssBB[2], BH = +cssBB[3];
+  const gid0 = g.document.getElementById, fake = {}; g.document.getElementById = id => fake[id] || gid0(id);
+  /* caixa do botão lida do HTML: {top,left,w,h,sm,ring} (sem estilo próprio vale o CSS) */
+  const box = () => { const h = P.hudHtml(), m = /<button class="(pc-bb[^"]*)" data-pc="list" style="([^"]*)"[^>]*><span class="r"(?: style="width:(\d+)px;height:(\d+)px")?>/.exec(h); assert(m, 'botão Bênçãos no HUD'); const st = {}; m[2].split(';').forEach(p => { const k = p.split(':'); st[k[0]] = parseFloat(k[1]); });
+    return { top: st.top, left: st.left != null ? st.left : BL, w: st.width != null ? st.width : BW, h: st.height != null ? st.height : BH, sm: / sm( |$)/.test(m[1]), ring: m[3] != null ? +m[3] : 52 }; };
+  const hits = b => b.left < KL + KW && b.left + b.w > KL && b.top < +parseFloat(fake.fb_kb.style.top) + KH && b.top + b.h > parseFloat(fake.fb_kb.style.top);
+  try {
+    g.FB_MENU = lefts.concat([{ id: 'chest', side: 'right' }]); g.fbUnl = () => true;
+    { const b = box(); assert.strictEqual(b.top, 136 + 78 * lefts.length); assert.strictEqual(b.sm, false, 'sem as barras na tela (fora da luta cheia): o lugar e o tamanho de sempre'); assert.strictEqual(b.left, BL); assert.strictEqual(b.w, BW); }
+    fake.fb_kb = { style: { left: KL + 'px', top: KT + 'px' } };
+    { const big = { top: 136 + 78 * lefts.length, left: BL, w: BW, h: BH }; assert(hits(big), 'pré-condição: no tamanho de sempre, com ' + lefts.length + ' ícones, o botão (x ' + BL + ' a ' + (BL + BW) + ', y ' + big.top + ' a ' + (big.top + BH) + ') cruza as barras (x ' + KL + ', y ' + KT + ')');
+      const b = box(); assert.strictEqual(b.sm, true, 'cruzando as barras do herói o botão encolhe'); assert.strictEqual(b.top, big.top, 'continua na vaga da coluna'); assert(b.left >= 3 && b.left + b.w <= KL - 2, 'cabe à esquerda das barras: x ' + b.left + ' a ' + (b.left + b.w) + ' (barras em ' + KL + ')');
+      assert(!hits(b), 'não cruza mais as barras'); assert(b.w >= 32 && b.ring <= b.w && b.ring >= 30, 'ainda dá para tocar: ' + b.w + ' px, anel ' + b.ring); assert(b.h <= BH && b.h >= b.ring + 11, 'altura acompanha');
+      assert(/\.pc-bb\.sm \.ct\{right:auto;left:-3px/.test(SRC), 'encolhido: a contagem vai para a esquerda (não invade as barras)'); clean(P.hudHtml(), 'HUD encolhido');
+      out.push('Bênçãos com ' + lefts.length + ' ícones na coluna: x ' + b.left + ' a ' + (b.left + b.w) + ', y ' + b.top + ' a ' + (b.top + b.h) + '; barras do herói a partir de x ' + KL + ' (y ' + KT + '): não se cruzam'); }
+    /* as barras sobem e descem com o herói (montaria): qualquer altura que cruze o botão encolhe; fora da altura dele, tamanho cheio */
+    for (const kt of [KT - 20, KT + 40, KT + BH - 2]) { fake.fb_kb.style.top = kt + 'px'; const b = box(); assert(!hits(b), 'barras em y ' + kt + ': sem cruzar'); assert.strictEqual(b.sm, true); }
+    for (const kt of [136 + 78 * lefts.length - KH - 1, 136 + 78 * lefts.length + BH + 1]) { fake.fb_kb.style.top = kt + 'px'; const b = box(); assert.strictEqual(b.sm, false, 'barras em y ' + kt + ' (fora da altura do botão): tamanho cheio'); assert(!hits(b)); }
+    /* menos ícones (jogador novo): o botão fica acima das barras, tamanho cheio */
+    fake.fb_kb.style.top = KT + 'px'; g.fbUnl = id => id === lefts[0].id || id === lefts[1].id; { const b = box(); assert.strictEqual(b.top, 136 + 78 * 2); assert.strictEqual(b.sm, false); assert(!hits(b), '2 ícones: longe das barras'); }
+    /* barras coladas na borda (não sobra faixa de 32 px): o botão desce para baixo delas */
+    g.fbUnl = () => true; fake.fb_kb.style.left = '20px'; { const b = box(); assert.strictEqual(b.sm, false); assert(b.top >= KT + KH + 6, 'sem faixa à esquerda: desce para baixo das barras (' + b.top + ')'); }
+    fake.fb_kb.style.left = KL + 'px'; fake.fb_kb.style.display = 'none'; assert.strictEqual(box().sm, false, 'barras escondidas não contam'); delete fake.fb_kb.style.display;
+    /* o HUD segue as barras sozinho (update, 2 vezes por segundo, só troca o HTML quando muda) */
+    P.update(true); assert(/class="pc-bb sm/.test(hud.innerHTML), 'o HUD desenha o botão encolhido'); delete fake.fb_kb; P.update(true); assert(!/class="pc-bb sm/.test(hud.innerHTML), 'sem as barras volta ao tamanho cheio');
+  } finally { g.document.getElementById = gid0; delete g.FB_MENU; delete g.fbUnl; } }
 clean(hud.innerHTML, 'HUD'); for (const b of buttons(hud.innerHTML)) assert(b.dataset.pc === 'badge' || b.dataset.pc === 'list', 'botão do HUD sem ação');
 hud.listeners.click({ target: { closest: () => ({ dataset: { pc: 'badge' } }) } }); assert.strictEqual(X.open, true); assert.strictEqual(X.mode, 'pick', 'selo abre a escolha');
 { const id = buttons(H()).find(b => b.dataset.x === 'pick').dataset.id; tap('pick', { id }); tap('ok'); tap('close'); }
