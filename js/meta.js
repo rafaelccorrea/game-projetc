@@ -111,12 +111,18 @@ const TUT=[
   {txt:'A batalha é <b>automática</b>: seu herói ataca sozinho. Derrote 4 inimigos e o chefe para avançar de fase.', sel:()=>'#cv', ok:true},
   {txt:'O <b>Especial</b> dispara sozinho quando recarrega: um golpe 3x mais forte!', sel:()=>'#fb_s2b', ok:true},
   {txt:()=>view==='gear2'?(tutCapped()?'O item sobe até o <b>seu nível</b>. Lute para subir de nível e volte aqui para <b>Upar</b>.':'Toque na sua <b>arma</b> e depois em <b>Upar</b> para deixá-la mais forte.'):view!=='gear'?'Agora abra <b>Equip.</b> para melhorar sua arma.':!document.getElementById('g_upgold')?'Toque na sua <b>arma</b> na mochila.':tutCapped()?'O item sobe até o <b>seu nível</b>. Lute para subir de nível e volte aqui para <b>Upar</b>.':'Toque em <b>Upar</b> para deixar sua arma mais forte.',
-   sel:()=>view==='gear2'?'#tut_sem_alvo':view!=='gear'?'#fbm_gear':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', views:['gear','gear2'], okIf:()=>(view==='gear2'||(view==='gear'&&!!document.getElementById('g_upgold')))&&tutCapped()},
+   sel:()=>view==='gear2'?'#tut_sem_alvo':view!=='gear'?'#fbm_gear':document.getElementById('g_upgold')?'#g_upgold':'.x-cell.eqw', ev:'up', views:['gear','gear2'], doneIf:()=>{ try{ const it=itemOf(S.eq.weapon), l=it?(it.lvl|0):0; if(tutW0<0) tutW0=l; return l>tutW0; }catch(e){ return false; } }, okIf:()=>(view==='gear2'||(view==='gear'&&!!document.getElementById('g_upgold')))&&tutCapped()},
   {txt:'A <b>Ultimate</b> carrega quando você bate e apanha e dispara sozinha quando a energia enche.', sel:()=>'#fb_s3b', ok:true, pre:()=>{ if(view!=='battle') setView('battle'); }},
   /* v0.12.3 (liberação por nível): Invocar só existe a partir do nível 3. O passo fica por último e ESPERA o nível (when); até lá o tutorial some da tela */
   {txt:()=>view==='summon'?'Você tem 1 invocação <b>grátis</b> por dia. Toque nela!':'Abra <b>Invocar</b>: há 1 invocação grátis por dia.', sel:()=>view==='summon'?'[data-a=pull][data-k=item][data-n="1"]':'#fbm_summon', ev:'pull', views:['summon'],
    when:()=>typeof fbUnl!=='function'||fbUnl('summon'), pre:()=>{ if(!S.unl||typeof S.unl!=='object') S.unl={}; S.unl.summon=1; }},
 ];
+let tutSeen=-1, tutW0=-1;   /* tutSeen = passo cuja tela o jogador já abriu · tutW0 = nível da arma quando o passo do Upar apareceu */
+const TUT_MAXLV=5;   /* acima deste nível o tutorial se encerra sozinho: anel e balão não ficam na tela de quem já joga */
+function tutLv(){ try{ return Sys.level.level(S)|0; }catch(e){ return 0; } }
+function tutAuto(st){ try{ if(tutLv()>TUT_MAXLV){ endTut(false); return true; }
+    if(st.doneIf&&st.doneIf()){ S.tut++; save(); tutShow(); return true; }
+    if(st.ev&&st.views){ if(st.views.indexOf(view)>=0) tutSeen=S.tut; else if(tutSeen===S.tut&&view==='battle'){ tutSeen=-1; S.tut++; save(); tutShow(); return true; } } }catch(e){} return false; }
 let tutWait=false;   // true = o passo atual espera uma condição (when); o balão e o anel ficam escondidos
 let tutT=null;
 const tutOn = () => S.tut<99 && tutT!==null;
@@ -150,6 +156,7 @@ function tutShow(){
 function tutLayout(){
   if(!tutOn()) return; const st=TUT[S.tut]; if(!st) return;
   if(tutWait){ if(!st.when||st.when()){ if(view==='battle'&&!B.paused) tutShow(); } return; }
+  if(tutAuto(st)) return;
   const b=document.querySelector('#tut .tbub'), r=document.querySelector('#tut .tring');
   if(b.dataset.k!==S.tut+'|'+st.sel()+'|'+(st.okIf?st.okIf():'')){ tutShow(); return; }
   if(S.tut===1&&B.cd2>0&&!(B.act&&B.act.type==='s2')) B.cd2=0;
