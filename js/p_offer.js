@@ -16,8 +16,9 @@
    - comprar abre "Pagamento em breve" (PO); por isso não há "Processando", itens voando nem entrega aqui. O estado "comprado" (carimbo, vistos,
      "Ver no Equipamento") só aparece quando o jogo/servidor já tiver chamado Sys.offer.grant;
    - nome da arma = o texto que o módulo devolve (contents.weapon); ícone = a arma da era atual do jogador (é a era em que ela chega);
-   - montaria (POLIMENTO P1): arte REAL, o Kael montado no Lobo de guerra (assets/anim/mounts/kael_<id>_idle_era2_t1.png) na vitrine e no card;
-     sem a folha da montaria, volta o marcador neutro (névoa + ferradura). Nome do Sys.mount; o bônus aparece como "até +X%" (teto do Sys.mount);
+   - montaria (N1 da Arte, 14/11): o HERÓI DO JOGADOR (Kael ou Kaia, skin atual) montado, pelo desenho do próprio jogo (folha _body sem arma pintada + a arma
+     no grip), na vitrine e no card; sem o desenho do jogo, ou herói sem folha montada nessa montaria, fica o ÍCONE da montaria sozinha (assets/icons/mounts).
+     A folha kael_<id>_idle_era2_t1 (sempre o Kael, com a espada pintada) NÃO é mais usada. Sem montaria na oferta, volta o marcador neutro (névoa + ferradura). Nome do Sys.mount; o bônus aparece como "até +X%" (teto do Sys.mount);
    - ouro: o módulo guarda "goldk × ouro de um abate"; a tela mostra goldk × Sys.host.goldUnit() (ou "de N abates" se o jogo não der a unidade);
    - estado a mais, que o módulo modela e o protótipo não: quem já fez outra compra (reason 'not_first_purchase') vê "Oferta indisponível";
    - sem os botões "PROTÓTIPO" (pular tempo, reiniciar). */
@@ -46,12 +47,16 @@ function ofMount(o){ const M=ofM(), id=M&&M.DATA?M.DATA.mount:''; let inf=null, 
   try{ if(Sys.mount&&Sys.mount.info){ inf=Sys.mount.info(S,ofHost(),id); vis=!!(Sys.mount.DATA&&Sys.mount.DATA.visual===true); } }catch(e){ inf=null; }
   const nm=inf&&inf.name?inf.name:(typeof o.c.mount==='string'&&o.c.mount&&o.c.mount!==id?o.c.mount:'Montaria');
   return {id:/^[a-z0-9_]+$/.test(id)?id:'',name:nm,rar:inf&&inf.rarityName?inf.rarityName:'',r:inf&&ofNum(inf.rarity)?inf.rarity:-1,pct:inf&&ofNum(inf.maxPct)?inf.maxPct:0,vis}; }
-/* POLIMENTO P1: arte REAL da montaria = o Kael montado (assets/anim/mounts/kael_<id>_idle_era2_t1.png, 12 quadros de 512x352, patas em 339) */
-const ofMountSheet=M=>M&&M.id?'assets/anim/mounts/kael_'+M.id+'_idle_era2_t1.png':'';
-/* POLIMENTO (PO): o Kael montado segura a ARMA DA OFERTA (não a espada da folha). Desenho do próprio jogo (drawHero da batalha, com a montaria e a
-   arma trocável pelo grip quadro a quadro), num canvas da vitrine; sem o desenho do jogo, fica a folha (of-ride) como antes. */
+/* N1 (Arte, 14/11): a montaria da oferta nunca aparece com o Kael fixo e a espada pintada. ofMountIcon = o ícone da montaria SOZINHA (reserva e marca de
+   "esta oferta tem montaria"); ofCanRide = o jogo consegue desenhar o herói ATUAL montado nela (tabela de desenho + folha montada desse herói). */
+const OF_MICON={mecha:'war_mecha'};   /* ícone com nome diferente da folha (como no js/p_mounts2.js) */
+const ofMountIcon=M=>{ if(!M||!M.id) return ''; let f=M.id; try{ if(typeof mountFile==='function') f=mountFile(M.id); }catch(e){} return 'assets/icons/mounts/'+(OF_MICON[M.id]||f)+'.png'; };
+const ofHeroN=()=>{ try{ return S.hero==='kaia'?'Kaia':'Kael'; }catch(e){ return 'Kael'; } };
+/* POLIMENTO (PO): o herói montado segura a ARMA DA OFERTA (não a espada da folha). Desenho do próprio jogo (drawHero da batalha, com a montaria e a
+   arma trocável pelo grip quadro a quadro), num canvas da vitrine; o corpo é o do herói do jogador (mountPrefix). Sem o desenho do jogo: o ícone da montaria. */
 const OFR={x:0,gy:0,t:0,sk:null,ws:null,walking:false,hurt:0,deadP:-1,act:null,main:false,mount:null}; let ofRaf=0, ofLast=0;
 const ofCanDraw=()=>typeof drawHero==='function'&&typeof mainCtx!=='undefined'&&typeof SKIN==='function'&&typeof HS==='number';
+const ofCanRide=M=>{ try{ return ofCanDraw()&&!!M&&!!M.id&&typeof MOUNT_TBL!=='undefined'&&!!MOUNT_TBL[M.id]&&typeof mountPrefix==='function'&&!!mountPrefix(M.id); }catch(e){ return false; } };
 /* desenha nos canvases da tela: vitrine (of_rc, inteiro) e card da montaria (of_rc2, mais perto) */
 function ofRideDraw(c,zoom,dx){ const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth, h=c.clientHeight; if(!w||!h) return;
   if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
@@ -63,7 +68,7 @@ function ofRideLoop(ts){ ofRaf=0; const c=document.getElementById('of_rc'), c2=d
   const dt=ofLast?Math.min(0.05,(ts-ofLast)/1000):0; ofLast=ts; OFR.t+=dt;
   try{ if(c) ofRideDraw(c,1.42,-0.12); if(c2) ofRideDraw(c2,1.32,-0.05); }catch(e){ ctx=mainCtx; }
   ofRaf=requestAnimationFrame(ofRideLoop); }
-function ofRideStart(W,M){ if(!ofCanDraw()||!M||!M.id) return;
+function ofRideStart(W,M){ if(!ofCanRide(M)) return;
   const e=Math.max(0,Math.min(6,W.era|0)), r=Math.max(0,Math.min(4,W.r|0));
   OFR.sk=SKIN(S.skinEq&&S.skinEq.armor)||SKIN('a00'); OFR.ws=SKIN('w'+e+r)||OFR.ws; OFR.mount={id:M.id,stars:3,aura:null};
   try{ if(typeof preloadAssets==='function') preloadAssets(); }catch(e){}
@@ -77,7 +82,7 @@ function ofClock(ms){ const sec=Math.floor(Math.max(0,ms)/1000); return {h:Math.
 function ofWindowTxt(){ const M=ofM(), w=M&&M.DATA?M.DATA.windowMs:0; if(!ofNum(w)||w<=0) return ''; const h=Math.round(w/3600000); return h>=1?'válida por '+h+' h a partir do primeiro acesso':''; }
 function ofOn(){ return typeof view!=='undefined'&&view==='offer'; }
 /* assinatura do que muda por fora (estado, conteúdo, ouro da fase): o tick redesenha só quando ela muda */
-function ofSig(o){ if(o.kind==='soon') return 'soon'; const g=ofGold(o); return [o.kind,ofPrice(o),o.c.weapon,o.c.mount,o.c.gems,g.big,g.small,XO.dlg?1:0].join('|'); }
+function ofSig(o){ if(o.kind==='soon') return 'soon'; const g=ofGold(o); let rd=0; try{ rd=ofCanRide(ofMount(o))?1:0; }catch(e){ rd=0; } return [o.kind,ofPrice(o),o.c.weapon,o.c.mount,o.c.gems,g.big,g.small,XO.dlg?1:0,rd].join('|'); }   /* rd: a folha montada do herói ficou disponível (manifesto chegou) → redesenha com o herói montado */
 
 (function(){ const st=document.createElement('style'); st.textContent=`
 .of-in{animation:of-fade .25s ease-out both}
@@ -109,8 +114,6 @@ function ofSig(o){ if(o.kind==='soon') return 'soon'; const g=ofGold(o); return 
 .of-got{border-color:#5fd068!important}
 .of-off{filter:grayscale(.85) brightness(.7)}
 /* a folha da montaria virou GRADE 6×2 (Arte b691560: 3072×704, 12 quadros): um passo por quadro, linha de cima e depois a de baixo */
-.of-ride{background-repeat:no-repeat;background-size:600% 200%;animation:of-rideK 1s step-end infinite}
-@keyframes of-rideK{0%{background-position:0% 0%}8.333%{background-position:20% 0%}16.667%{background-position:40% 0%}25%{background-position:60% 0%}33.333%{background-position:80% 0%}41.667%{background-position:100% 0%}50%{background-position:0% 100%}58.333%{background-position:20% 100%}66.667%{background-position:40% 100%}75%{background-position:60% 100%}83.333%{background-position:80% 100%}91.667%{background-position:100% 100%}100%{background-position:0% 0%}}
 .of-mist{position:absolute;inset:0;border-radius:inherit;background:radial-gradient(60% 50% at 50% 60%,rgba(220,190,255,.55),rgba(176,124,255,.18) 55%,rgba(176,124,255,0) 75%);animation:of-mistK 2.8s ease-in-out infinite}
 @keyframes of-mistK{0%,100%{opacity:.6;transform:scale(.92)}50%{opacity:1;transform:scale(1.06)}}
 .of-gold{background:linear-gradient(180deg,#ffe07a,#f2a826);color:#2a1403!important;box-shadow:0 6px 0 #8a4f0c;border:0}
@@ -129,7 +132,7 @@ function ofSig(o){ if(o.kind==='soon') return 'soon'; const g=ofGold(o); return 
 .of-dim{animation:of-fade .25s ease-out both}
 .of-soon{animation:of-soonK 2s ease-in-out infinite}
 @keyframes of-soonK{0%,100%{opacity:.75}50%{opacity:1}}
-@media (prefers-reduced-motion:reduce){.of-gtext,.of-rays,.of-spark,.of-digS,.of-colon,.of-wglow,.of-wimg,.of-hshoe,.of-ride,.of-sheen,.of-star,.of-rarP,.of-mist,.of-cta,.of-soon{animation:none}}
+@media (prefers-reduced-motion:reduce){.of-gtext,.of-rays,.of-spark,.of-digS,.of-colon,.of-wglow,.of-wimg,.of-hshoe,.of-sheen,.of-star,.of-rarP,.of-mist,.of-cta,.of-soon{animation:none}}
 `; document.head.appendChild(st); })();
 
 const OF_BG='radial-gradient(130% 70% at 50% 0%,#3f2166 0%,#1e1230 52%,#140c1f 100%)';
@@ -193,8 +196,8 @@ function scrOffer(){
       <span class="of-spark" style="left:52%;top:30%;animation-delay:1s"></span><span class="of-spark" style="left:92%;top:56%;animation-delay:1.4s"></span>
       <div style="position:absolute;left:0;right:0;bottom:0;height:18px;background:linear-gradient(180deg,#4a2f6a,#24163a);border-top:2px solid rgba(220,190,255,.45)"></div>
       <div style="position:absolute;left:14%;width:34%;bottom:10px;height:14px;border-radius:50%;background:rgba(0,0,0,.45)"></div>
-      ${ofMountSheet(M)?(ofCanDraw()?`<canvas id="of_rc" role="img" aria-label="Kael montado no ${esc2(M.name)} com a arma da oferta" style="position:absolute;left:4%;bottom:10px;width:62%;height:96%;z-index:2"></canvas>`
-        :`<div class="of-ride" role="img" aria-label="Kael montado no ${esc2(M.name)}" style="position:absolute;left:34%;bottom:calc(18px - 3.6%);height:96%;aspect-ratio:512 / 352;transform:translateX(-50%);z-index:2;background-image:url(${ofMountSheet(M)})"></div>`)
+      ${ofMountIcon(M)?(ofCanRide(M)?`<canvas id="of_rc" role="img" aria-label="${esc2(ofHeroN())} montando ${esc2(M.name)} com a arma da oferta" style="position:absolute;left:4%;bottom:10px;width:62%;height:96%;z-index:2"></canvas>`
+        :`<img src="${esc2(ofMountIcon(M))}" alt="${esc2(M.name)}" onerror="this.style.visibility='hidden'" style="position:absolute;left:34%;bottom:14px;height:76%;max-width:58%;object-fit:contain;object-position:50% 100%;transform:translateX(-50%);z-index:2">`)
         :`<div class="kidle ${tier?'t'+tier:''}" role="img" aria-label="Kael parado ao lado da arma da oferta" style="position:absolute;left:31%;bottom:calc(18px - 4.7%);height:94%;aspect-ratio:1 / 1;transform:translateX(-50%);z-index:2"></div>`}
       <div style="position:absolute;left:72%;bottom:18px;width:76px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;z-index:2">
         <div class="of-wglow" style="position:relative;width:72px;height:72px;border-radius:16px;border:3px solid ${wCol};background:radial-gradient(circle at 50% 45%,#7a45b8,#2a1640 78%);display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
@@ -226,8 +229,8 @@ function scrOffer(){
         <span style="${descSt}">Chega no seu nível e na sua era · atributos fixos, sem sorteio</span>${done?OF_GOT:''}</div>
       <div class="${cardCls}" style="padding:8px;display:flex;flex-direction:column;gap:4px;border-color:${mCol};animation-delay:.08s">
         <div style="display:flex;gap:7px;align-items:center">
-          <div class="of-wglow" role="img" aria-label="${esc2(M.name)}" style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;border:2px ${ofMountSheet(M)?'solid':'dashed'} ${mCol};background:${ofMountSheet(M)?'radial-gradient(circle,#7a45b8,#2a1640 78%)':'#1d1030'};display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
-            ${ofMountSheet(M)&&ofCanDraw()?`<canvas id="of_rc2" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%"></canvas>`:ofMountSheet(M)?`<span class="of-ride" aria-hidden="true" style="position:absolute;left:50%;bottom:-2px;height:120%;aspect-ratio:512 / 352;transform:translateX(-42%);background-image:url(${ofMountSheet(M)})"></span>`:`<span class="of-mist"></span>${OF_SHOE(28,'#f3e6ff')}`}</div>
+          <div class="of-wglow" role="img" aria-label="${esc2(M.name)}" style="position:relative;width:48px;height:48px;flex:none;border-radius:12px;border:2px ${ofMountIcon(M)?'solid':'dashed'} ${mCol};background:${ofMountIcon(M)?'radial-gradient(circle,#7a45b8,#2a1640 78%)':'#1d1030'};display:flex;align-items:center;justify-content:center;overflow:hidden;box-sizing:border-box">
+            ${ofCanRide(M)?`<canvas id="of_rc2" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%"></canvas>`:ofMountIcon(M)?`<img src="${esc2(ofMountIcon(M))}" alt="" onerror="this.style.visibility='hidden'" style="position:absolute;left:8%;top:8%;width:84%;height:84%;object-fit:contain">`:`<span class="of-mist"></span>${OF_SHOE(28,'#f3e6ff')}`}</div>
           <div style="display:flex;flex-direction:column;gap:3px;min-width:0">${tag(M.rar,mCol)}
             <span style="font-size:10.5px;font-weight:900;color:#d9b3ff;white-space:nowrap">Montaria</span></div></div>
         <span class="lil" style="${nameSt}">${esc2(M.name)}</span>

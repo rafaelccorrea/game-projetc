@@ -14,8 +14,17 @@ const KI = kael('idle');
 const ph = (n, st) => A + 'hyb/phase' + n + '/kael_' + st;
 const pet = (sp, nm) => ({ t: nm, s: [['Parado', [PT + sp + '_idle']], ['Andando', [PT + sp + '_run']], ['Ataque 1', [PT + sp + '_atk1']], ['Ataque 2', [PT + sp + '_atk2']], ['Ataque 3', [PT + sp + '_atk3']],
   ['Médio parado', [PT + sp + '_mid_idle']], ['Médio andando', [PT + sp + '_mid_run']], ['Médio ataque', [PT + sp + '_mid_atk1']], ['Evoluído parado', [PT + sp + '_evo_idle']], ['Evoluído andando', [PT + sp + '_evo_run']], ['Evoluído ataque', [PT + sp + '_evo_atk1']]] });
-const mount = (m, nm) => ({ t: nm, s: [['Parado', [MT + 'kael_' + m + '_idle_era2_t1']], ['Correndo', [MT + 'kael_' + m + '_run_era2_t1']], ['Golpe', [MT + 'kael_' + m + '_attack_era2_t1']],
-  ['3 estrelas parado', [MT + 'kael_' + m + '_idle_3star']], ['3 estrelas correndo', [MT + 'kael_' + m + '_run_3star']], ['5 estrelas parado', [MT + 'kael_' + m + '_idle_5star']], ['5 estrelas correndo', [MT + 'kael_' + m + '_run_5star']]] });
+/* N1 (Arte, 14/11): a montaria NÃO é mais mostrada pelas folhas kael_<montaria>_*_era2_t1 / _Nstar (sempre o Kael, com a espada pintada). O cartão usa o desenho
+   do próprio jogo (window.drawHeroFull com state.mount): herói e skin ATUAIS do jogador, folha _body e a arma que o ponto único devolve (wFamLook) no grip;
+   a aura por estrela é a do código (MOUNT_AURA). ride = id do Sys.mount. Só abre montaria ligada no módulo e com folha montada do herói atual. */
+const mount = (m, nm) => ({ t: nm, ride: m });
+const rideSt = (label, id, stars, o) => Object.assign({ label, ly: [], ride: { id, stars } }, o || {});
+const rideStates = id => [rideSt('Parado', id, 1), rideSt('Correndo', id, 1, { walk: 1 }), rideSt('Golpe', id, 1, { hit: 1 }), rideSt('3 estrelas parado', id, 3), rideSt('3 estrelas correndo', id, 3, { walk: 1 }), rideSt('5 estrelas parado', id, 5), rideSt('5 estrelas correndo', id, 5, { walk: 1 })];
+const rideOk = id => { try { return typeof window.drawHeroFull === 'function' && typeof mountIds === 'function' && mountIds().some(m => m.id === id) && typeof mountPrefix === 'function' && !!mountPrefix(id); } catch (e) { return false; } };
+/* k = px de tela por px da célula de 256; o drawHeroFull quer a escala sobre o tamanho da batalha (HS) e o ponto dos pés */
+function drawRide(g, st, t, cx, gy, k){ const s = { t, mount: st.ride, pet: false, walking: !!st.walk };
+  if (st.hit){ const dur = 0.6, tt = t % (dur + 0.5); if (tt < dur) s.act = { type: 's1', t: tt, dur, hits: [{ t: dur * 0.45, s: dur * 0.45 }] }; }   /* o golpe é o do herói (a montaria não ataca); entre um golpe e outro, parado */
+  window.drawHeroFull(g, cx, gy, k * 256 / HS, s); }
 const gun = (e, nm) => ({ t: nm, s: [['Parado', [PS + 'kael_pistol_idle_era' + e + '_t0']], ['Correndo', [PS + 'kael_pistol_run_era' + e + '_t0']], ['Atirando', [PS + 'kael_pistol_shoot_era' + e + '_t0']]] });
 /* TABELA DE ESCALA POR FASE NA TELA (dono, v0.12.7): garoto 1,00 · adolescente 1,12 · adulto 1,25 · guerreiro 1,30, para Kael e Kaia; pés no chão.
    Vale na Prévia agora; fica em window.PHASE_SCALE para a batalha usar quando o Kael por fase ligar. O tocador NÃO normaliza altura: desenha cada
@@ -35,7 +44,7 @@ const TB = [
   { g: 'Kaia', c: [kaiaF(0, 'Kaia (padrão)')] },
   { g: 'Pets', c: [pet('era0_mammoth', 'Mamute'), pet('era1_sphinx', 'Esfinge'), pet('era2_dragon', 'Dragão'), pet('era3_parrot', 'Papagaio'), pet('era4_mechdog', 'Cão mecânico'),
     { t: 'Ovo chocando', egg: { egg: 'assets/pets/pet_egg.png', pet: PT + 'era0_mammoth_idle' } }] },
-  { g: 'Montarias', c: [mount('wolf', 'Kael no lobo'), mount('griffin', 'Kael no grifo')] },
+  { g: 'Montarias', c: [mount('pony', 'Pônei'), mount('horse', 'Cavalo de guerra'), mount('wolf', 'Lobo de guerra'), mount('griffin', 'Grifo dourado'), mount('mythic', 'Tigre de cristal'), mount('wyvern', 'Serpe dourada'), mount('phoenixm', 'Fênix gigante'), mount('mecha', 'Mecha de guerra')] },
   { g: 'Armas de fogo e nível', c: [gun(3, 'Pistola (era 3)'), gun(4, 'Revólver (era 4)'), gun(5, 'Pistola (era 5)'), gun(6, 'Pistola (era 6)'),
     { t: 'Subir de nível', s: [['Nível +1', [KI, A + 'fx/levelup'], { once: 1 }]] }] },
 ];
@@ -193,9 +202,12 @@ function play(){ const c = document.getElementById('apv_cv'); if (!c || !UI.laye
   const gr = g.createLinearGradient(0, gy, 0, h); gr.addColorStop(0, '#7a5a34'); gr.addColorStop(1, '#4a3520'); g.fillStyle = gr; g.fillRect(0, gy - 8, w, h - gy + 8); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, gy - 8, w, 3);
   const st = UI.layers[UI.st]; let t = (now - UI.t0) / 1000;
   if (st && st.egg) drawEgg(g, st.egg, t, cx, gy, k);
+  else if (st && st.ride){ try { drawRide(g, st, t, cx, gy, k); } catch (e) {} }
   else if (st){ g.fillStyle = 'rgba(30,18,8,.3)'; g.beginPath(); g.ellipse(cx, gy + 2, 34 * k, 8 * k, 0, 0, 7); g.fill(); if (drawLayers(g, st, t, cx, gy, k) && t > (st.dur || 1) + 1) UI.t0 = now; }
   UI.raf = requestAnimationFrame(play); }
 function openCard(gi, ci){ const card = TB[gi].c[ci], tok = ++UI.tok; freeLayers(); UI.tok = tok; UI.open = [gi, ci]; UI.st = 0; paint();
+  if (card.ride){ if (!rideOk(card.ride)){ UI.open = null; paint(); toast('Montaria ainda não disponível para este herói'); return; }
+    UI.layers = rideStates(card.ride); UI.st = 0; UI.t0 = performance.now(); paint(); UI.raf = requestAnimationFrame(play); return; }
   const jobs = card.egg ? [Promise.all([new Promise((ok, er) => { const im = new Image(); im.onload = () => ok(im); im.onerror = er; im.src = card.egg.egg; }), loadLayer(card.egg.pet)]).then(a => ({ label: 'Chocar', egg: { egg: a[0], pet: a[1] }, ly: [a[1]] })).catch(() => null)]
     : card.s.map(s => Promise.all(s[1].map(loadLayer)).then(ly => ({ label: s[0], ly, once: !!(s[2] && s[2].once), sc: (s[2] && s[2].sc) || 1, dur: Math.max.apply(null, ly.map(l => (l.m.frames || 1) / (l.m.fps || 12))) })).catch(() => null));
   Promise.all(jobs).then(res => { if (UI.tok !== tok) return; const ok = res.filter(Boolean);
