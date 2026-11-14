@@ -5,7 +5,7 @@
    ("assets/pets/x.png"); este arquivo resolve, num ponto só, os dois casos de uma <img> dessas que falha:
      1. o pacote JÁ chegou, mas mora em outra pasta (Sys.assets.url): troca o endereço uma vez e a imagem carrega;
      2. o pacote AINDA não chegou: deixa a reserva da própria tela agir (onerror dela); sem reserva, esconde a imagem
-        (nunca o ícone de imagem quebrada) e tenta de novo sozinho quando o pacote chegar.
+        (nunca o ícone de imagem quebrada) e tenta de novo sozinho quando o pacote chegar (mesmo que chegue no MESMO endereço: js/padbridge.js avisa).
    No APK de teste (tudo dentro, Sys.assets desligado) nada disto roda: a imagem não falha.
    SIMULAÇÃO para o QA (PO 14/11): ?debug=1&semlate=1 faz toda <img> desse pacote FALHAR de verdade (endereço que não existe), para ver a reserva de
    cada tela antes da loja; ?debug=1&semlate=20 faz o pacote "chegar" depois de 20 s; no console, LatePack.chegou() faz chegar na hora.
@@ -25,7 +25,10 @@
   function fix(im){ if(!im||!im.dataset) return ''; const p=im.dataset.lpP||rel(im.getAttribute&&im.getAttribute('src')||im.src); if(!late(p)) return '';
     if(ready(p)){ const u=real(p); if(im.dataset.lp==='s'||u===(im.getAttribute&&im.getAttribute('src'))) return ''; im.dataset.lp='s'; im.dataset.lpP=p; if(im.style&&im.dataset.lpH){ im.style.visibility=''; delete im.dataset.lpH; } im.src=u; return 'swap'; }
     im.dataset.lp='w'; im.dataset.lpP=p; return 'wait'; }
-  function tick(){ for(const im of Array.from(WAIT)){ if(!im.isConnected){ WAIT.delete(im); continue; } if(ready(im.dataset.lpP)){ WAIT.delete(im); im.dataset.lp=''; if(im.style) im.style.display=''; fix(im); } }
+  /* o pacote chegou no MESMO endereço (versão de loja: o app intercepta https://localhost/assets/..., CONTRATO_PACOTES §5): a <img> que já falhou não se
+     recarrega sozinha. Pede de novo UMA vez (o carimbo ?lp=1 evita a resposta de falha guardada) e desfaz o esconder. Só roda para imagem que ESPERAVA o pacote. */
+  function again(im){ try{ const p=im.dataset.lpP; if(!p||im.dataset.lp==='s') return; im.dataset.lp='s'; if(im.style&&im.dataset.lpH){ im.style.visibility=''; delete im.dataset.lpH; } const u=real(p); im.src=u+(u.indexOf('?')<0?'?':'&')+'lp=1'; }catch(e){} }
+  function tick(){ for(const im of Array.from(WAIT)){ if(!im.isConnected){ WAIT.delete(im); continue; } if(ready(im.dataset.lpP)){ WAIT.delete(im); im.dataset.lp=''; if(im.style) im.style.display=''; if(fix(im)!=='swap') again(im); } }
     if(!WAIT.size&&timer){ clearInterval(timer); timer=null; } }
   function onError(ev){ const im=ev&&ev.target; if(!im||im.tagName!=='IMG') return; const r=fix(im);
     if(r==='swap'){ if(ev.stopPropagation) ev.stopPropagation(); return; }   /* a reserva da tela não dispara: a imagem vai carregar do pacote */

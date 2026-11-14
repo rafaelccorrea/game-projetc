@@ -82,3 +82,25 @@ A base da loja tinha voltado a 161,3 MB. Saiu da base para o fast-follow (pacote
 - Ficam na base de propósito: relógio do mapa (a história de abertura usa), ícones do Grimório (1ª magia na fase 10, aparecem na batalha), ícones do Menu.
 - Regra em `js/sys/assets.js` (`classify`). Imagem desse pacote que falha é tratada em `js/latepack.js`: pacote chegou em outra pasta = troca o endereço; não chegou = reserva da tela, ou a imagem some e volta sozinha quando chegar.
 - Falta: compressão sem perda dos PNG do core (Arte) e ver as telas com o pacote ausente quando o plugin de entrega existir.
+
+## Plugin de entrega (feito / falta)
+
+Estado em 14/11, só código: nada disto foi compilado nesta rodada nem rodou em aparelho. Forma decidida pelo PO: o app intercepta os endereços (o jogo não troca caminho de imagem). Contrato: `fps-android/CONTRATO_PACOTES.md`.
+
+**Feito**
+
+- Lado Android (já existia, `fps-android/android/app/src/pacotes`): plugin `EonPacks` (`info`, `status`, `ensure`, `fetch`, `confirm`, `remove`, evento `packProgress`) sobre a `asset-delivery:2.3.0`, interceptador da WebView e o gancho na `MainActivity`. Só entra na compilação do AAB; o APK de teste leva a versão vazia (`src/universal`) e nem a biblioteca.
+- Gradle e cópia por pacote (já existiam): `tools/montar-pacotes.js` lê `delivery`/`apack` do manifesto e gera um módulo por asset pack em `android/packs`; `settings.gradle` e `app/build.gradle` os incluem sozinhos. A chave é o modo gravado em `eon_packs.json` (`pacotes` ou `universal`), com trava: `assemble*` só em universal, `bundle*` só em pacotes.
+- Ponte no jogo: `js/padbridge.js` (novo). Fora da loja não faz nada. Na loja: liga o `Sys.assets`, repassa o que está no aparelho (`setInstalled`), pede em segundo plano o fast-follow e o que `plan()` diz que falta, ouve o progresso e, quando um pacote chega, avisa `LatePack`, `Preload` e a cena. Para as telas: `PadBridge.on`, `PadBridge.ensure`, `PadBridge.confirm`, `PadBridge.state.groups`.
+- `js/latepack.js`: imagem do `ui:late` que esperava o pacote é pedida de novo quando ele chega no mesmo endereço (antes só voltava se o endereço mudasse).
+- Testes de fumaça em node: `test/paineis/padbridge.smoke.js` (11 casos, com o `Sys.assets` de verdade e um plugin de mentira) e um caso novo em `test/paineis/latepack.smoke.js`.
+
+**Falta**
+
+- Incluir `padbridge` na lista de scripts do `index.html` (depois de `latepack`). Sem isso a ponte não carrega.
+- Compilar o AAB e medir (`bundletool`); ver em aparelho: interceptador, download, fast-follow automático, telas com o pacote ausente. O Java dos pacotes compilou uma vez em 13/11, antes de ser separado em `src/pacotes`; depois disso não foi recompilado.
+- Refazer a cópia do jogo no `fps-android`: a de hoje (commit f56d3b4) é anterior ao `ui:late`; nela a base dá 174,9 MB e o `montar-pacotes.js` recusa (limite 150).
+- Telas: barra de "baixando" com o progresso real, "sem internet / tentar de novo", "sem espaço", botão de confirmar em Wi-Fi (contrato §4.3). A ponte entrega os dados; nenhuma tela os mostra ainda.
+- Tela de carregamento (`js/loading.js`): esperar o pacote antes de pré-carregar a lista (`PadBridge.ensure({files})`, contrato §4.2). Hoje o arquivo de pacote ausente falha, o jogo usa a reserva e a ponte refaz a cena quando o pacote chega.
+- `Sys.assets.needed()` (Sistemas) não inclui `skin:<id>`, `ult:<família>` nem `weapon:<bow|boomerang>`: skin, ultimate lendária e arco/bumerangue equipados não são pedidos por ninguém. Também pede `hero:<herói>:1` (aposentado), que o app não conhece; a ponte ignora.
+- Decisões do PO ainda abertas: as cinco permissões que a biblioteca da Play acrescenta ao AAB e a chave de upload (ver `fps-android/PLANO_PACOTES.md`).
