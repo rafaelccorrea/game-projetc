@@ -288,3 +288,14 @@ Rodado com `RX='[1.073,1,1.40,1.48,1.50,1.49,1.667k,1.748k,1.54k]' node tools/si
 - sem os módulos, com 115% da FC, vencer.
 
 A primeira tentativa (era 6) foi parada pelo sistema por falta de memória, e nenhum número saiu. Nada mudou no balance.json.
+
+**Lutas com k = 1,5** (versão leve: 4 lutas por caso, node com 600-700 MB; o balance.json ainda não mudou):
+
+| Era | Com os módulos (100% da FC nova) | Sem os módulos, 100% | Sem os módulos, 115% |
+|---|---|---|---|
+| 6 | 4/4 em 29,5 s | 2/4 | 3/4 |
+| 7 | 4/4 em 25,2 s | 0/4 | 4/4 |
+| 8 | falta (a checagem de memória parou em 1,38 GB livres; o S24 passou ao QA) | | |
+
+Leitura: o caso "com os módulos" usa o herói montado na FC nova, por isso o chefe não ficou mais lento. O ×1,5 muda **quando** o jogador
+chega (o calendário), não a luta. As eras 6 e 7 cumprem os limites do dono.
