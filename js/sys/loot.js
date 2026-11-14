@@ -380,6 +380,11 @@ function grantBundle(S,host,b){
      no mesmo lugar dos fragmentos do Passe (S.sys.pass.mfrag) e entram sozinhos quando o jogador ganhar a 1ª (Sys.mount.add chama o release) */
   if(int0(b.mountFrags)){ const n=int0(b.mountFrags), P=root.Sys&&root.Sys.pass;
     try{ if(P&&P.ensure&&P.releaseMountFrags){ const po=P.ensure(S), d={}; po.mfrag=int0(po.mfrag)+n; P.releaseMountFrags(S,d); out.mountFrags=d.id?{n,id:d.id,stars:d.stars,up:d.up}:{n,stored:true}; } }catch(e){} }
+  /* fragmentos de RELÍQUIA genéricos (masmorra cooperativa pelo correio, att.relicFrags; docs/SERVIDOR_LOM.md): Sys.relics.addRelicFrags decide a relíquia
+     (a de menor nível que o jogador tem). Sys.relics ausente ou desligado: ficam guardados em S.sys.loot.relicFrags e o Sys.relics traz sozinho quando ligar. */
+  if(int0(b.relicFrags)){ const n=int0(b.relicFrags), R=root.Sys&&root.Sys.relics; let r=null;
+    try{ if(R&&typeof R.addRelicFrags==='function') r=R.addRelicFrags(S,n,typeof b.origin==='string'?b.origin:'reward'); }catch(e){ r=null; }
+    if(r&&r.ok) out.relicFrags={n,era:r.era}; else { o.relicFrags=int0(o.relicFrags)+n; out.relicFrags={n,stored:true}; } }
   for(const r0 of Array.isArray(b.eggs)?b.eggs:[]){ const r=clamp(int0(r0),0,maxDropR());
     if(capEggR(host,r)<r){ o.held.push({r,source:'drop'}); out.heldEggs.push({r,needLevel:eggNeedLevel(r)}); }
     else out.eggs.push(addEgg(S,host,r)); }

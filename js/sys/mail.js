@@ -73,10 +73,17 @@ function claim(S,host,id){
   if(att.goldk!=null) att.goldk=Math.min(int0(att.goldk),int0(DATA.goldkCap));   // ouro do correio: goldk (× goldUnit da fase) com teto de 5 min de abate   // o pacote comum vai sem a chave nova
   const ndGot=nd?NewDrops().grant(S,host,nd.src,nd.ctx):null;
   if(L&&L.grantBundle){ const got=Object.keys(att).length?L.grantBundle(S,host,att):{}; if(ndGot) got.newDrops=ndGot.got||[]; return {ok:true,got}; }
-  // reserva sem Sys.loot: só ouro e gemas (o resto exige o loot carregado)
+  // reserva sem Sys.loot: só ouro, gemas e fragmentos de relíquia (o resto exige o loot carregado)
   const gold=int0(att.gold), gems=int0(att.gems);
   if(gold&&host.addGold) host.addGold(gold); if(gems&&host.addGems) host.addGems(gems);
-  const got={gold,gems}; if(ndGot) got.newDrops=ndGot.got||[]; return {ok:true,got};
+  const got={gold,gems}; if(int0(att.relicFrags)) got.relicFrags=relicFrags(S,int0(att.relicFrags));
+  if(ndGot) got.newDrops=ndGot.got||[]; return {ok:true,got};
+}
+/* att.relicFrags (masmorra cooperativa, docs/SERVIDOR_LOM.md) sem o Sys.loot: Sys.relics.addRelicFrags; desligado/ausente = guardado em S.sys.loot.relicFrags
+   (o mesmo lugar do Sys.loot.grantBundle; o Sys.relics traz sozinho quando ligar) */
+function relicFrags(S,n){ const R=root.Sys&&root.Sys.relics; let r=null; try{ if(R&&typeof R.addRelicFrags==='function') r=R.addRelicFrags(S,n,'mail'); }catch(e){ r=null; }
+  if(r&&r.ok) return {n,era:r.era}; if(!S.sys||typeof S.sys!=='object') S.sys={}; if(!S.sys.loot||typeof S.sys.loot!=='object') S.sys.loot={};
+  S.sys.loot.relicFrags=int0(S.sys.loot.relicFrags)+n; return {n,stored:true};
 }
 function claimAll(S,host){ if(!DATA.enabled) return {n:0,list:[],reason:'desligado'}; const out=[]; for(const m of inbox(S,host)) if(m.hasAtt&&!m.claimed){ const r=claim(S,host,m.id); if(r.ok) out.push({id:m.id,got:r.got}); } return {n:out.length,list:out}; }
 /* apaga: só sem anexo pendente */

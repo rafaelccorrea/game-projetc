@@ -452,3 +452,27 @@ Regras por trás dos protótipos aprovados pelo dono: `docs/proto/v2/Caminhos.ht
 **O que o Engenheiro chama (quando o dono ligar):**
 1. Caminho: carregar `js/sys/path.js` antes de `strikes.js`, `affinity.js` e `pathtry.js`. Tela Caminhos: `Sys.path.view(S,host)` → `{unlocked, needLevel, chosen, chosenName, freeLeft, nextFreeChange (ms; 0 = já pode), paid:false, text, paths:[{id,name,desc,strikes,stat,chosen,canChoose,canChange}]}`. Botões: `Sys.path.choose(S,host,id)` / `Sys.path.change(S,host,id)` → `{ok, reason:'off'|'id'|'level'|'chosen'|'none'|'same'|'week', next}`. Depois de escolher/trocar, recalcular o perfil do `Sys.strikes` (como na troca de equipamento). Atributos do caminho em pontos %: `Sys.path.statOf(S)` (`{aspd:10}` ou `{critDmg:20}`) → somar na velocidade de ataque e no dano crítico da batalha (o `Sys.stats` ainda não soma sozinho). Também: `current(S)`, `profile(S)`, `styleOf(S)`.
 2. Baús: carregar `js/sys/mapchest.js` depois de `forge.js` e `phases.js`. Mapa: `Sys.mapChest.view(S,host,era)` → `{chests:[{stage, n, name, state, reward:{gold,gems,stones}, text}], ready, readyAll}` (o "!" no botão do mapa = `readyAll`). Toque em baú pronto: `Sys.mapChest.claim(S,host,fase)` (fase = número corrido da curva que vale, ou `{era,slot}`) → `{ok, reason:'off'|'id'|'closed'|'collected', gold, gems, stones}`; credita por `host.addGold`, `host.addGems` e `Sys.forge.addStones`. O host precisa de `goldUnit()` (ouro de um abate da fase atual) e, na curva de hoje, `bestStage()` (maior fase vencida; sem ele vale `stage() − 1`).
+
+### LoM bloco A: Relíquias, Escavação, Pets de apoio, Lista "Hoje" (`relics.js`, `dig.js`, `petsupport.js`, `today.js`)
+
+Itens 8, 9, 10 e 13 do `docs/LOM_VS_EONBOUND.md` §5. Os 4 estão com a chave **DESLIGADA** (`DATA.on=false`) e nada muda no jogo. Passo a passo do Engenheiro: `docs/LIGACOES_LOM_A.md`.
+
+| Ponto | Relíquias (`Sys.relics`) | Escavação (`Sys.dig`) | Pets de apoio (`Sys.petSupport`) | Hoje (`Sys.today`) |
+|---|---|---|---|---|
+| Dados | ✓ 9 relíquias, 1 por era; Nv 1-10; custo 5…50 (206 no total); passivo por nível | ✓ camada 5×6 fixa pela semente; 1 escada, 6 pedras, 2 fragmentos, bomba/broca | ✓ coleção 0,10…0,60 × estágio ×1/1,5/2, teto de 5%; apoio = 30% do lado de vida | ✓ 11 linhas de resgate + 5 de aviso |
+| Poder (FC) | ✓ `bonus(S)`, somado sozinho pelo `Sys.fc`; Nv 10 em tudo = ATQ/Vida +5,2%, DEF +2,6%, Crítico +1,3 pts | — (dá pedras de prática e fragmentos) | ✓ `bonus(S)`: ATQ/Vida da coleção + `petBond` do apoio (dentro do teto de pet) | — |
+| Fontes | ✓ Senhor da Era (nasce; depois 2 por dia), Torre 2/10 andares, Chefe Mundial 3, Arena 5/semana, evento 10, Escavação, `att.relicFrags` do correio (`addRelicFrags`) | ✓ picaretas 1/30 min até 20; missões +5/dia; Senhor da Era 1 bomba; evento | ✓ os pets que já existem | ✓ lê os módulos |
+| Ouro / Brasas | ✓ zero / zero | ✓ zero / zero | ✓ zero / zero | ✓ não cria nada: só chama o resgate de cada módulo |
+| Venda / sorteio pago | ✓ nada; loja recusada | ✓ nada; sem recarga paga; loja recusada | ✓ nada | ✓ nunca gasta moeda, nunca luta, nunca pega a trilha premium |
+| Ligação no jogo | ✗ Engenheiro: `grant` no Senhor da Era, Torre, Chefe Mundial, Arena; tela | ✗ Engenheiro: tela, `grant('daily')` nas missões, `grant('eraLord')` | ✗ Engenheiro: encaixes na tela de Pets; desenhar os 2 apoios atrás | ✗ Engenheiro: botão e folha "Hoje" |
+| Arte | ✗ 9 ícones de relíquia + silhueta (mock da Arte) | ✗ terra, rocha, rachadura, escada, bomba, broca, picareta | ✗ encaixe "Apoio" | ✗ ícones das linhas |
+| Testes | ✓ `test/sys/relics.test.js` (12) | ✓ `test/sys/dig.test.js` (11) | ✓ `test/sys/petsupport.test.js` (8); `pet.js` sem mudança | ✓ `test/sys/today.test.js` (9) |
+
+**Correio da masmorra cooperativa:**
+- `att.relicFrags` é entregue pelo `Sys.loot.grantBundle` (`js/sys/loot.js`). Sem o loot, entra pela reserva do `Sys.mail.claim` (`js/sys/mail.js`, função `relicFrags`). Os dois chamam `Sys.relics.addRelicFrags`.
+- Os fragmentos vão para a relíquia de menor nível. Sem relíquia, ficam soltos (`loose`). Com o módulo desligado, ficam guardados em `S.sys.loot.relicFrags` e entram quando a chave ligar.
+
+**Escavação, simulação** (60 dias, 53 picaretas por dia):
+- Pedras de prática por dia: 19,8 na era 0, 26,3 na era 3 e 44,2 na era 8.
+- Isso é ~5 a 10% das pedras que o abate dá (290 a 460 por dia).
+- Fragmentos: ~2 por dia.

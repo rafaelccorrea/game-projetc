@@ -1,0 +1,64 @@
+// node test/sys/relics.test.js — Sys.relics (Relíquias das Eras, desligado): 9 espaços (1 por era), nasce no Senhor da Era ou com 20 fragmentos,
+// sobe com fragmentos da era, bônus passivo somado pelo Sys.fc, fontes fixas, loja recusada, sem ouro
+'use strict';
+const assert=require('assert');
+globalThis.Sys={};
+['stats','level','fc','relics'].forEach(m=>require('../../js/sys/'+m+'.js'));
+const {makeHost}=require('./_host.js');
+const R=Sys.relics, FC=Sys.fc;
+let n=0; const t=(name,fn)=>{ fn(); n++; console.log('ok -',name); };
+const on=fn=>{ const a=R.DATA.on; R.DATA.on=true; try{ fn(); } finally{ R.DATA.on=a; } };
+const host=o=>makeHost(Object.assign({now:Date.UTC(2026,10,13,15,0,0),eraMax:3},o||{}));
+const DAY=86400000;
+
+t('DESLIGADO por padrão: não grava, bônus zero, Sys.fc igual',()=>{ assert.strictEqual(R.DATA.on,false); const S={}, h=host();
+  const fc0=FC.compute(S,h); assert.strictEqual(R.grant(S,h,'eraLord',{era:0}).reason,'off'); assert.strictEqual(R.addFragments(S,0,50,'dig').reason,'off');
+  assert.strictEqual(R.levelUp(S,'flintAxe',h).reason,'off'); assert.deepStrictEqual(R.bonus(S),{atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
+  assert.strictEqual(FC.compute(S,h),fc0); assert.ok(!S.sys||!S.sys.relics||!Object.keys(S.sys.relics.own||{}).length); });
+t('9 relíquias, uma por era, ids únicos',()=>{ assert.strictEqual(R.DATA.relics.length,9); assert.deepStrictEqual(R.DATA.relics.map(r=>r.era),[0,1,2,3,4,5,6,7,8]);
+  assert.strictEqual(new Set(R.DATA.relics.map(r=>r.id)).size,9); assert.strictEqual(R.DATA.cost.reduce((a,b)=>a+b,0),206); });
+t('Senhor da Era: 1ª vitória faz nascer (Nv 1); de novo = 2 fragmentos, 1 vez por era por dia',()=>on(()=>{ const S={}, h=host();
+  const a=R.grant(S,h,'eraLord',{era:0}); assert.ok(a.ok&&a.unlocked==='flintAxe'&&a.frags===0); assert.strictEqual(R.levelOf(S,'flintAxe'),1);
+  const b=R.grant(S,h,'eraLord',{era:0}); assert.ok(b.ok&&b.src==='eraLordRepeat'&&b.frags===2&&!b.unlocked);
+  assert.strictEqual(R.grant(S,h,'eraLord',{era:0}).reason,'daily'); assert.ok(R.grant(S,h,'eraLord',{era:1}).unlocked==='scarab','outra era vale');
+  h.t+=DAY; assert.strictEqual(R.grant(S,h,'eraLord',{era:0}).frags,2,'dia novo'); assert.strictEqual(R.ensure(S).frags[0],4); }));
+t('subir de nível gasta fragmentos DA ERA; Nv máx 10',()=>on(()=>{ const S={}, h=host(); R.grant(S,h,'eraLord',{era:0});
+  assert.strictEqual(R.canLevel(S,'flintAxe').reason,'frags'); R.addFragments(S,1,999,'dig'); assert.strictEqual(R.canLevel(S,'flintAxe').reason,'frags','era errada não serve');
+  R.addFragments(S,0,206,'dig'); for(let i=0;i<9;i++) assert.ok(R.levelUp(S,'flintAxe',h).ok); assert.strictEqual(R.levelOf(S,'flintAxe'),10);
+  assert.strictEqual(R.ensure(S).frags[0],0); assert.strictEqual(R.canLevel(S,'flintAxe').reason,'max'); }));
+t('nascer com 20 fragmentos sem o Senhor da Era',()=>on(()=>{ const S={}, h=host(); R.addFragments(S,5,19,'dig'); assert.strictEqual(R.canUnlock(S,'fieldRadio').reason,'frags');
+  R.addFragments(S,5,1,'dig'); const u=R.unlock(S,'fieldRadio',h); assert.ok(u.ok&&u.lv===1); assert.strictEqual(R.ensure(S).frags[5],0); assert.strictEqual(R.unlock(S,'fieldRadio',h).reason,'owned'); }));
+t('bônus por relíquia: base + step·(nv−1); Pena da Balança dá ATQ e Vida; entra no Sys.fc sozinho',()=>on(()=>{ const S={}, h=host();
+  const fc0=FC.compute(S,h); R.grant(S,h,'eraLord',{era:0}); R.grant(S,h,'eraLord',{era:3}); R.grant(S,h,'eraLord',{era:8});
+  let b=R.bonus(S); assert.strictEqual(b.atkPct,1.0); assert.strictEqual(b.hpPct,0.4); assert.strictEqual(b.critPct,0.2); assert.strictEqual(b.goldPct,0,'não mexe no ouro');
+  R.addFragments(S,0,206,'dig'); for(let i=0;i<9;i++) R.levelUp(S,'flintAxe',h); b=R.bonus(S); assert.strictEqual(b.atkPct,Math.round((0.6+0.15*9+0.4)*1e4)/1e4);
+  assert.ok(FC.compute(S,h)>fc0,'a FC sobe'); assert.ok(FC.sources(S).some(s=>s.id==='relics'&&s.bonus.atkPct>0)); }));
+t('teto de tudo no Nv 10: ATQ +5,2% · Vida +5,2% · DEF +2,6% · Crítico +1,3 pts',()=>on(()=>{ const S={}, h=host(); const o=R.ensure(S);
+  for(const r of R.DATA.relics) o.own[r.id]={lv:10}; const b=R.bonus(S);
+  assert.deepStrictEqual([b.atkPct,b.hpPct,b.defPct,b.critPct],[5.2,5.2,2.6,1.3]); }));
+t('fontes fixas: torre 2, chefe mundial 3, arena 5, evento 10; era padrão = maior era liberada',()=>on(()=>{ const S={}, h=host({eraMax:4});
+  assert.strictEqual(R.grant(S,h,'tower').era,4); R.grant(S,h,'worldBoss'); R.grant(S,h,'arenaWeek'); R.grant(S,h,'event',{era:2});
+  assert.strictEqual(R.ensure(S).frags[4],10); assert.strictEqual(R.ensure(S).frags[2],10); assert.strictEqual(R.grant(S,h,'xyz').reason,'src'); }));
+t('loja/diamante/anúncio RECUSADOS; código sem preço, sorteio ou ouro',()=>on(()=>{ const S={}, h=host();
+  for(const s of ['shop','gems','offer','pack','pay','gacha','ads']){ assert.strictEqual(R.addFragments(S,0,5,s).reason,'forbidden'); assert.strictEqual(R.grant(S,h,s).reason,'forbidden'); }
+  const src=require('fs').readFileSync(require('path').join(__dirname,'../../js/sys/relics.js'),'utf8').replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'');
+  assert.ok(!/addGold|addGems|productId|brl|price|Math\.random|rng\(/i.test(src)); }));
+t('save estranho é consertado; view para a tela',()=>on(()=>{ const S={sys:{relics:{own:{flintAxe:{lv:99},bogus:{lv:3}},frags:[-5,'x',3]}}}, h=host();
+  const o=R.ensure(S); assert.deepStrictEqual(o.own,{flintAxe:{lv:10}}); assert.deepStrictEqual(o.frags.slice(0,3),[0,0,3]); assert.strictEqual(o.frags.length,9);
+  const v=R.view(S,h); assert.ok(v.on&&v.owned===1&&v.total===9&&v.slots.length===9&&v.paid===false); assert.strictEqual(v.slots[0].max,true);
+  assert.strictEqual(v.slots[5].locked,true,'era 5 acima da era liberada (3)'); assert.ok(/ATQ \+1,95%/.test(v.slots[0].passiveText)); }));
+t('advice no "Como ficar mais forte"',()=>on(()=>{ const S={}, h=host(); R.grant(S,h,'eraLord',{era:0}); R.addFragments(S,0,5,'dig');
+  const a=R.advice(S); assert.ok(a.some(x=>x.id==='relic.lv.flintAxe'&&x.ready&&x.delta.atkPct===0.15));
+  const adv=FC.advice(S,h,50); assert.ok(adv.some(x=>x.id==='relic.lv.flintAxe'&&x.gain>0)); }));
+t('att.relicFrags do correio (masmorra cooperativa): vai para a relíquia de MENOR nível; sem relíquia fica solto; desligado fica guardado no Sys.loot',()=>{
+  require('../../js/sys/loot.js'); const M=require('../../js/sys/mail.js'); const keep=M.DATA.enabled; M.DATA.enabled=true;
+  try{ const S={}, h=host();
+    M.send(S,h,{title:'Masmorra',att:{relicFrags:3}}); const id=M.inbox(S,h)[0].id; const c=M.claim(S,h,id); assert.ok(c.ok&&c.got.relicFrags.stored,'desligado: guardado');
+    assert.strictEqual(S.sys.loot.relicFrags,3);
+    on(()=>{ const o=R.ensure(S); assert.strictEqual(S.sys.loot.relicFrags,0); assert.strictEqual(o.loose,3,'sem relíquia: solto');
+      R.grant(S,h,'eraLord',{era:2}); assert.strictEqual(R.ensure(S).frags[2],3,'solto entra na 1ª que nasce'); assert.strictEqual(R.ensure(S).loose,0);
+      R.grant(S,h,'eraLord',{era:0}); R.ensure(S).own.knightHelm.lv=4; M.send(S,h,{title:'M2',att:{relicFrags:2}});
+      const c2=M.claim(S,h,M.inbox(S,h).find(m=>!m.claimed).id); assert.ok(c2.ok&&c2.got.relicFrags.era===0,'menor nível: era 0'); assert.strictEqual(R.ensure(S).frags[0],2);
+      assert.strictEqual(R.addRelicFrags(S,5,'shop').reason,'forbidden'); });
+  } finally{ M.DATA.enabled=keep; } });
+console.log(n+' testes ok');
