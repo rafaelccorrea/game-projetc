@@ -21,7 +21,7 @@ Regra: `docs/ARTE_PRONTO.md` (as colunas são as listas de lá, por tipo). Uma l
 | (b) refazer os vídeos com o bastão magenta (polevid) | 36 vídeos | ~144 créditos Higgsfield (4/vídeo) ou Kling grátis 18/clipe: 3 clipes/dia → 12 dias | **Já foi feito**: o `_body` atual saiu deste pipeline (cabeçalho de mountset.js) |
 | **(c) RECOMENDADA: só CÓDIGO** — as 3 telas desenham `_body` + arma equipada no grip pelo mesmo caminho da batalha (`drawHeroFull`/StageKit, como a Arena js/p_arena.js:151) e com o prefixo do herói (`mountPrefix`) | 0 | 0 crédito | Engenheiro; teste sheetcss/stagekit nas telas |
 
-Única arte montada que falta de verdade: **Kaia na Fênix gigante** (`kaia_giant_phoenix_{idle,run,attack}_{body,era2_t1}`): 3 vídeos pela opção (b) = ~12 créditos Higgsfield ou 54 dos 66 grátis do Kling (1 dia). A Fênix está desligada.
+Kaia na Fênix gigante: ✓ entregue (5df5551, `kaia_giant_phoenix_{idle,run,attack}_{body,era2_t1}` em assets/anim/mounts). Nenhuma arte montada falta.
 
 **3. Ferramentas** (C:\Users\rafae\AppData\Local\Temp\tools)
 - `mountset.js` ✓ (vídeo com bastão → polevid → loopsheet → `_body` + compose2 → `_era2_t1`); `polevid.js` ✓; `stagekit/` ✓; `riderless/` ✓ (montaria sem cavaleiro).
@@ -153,7 +153,7 @@ Colunas: **A pé** (parado, correr, golpe, giro, morte, pistola ×3; arco/bumera
 ### Montaria
 | Item | Estado | Falta |
 |---|---|---|
-| Fênix gigante (phoenixm) | `newOn:false` (js/sys/mount.js:47); ligada no código atrás da chave (b90cf5e) | **ARTE**: Kaia `kaia_giant_phoenix_{idle,run,attack}_{body,era2_t1}` (3 vídeos com bastão). **CÓDIGO**: imagem parada já entregue (assets/mounts/mount_giant_phoenix_ref.png, b48fff2), mas falta a linha em MOUNT_REF (js/mountfx.js:156); medir wx2/wy2 (MOUNT_TBL :27). Kael ✓ (grip 100%), ícone ✓ (assets/icons/mounts/giant_phoenix.png). N4, N1, N3 |
+| Fênix gigante (phoenixm) | `newOn:false` (js/sys/mount.js:47); ligada no código atrás da chave (b90cf5e) | Kaia ✓ (5df5551). **CÓDIGO**: imagem parada já entregue (assets/mounts/mount_giant_phoenix_ref.png, b48fff2), mas falta a linha em MOUNT_REF (js/mountfx.js:156); medir wx2/wy2 (MOUNT_TBL :27). Kael ✓ (grip 100%), ícone ✓ (assets/icons/mounts/giant_phoenix.png). N4, N1, N3 |
 
 ### Pets (`v4:false`, js/sys/pet.js:61, eras 7-8)
 | Pet | Falta |
@@ -206,4 +206,5 @@ Arte: nada a fazer (ícone, grip do meta.json e folhas conferidos).
 **Montaria parada da Derrota**: ✓ assets/mounts/still/ (b934d3b), as 6 + Fênix.
 **Fogueira das Eras (aprovada pelo dono)**: ✓ fg_s1..9.png (90de853) + laços fg_s1..9_loop (37908a6, d787433).
 **Kaia na Fênix**: ✓ 5df5551. **Ícones das eras 7-8**: ✓ 9b94ead. **Asa Seráfica (A)**: ✓ 4b6c357, no wingsApproved.
-**Pendente**: folhas de dano dos inimigos (arma do atacante pintada; em limpeza); G5 do QA em tudo acima.
+**Folhas de dano dos inimigos**: ✓ limpas (7148219 era 0, eabfae1 eras 1-8). **Retratos dos mestres na Provação**: arte ✓ (assets/mentors/m0..m8.png, adec5d2); falta **CÓDIGO**: `ART={portrait:true}` em js/p_trial.js:23 (pedido ao Engenheiro em 14/11).
+**Pendente**: só o G5 do QA em tudo acima.
