@@ -1,14 +1,17 @@
 /* Eonbound — Sys.events: EVENTOS temporários. Cada evento tem início e fim, missões próprias que dão PONTOS do evento e uma LOJA de pontos
    (skins e materiais, compra direta: nada de sorteio, nada pago). Depois do fim, a loja fica aberta por graceDays para gastar os pontos; aí os pontos somem.
-   Entrega por Sys.loot.grantBundle (portões e itens guardados). Estado em S.sys.events[id]. Relatório: reports/sys-mail-login-eventos.md */
+   Entrega por Sys.loot.grantBundle (portões e itens guardados). Estado em S.sys.events[id]. Relatório: reports/sys-mail-login-eventos.md
+   OCORRÊNCIAS (calendário do servidor, docs/CALENDARIO_EVENTOS.md): o servidor manda GET /events → [{id, start, end, graceEnd}] (ms UTC) e cada
+   ocorrência tem id PRÓPRIO = <tema>_<AAMMDD do início em Brasília> (ex.: festival_eras_261120). O jogo acha o TEMA pelo prefixo (DATA.themes) e
+   guarda tudo por id COMPLETO: pontos, missões, compras (limites), trilha (Sys.evtrail) e ranking (Sys.eventRank). Ocorrência nova = começa do zero.
+   Prefixo desconhecido = ignorado (não entra no calendário, estado apagado). setCalendar(lista, S) aplica e guarda uma cópia no save
+   (S.sys.evcal) para o próximo boot sem rede; load(S, host) busca no servidor. Sem calendário, vale o evento local de DATA.events (id sem sufixo). */
 (function(root){
 'use strict';
-const DATA={
-  enabled:false,   // CHAVE (PO): desligado até o dono aprovar a tela; o jogo liga com Sys.events.DATA.enabled=true
-  graceDays:2,
-  events:[{
-    id:'festival_eras', name:'Festival das Eras', points:'Medalhas do Festival', icon:'🎉',
-    start:'2026-11-20', end:'2026-12-04',   // datas locais (AAAA-MM-DD), fim exclusivo: 14 dias. O jogo pode trocar o calendário.
+/* TEMAS: as regras de cada evento (missões, pontos repetíveis, loja). A data vem do calendário. */
+const THEMES={
+  festival_eras:{
+    name:'Festival das Eras', points:'Medalhas do Festival', icon:'🎉', days:14,
     // missões do evento (uma vez cada, valem pelo evento todo)
     // PRISMÁTICO (Revisão 5 aprovada pelo PO; fps-e2): 100 fragmentos por evento, SEM sorteio = 5 missões × 10 (prism) + loja 5 × 10.
     // Só entregam com Sys.pet.DATA.v3 e v4 ligadas; desligadas, as missões dão só os pontos e o item da loja não aparece.
@@ -21,7 +24,7 @@ const DATA={
     ],
     // pontos repetíveis: a cada `every` do evento k ganha pts, até `cap` pontos no evento
     repeat:[{k:'kill', every:250, pts:5, cap:200}],
-    // loja de pontos (limit = compras por evento). Skins são só visuais. Item fixo respeita o portão (acima dele, fica guardado).
+    // loja de pontos (limit = compras por OCORRÊNCIA). Skins são só visuais (quem já tem a skin não compra de novo). Item fixo respeita o portão.
     shop:[
       {id:'s_skin_w', cost:150, limit:1,  reward:{skin:'festival_weapon'}, txt:'Skin de arma "Lâmina do Festival"'},
       {id:'s_skin_a', cost:150, limit:1,  reward:{skin:'festival_armor'},  txt:'Skin de roupa "Traje do Festival"'},
@@ -32,74 +35,131 @@ const DATA={
       {id:'s_gold',   cost:20,  limit:10, reward:{goldk:50},  txt:'Saco de ouro'},
       {id:'s_prism',  cost:20,  limit:5,  reward:{petFrags:{prism:10}}, needs:'prism', txt:'10 fragmentos do Prismático'},
     ],
-  }],
+  },
 };
+const occ=(base,id,w)=>Object.assign({},THEMES[base],{id,base},w);
+const DATA={
+  enabled:false,   // CHAVE (PO): desligado até o dono aprovar a tela; o jogo liga com Sys.events.DATA.enabled=true
+  graceDays:2,     // carência da loja quando a ocorrência não traz graceEnd (o calendário do servidor usa fim + 2 dias)
+  maxDays:60,      // ocorrência mais longa que o servidor aceita
+  themes:THEMES,
+  calendar:false,  // true depois de setCalendar (DATA.events passa a ser a lista do servidor)
+  // evento LOCAL (sem servidor): datas locais (AAAA-MM-DD), fim exclusivo, 14 dias. Com o calendário, DATA.events vira a lista de ocorrências.
+  events:[occ('festival_eras','festival_eras',{start:'2026-11-20', end:'2026-12-04'})],
+};
+const LOCAL=DATA.events.slice();
 const EVENTS=['kill','boss','ult','chest','instance','forge','summon','upgrade'];
-const DAY=86400000;
+const DAY=86400000, BR=3*3600000;   // Brasília = UTC−3 (sem horário de verão)
+const ID_RE=/^[a-z0-9_]{3,40}$/;
 const num=(v,d)=>(typeof v==='number'&&isFinite(v))?v:d;
 const int0=v=>Math.max(0,Math.floor(num(v,0)));
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const Loot=()=>root.Sys&&root.Sys.loot;
 function ms(d){ if(typeof d==='number') return d; const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d||'')); return m?new Date(+m[1],+m[2]-1,+m[3]).getTime():NaN; }
+/* data do calendário: número (ms UTC) ou texto ISO com fuso */
+const tms=v=>typeof v==='number'?v:(typeof v==='string'&&/T/.test(v)?Date.parse(v):NaN);
+/* tema pelo id: o próprio tema, ou <tema>_<AAMMDD> com data válida. Desconhecido → null */
+function sufDay(id){ const m=/^(.+)_(\d{2})(\d{2})(\d{2})$/.exec(id); if(!m) return null; const y=2000+ +m[2], mo=+m[3], d=+m[4], t=Date.UTC(y,mo-1,d)+BR, x=new Date(t-BR);
+  return x.getUTCFullYear()===y&&x.getUTCMonth()===mo-1&&x.getUTCDate()===d?{base:m[1],start:t}:null; }
+function base(id){ if(typeof id!=='string'||!ID_RE.test(id)) return null; if(Object.prototype.hasOwnProperty.call(THEMES,id)) return id;
+  const s=sufDay(id); return s&&Object.prototype.hasOwnProperty.call(THEMES,s.base)?s.base:null; }
 const byId=id=>DATA.events.find(e=>e.id===id)||null;
+/* definição de um id: a ocorrência do calendário; fora dele, o TEMA (regras e loja) sem janela (fase 'fim'). Serve ao Sys.evtrail.earned no servidor. */
+function def(id){ const e=byId(id); if(e) return e; const b=base(id); return b?occ(b,id,{start:NaN,end:NaN}):null; }
+/* nome visível: tema + data de início ('Festival das Eras · 20/11/2026') */
+function nameOf(id){ const b=base(id); if(!b) return ''; const s=sufDay(id); if(!s||b===id) return THEMES[b].name;
+  const d=new Date(s.start-BR), p=n=>String(n).padStart(2,'0'); return THEMES[b].name+' · '+p(d.getUTCDate())+'/'+p(d.getUTCMonth()+1)+'/'+d.getUTCFullYear(); }
 /* Prismático ligado? (as duas chaves de pets da fps-e2) */
 const prismOn=()=>{ const P=root.Sys&&root.Sys.pet; return !!(P&&P.DATA&&P.DATA.v3===true&&P.DATA.v4===true); };
 const visible=x=>!x.needs||(x.needs==='prism'&&prismOn());
+const owns=(S,x)=>!!(x.reward&&x.reward.skin&&S&&Array.isArray(S.skins)&&S.skins.includes(x.reward.skin));
 
 function ensure(S){
   if(!S||typeof S!=='object') throw new Error('Sys.events.ensure: save inválido');
   if(!S.sys||typeof S.sys!=='object') S.sys={};
   let o=S.sys.events; if(!o||typeof o!=='object'||Array.isArray(o)) o=S.sys.events={};
-  for(const id in o){ const s=o[id]; if(!byId(id)||!s||typeof s!=='object'){ delete o[id]; continue; }
+  // guarda o estado de toda ocorrência de tema conhecido (mesmo fora do calendário carregado agora: no boot ele chega depois)
+  for(const id in o){ const s=o[id]; if(!base(id)||!s||typeof s!=='object'){ delete o[id]; continue; }
     s.pts=int0(s.pts); s.rep=int0(s.rep); if(!s.p||typeof s.p!=='object') s.p={}; for(const k in s.p){ if(!EVENTS.includes(k)) delete s.p[k]; else s.p[k]=int0(s.p[k]); }
     if(!Array.isArray(s.c)) s.c=[]; if(!s.buys||typeof s.buys!=='object') s.buys={}; for(const k in s.buys) s.buys[k]=int0(s.buys[k]); }
   return o;
 }
 function st(S,id){ const o=ensure(S); return o[id]||(o[id]={pts:0,rep:0,p:{},c:[],buys:{}}); }
-/* fase do evento agora: 'antes' | 'ativo' | 'loja' (fim + graceDays) | 'fim' */
-function phase(ev,host){ const now=nowOf(host), a=ms(ev.start), b=ms(ev.end);
-  if(!(isFinite(a)&&isFinite(b))) return 'fim'; if(now<a) return 'antes'; if(now<b) return 'ativo'; if(now<b+DATA.graceDays*DAY) return 'loja'; return 'fim'; }
-/* eventos visíveis agora (ativos ou com loja aberta): [{id, name, phase, pts, endsIn}] */
+
+/* ---------------- CALENDÁRIO (ocorrências do servidor) ---------------- */
+/* valida uma entrada {id, start, end, graceEnd, requires?, minClientVersion?} → ocorrência ou null (tema desconhecido, datas ruins, > maxDays) */
+function parseOcc(x){ if(!x||typeof x!=='object') return null; const id=x.id, b=base(id); if(!b) return null;
+  const a=tms(x.start), e=tms(x.end), g=x.graceEnd==null?e+DATA.graceDays*DAY:tms(x.graceEnd);
+  if(!(isFinite(a)&&isFinite(e)&&isFinite(g))||!(a<e&&e<=g)||e-a>DATA.maxDays*DAY) return null;
+  const w={start:a,end:e,graceEnd:g}; if(Array.isArray(x.requires)) w.requires=x.requires.filter(k=>typeof k==='string').slice(0,10);
+  if(typeof x.minClientVersion==='string') w.minClientVersion=x.minClientVersion; return occ(b,id,w); }
+/* estado de um evento LOCAL sem sufixo (festival_eras) passa para a ocorrência do calendário que começa no mesmo dia (festival_eras_261120) */
+function adopt(S){ if(!S||!S.sys) return; for(const key of ['events','evtrail']){ const o=S.sys[key]; if(!o||typeof o!=='object') continue;
+    for(const L of LOCAL){ if(!o[L.id]) continue; const a=ms(L.start); if(!isFinite(a)) continue; const d=new Date(a), p=n=>String(n).padStart(2,'0');
+      const to=L.base+'_'+p(d.getFullYear()%100)+p(d.getMonth()+1)+p(d.getDate()); if(byId(to)&&!o[to]){ o[to]=o[L.id]; delete o[L.id]; } } } }
+/* aplica a lista do servidor (GET /events). Lista inválida (não é array) não muda nada. Com S, guarda a lista no save e adota o estado local.
+   → {ok, n, ignored:[ids]} */
+function setCalendar(list,S){ if(!Array.isArray(list)) return {ok:false,reason:'data'}; const out=[], ignored=[], seen=new Set();
+  for(const x of list.slice(0,200)){ const o=parseOcc(x); if(!o||seen.has(o.id)){ ignored.push(x&&typeof x.id==='string'?x.id.slice(0,40):'?'); continue; } seen.add(o.id); out.push(o); }
+  out.sort((a,b)=>a.start-b.start); DATA.events=out; DATA.calendar=true;
+  if(S&&typeof S==='object'){ ensure(S); S.sys.evcal=out.map(o=>{ const r={id:o.id,start:o.start,end:o.end,graceEnd:o.graceEnd}; if(o.requires) r.requires=o.requires.slice(); if(o.minClientVersion) r.minClientVersion=o.minClientVersion; return r; }); adopt(S); }
+  return {ok:true,n:out.length,ignored}; }
+/* boot sem rede: usa o calendário guardado no save (se o desta sessão ainda não chegou) */
+function restore(S){ if(DATA.calendar||!S||!S.sys||!Array.isArray(S.sys.evcal)) return false; setCalendar(S.sys.evcal,null); adopt(S); return true; }
+/* busca o calendário no servidor (Sys.net.events) e aplica. Promise {ok, n, ignored} ou {ok:false, reason} */
+async function load(S,host){ const N=root.Sys&&root.Sys.net; if(!N||typeof N.events!=='function') return {ok:false,reason:'net_off'};
+  let d; try{ d=await N.events(); }catch(e){ return {ok:false,reason:(e&&e.code)||'error'}; } return setCalendar(d,S); }
+
+/* fase do evento agora: 'antes' | 'ativo' | 'loja' (até graceEnd, ou fim + graceDays) | 'fim' */
+function phase(ev,host){ const now=nowOf(host), a=ms(ev.start), b=ms(ev.end), g=ev.graceEnd!=null?ms(ev.graceEnd):b+DATA.graceDays*DAY;
+  if(!(isFinite(a)&&isFinite(b)&&isFinite(g))) return 'fim'; if(now<a) return 'antes'; if(now<b) return 'ativo'; if(now<g) return 'loja'; return 'fim'; }
+const graceOf=ev=>ev.graceEnd!=null?ms(ev.graceEnd):ms(ev.end)+DATA.graceDays*DAY;
+/* eventos visíveis agora (ativos ou com loja aberta): [{id, base, name, phase, pts, endsAt}] */
 function list(S,host){
-  if(!DATA.enabled) return [];
+  if(!DATA.enabled) return []; restore(S);
   return DATA.events.filter(ev=>['ativo','loja'].includes(phase(ev,host))).map(ev=>{ const s=st(S,ev.id), ph=phase(ev,host);
-    return {id:ev.id,name:ev.name,icon:ev.icon,points:ev.points,phase:ph,pts:s.pts,endsAt:ph==='ativo'?ms(ev.end):ms(ev.end)+DATA.graceDays*DAY}; });
+    return {id:ev.id,base:ev.base,name:ev.name,icon:ev.icon,points:ev.points,phase:ph,pts:s.pts,start:ms(ev.start),endsAt:ph==='ativo'?ms(ev.end):graceOf(ev)}; });
 }
 /* evento do jogo (abate, chefe, instância...). Só conta em evento ATIVO. Pontos repetíveis entram na hora (até o teto). */
 function track(S,host,k,n){
-  if(!DATA.enabled||!EVENTS.includes(k)) return; const v=int0(n==null?1:n); if(!v) return;
+  if(!DATA.enabled||!EVENTS.includes(k)) return; const v=int0(n==null?1:n); if(!v) return; restore(S);
   for(const ev of DATA.events){ if(phase(ev,host)!=='ativo') continue; const s=st(S,ev.id), before=s.p[k]||0; s.p[k]=before+v;
     for(const r of ev.repeat||[]){ if(r.k!==k) continue; const steps=Math.floor(s.p[k]/r.every)-Math.floor(before/r.every);
       const add=Math.max(0,Math.min(steps*r.pts,r.cap-s.rep)); s.rep+=add; s.pts+=add; } }
 }
-function missions(S,host,id){ const ev=byId(id); if(!ev) return []; const s=st(S,id);
+function missions(S,host,id){ restore(S); const ev=byId(id); if(!ev) return []; const s=st(S,id);
   return ev.missions.map(m=>({id:m.id,txt:m.txt,need:m.need,pts:m.pts,prism:prismOn()?int0(m.prism):0,p:Math.min(m.need,s.p[m.k]||0),done:(s.p[m.k]||0)>=m.need,claimed:s.c.includes(m.id)})); }
 /* resgata missão do evento (só com o evento ativo ou na loja) → {ok, pts} */
 function claimMission(S,host,id,mid){
-  if(!DATA.enabled) return {ok:false,reason:'desligado'};
+  if(!DATA.enabled) return {ok:false,reason:'desligado'}; restore(S);
   const ev=byId(id); if(!ev) return {ok:false,reason:'evento'}; if(!['ativo','loja'].includes(phase(ev,host))) return {ok:false,reason:'fechado'};
   const m=missions(S,host,id).find(x=>x.id===mid); if(!m) return {ok:false,reason:'id'}; if(!m.done) return {ok:false,reason:'incompleto'}; if(m.claimed) return {ok:false,reason:'resgatado'};
   const s=st(S,id); s.c.push(mid); s.pts+=m.pts;
   let got=null; if(m.prism){ const L=Loot(); if(L&&L.grantBundle) got=L.grantBundle(S,host,{petFrags:{prism:m.prism}}); }   // fragmentos do Prismático (só com as chaves)
   return {ok:true,pts:m.pts,total:s.pts,prism:m.prism||0,got};
 }
-function shop(S,host,id){ const ev=byId(id); if(!ev) return []; const s=st(S,id);
-  return ev.shop.filter(visible).map(x=>({id:x.id,txt:x.txt,cost:x.cost,limit:x.limit,bought:s.buys[x.id]||0,canBuy:(s.buys[x.id]||0)<x.limit&&s.pts>=x.cost,reward:x.reward})); }
+function shop(S,host,id){ restore(S); const ev=byId(id); if(!ev) return []; const s=st(S,id);
+  return ev.shop.filter(visible).map(x=>{ const own=owns(S,x); return {id:x.id,txt:x.txt,cost:x.cost,limit:x.limit,bought:s.buys[x.id]||0,owned:own,canBuy:!own&&(s.buys[x.id]||0)<x.limit&&s.pts>=x.cost,reward:x.reward}; }); }
 /* compra na loja de pontos (compra direta; nunca sorteio) → {ok, got} */
 function buy(S,host,id,sid){
-  if(!DATA.enabled) return {ok:false,reason:'desligado'};
+  if(!DATA.enabled) return {ok:false,reason:'desligado'}; restore(S);
   const ev=byId(id); if(!ev) return {ok:false,reason:'evento'}; if(!['ativo','loja'].includes(phase(ev,host))) return {ok:false,reason:'fechado'};
   const x=ev.shop.find(y=>y.id===sid); if(!x||!visible(x)) return {ok:false,reason:'id'}; const s=st(S,id);
-  if((s.buys[sid]||0)>=x.limit) return {ok:false,reason:'limite'}; if(s.pts<x.cost) return {ok:false,reason:'pontos'};
+  if((s.buys[sid]||0)>=x.limit) return {ok:false,reason:'limite'}; if(owns(S,x)) return {ok:false,reason:'possui'}; if(s.pts<x.cost) return {ok:false,reason:'pontos'};
   const L=Loot(); if(!L||!L.grantBundle) return {ok:false,reason:'loot'};
   s.pts-=x.cost; s.buys[sid]=(s.buys[sid]||0)+1;
   return {ok:true,got:L.grantBundle(S,host,x.reward),left:s.pts};
 }
-/* depois do fim + carência, apaga o estado do evento (os pontos somem) */
-function cleanup(S,host){ const o=ensure(S); for(const id in o){ const ev=byId(id); if(!ev||phase(ev,host)==='fim') delete o[id]; } }
+/* depois do fim + carência, apaga o estado da ocorrência (os pontos somem; a trilha do Sys.evtrail da mesma ocorrência também).
+   Ocorrência fora do calendário atual: apaga quando passou do maior prazo possível (início + maxDays + graceDays). */
+function cleanup(S,host){ restore(S); const o=ensure(S), now=nowOf(host), T=S.sys.evtrail;
+  for(const id in o){ const ev=byId(id); let gone;
+    if(ev) gone=phase(ev,host)==='fim';
+    else { const L=LOCAL.find(x=>x.id===id), s=sufDay(id), a=L?ms(L.start):s?s.start:NaN; gone=!isFinite(a)||now>=a+(DATA.maxDays+DATA.graceDays)*DAY; }
+    if(gone){ delete o[id]; if(T&&typeof T==='object') delete T[id]; } } }
 
 const bonus=()=>({atkPct:0,hpPct:0,goldPct:0,critPct:0,defPct:0,fc:0});
-const API={DATA,ensure,phase,list,track,missions,claimMission,shop,buy,cleanup,bonus};
+const API={DATA,ensure,phase,list,track,missions,claimMission,shop,buy,cleanup,bonus,base,def,nameOf,setCalendar,restore,load};
 root.Sys=root.Sys||{}; root.Sys.events=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

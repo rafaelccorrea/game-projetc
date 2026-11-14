@@ -26,7 +26,7 @@ const on=()=>DATA.on===true;
 const setOn=v=>{ DATA.on=!!v; return DATA.on; };
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
 const evId=v=>typeof v==='string'&&/^[a-z0-9_]{1,40}$/.test(v)?v:null;
-const evName=id=>{ const E=SYS().events; try{ const ev=E&&E.DATA&&E.DATA.events.find(e=>e.id===id); if(ev) return ev.name; }catch(e){} return 'Evento'; };
+const evName=id=>{ const E=SYS().events; try{ if(E&&typeof E.nameOf==='function'){ const n=E.nameOf(id); if(n) return n; } const ev=E&&E.DATA&&E.DATA.events.find(e=>e.id===id); if(ev) return ev.name; }catch(e){} return 'Evento'; };
 
 /* ================= REGRAS PURAS (o servidor carrega este arquivo) ================= */
 /* faixa pela posição final entre `total` jogadores com ≥ 1 ponto: top1 se rank ≤ max(1, ceil(1%·total)); top10 ≤ ceil(10%); top50 ≤ ceil(50%); senão part */

@@ -35,9 +35,11 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ON=()=>DATA.on===true;
 const SYS=()=>root.Sys||{};
 const nowOf=host=>num(host&&host.now&&host.now(),Date.now());
-const cfg=id=>DATA.events[id]||DATA.events.default;
+/* config da trilha/chefe: pelo id da ocorrência, senão pelo TEMA (prefixo: festival_eras_261120 → festival_eras, Sys.events.base), senão 'default' */
+const cfg=id=>{ if(DATA.events[id]) return DATA.events[id]; const E=SYS().events; let b=null; try{ b=E&&E.base?E.base(id):null; }catch(e){} return (b&&DATA.events[b])||DATA.events.default; };
 const dayKey=host=>{ const C=SYS().clock, t=nowOf(host); if(C&&C.dayKey) return C.dayKey(t); const d=new Date(t); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
-const evDef=id=>{ const E=SYS().events; return E&&E.DATA&&E.DATA.events?E.DATA.events.find(e=>e.id===id)||null:null; };
+/* definição da ocorrência (Sys.events.def: a do calendário, ou o tema pelo prefixo; o servidor roda o earned sem calendário). Estado por id COMPLETO. */
+const evDef=id=>{ const E=SYS().events; if(E&&typeof E.def==='function'){ try{ return E.def(id); }catch(e){ return null; } } return E&&E.DATA&&E.DATA.events?E.DATA.events.find(e=>e.id===id)||null:null; };
 const evOpen=(id,host)=>{ const E=SYS().events, ev=evDef(id); return !!(E&&E.DATA&&E.DATA.enabled&&ev&&E.phase&&E.phase(ev,host)==='ativo'); };
 
 function ensure(S){ if(!S||typeof S!=='object') throw new Error('Sys.evtrail.ensure: save inválido'); if(!S.sys||typeof S.sys!=='object') S.sys={};
