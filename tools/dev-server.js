@@ -45,7 +45,10 @@ http.createServer((req, res) => {
     res.write('retry: 2000\nevent: hello\ndata: 1\n\n'); clients.add(res);
     const off = () => { clients.delete(res); }; req.on('close', off); res.on('error', off); return;
   }
-  if (u.pathname === '/__dev/ping') { res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' }); return res.end('eonbound-dev ' + clients.size); }   // o tools/dev-celular.cmd usa para saber se este servidor já está no ar
+  if (u.pathname === '/__dev/pause' || u.pathname === '/__dev/resume') { const txt = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' };
+    if (u.pathname === '/__dev/pause') { const m = Math.max(1, Math.min(180, +(u.searchParams.get('min') || 25) || 25)); pausedUntil = Date.now() + m * 60000; clearTimeout(pauseT); pauseT = setTimeout(resume, m * 60000); console.log(new Date().toLocaleTimeString() + '  recarga ao vivo PAUSADA por ' + m + ' min'); res.writeHead(200, txt); return res.end('pausada por ' + m + ' min'); }
+    resume(); res.writeHead(200, txt); return res.end('liberada'); }
+  if (u.pathname === '/__dev/ping') { res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' }); return res.end('eonbound-dev ' + clients.size + (pausedUntil > Date.now() ? ' pausada ' + Math.ceil((pausedUntil - Date.now()) / 60000) + 'min' : '')); }   // o tools/dev-celular.cmd usa para saber se este servidor já está no ar
   const live = isLive(req, u);
   if (live && u.pathname === '/sw.js') { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }); return res.end('sem service worker no modo de desenvolvimento'); }
   const file = resolveFile(u.pathname);
@@ -75,11 +78,13 @@ http.createServer((req, res) => {
    Só .css mudou = troca de estilo sem recarregar; qualquer outra coisa = recarga. Arquivo temporário de editor (~, .tmp, .swp) é ignorado. */
 const WATCH = ['js', 'assets', 'css'], FILES = new Set(['index.html', 'sw.js']);
 const QUIET_MS = 4000;   /* pedido do dono (recarregava a cada arquivo): só recarrega depois de 4 s sem nenhuma gravação */
-let timer = null, onlyCss = true, count = 0;
+let timer = null, onlyCss = true, count = 0, pausedUntil = 0, pauseT = null, pending = false;
+function resume() { clearTimeout(pauseT); pausedUntil = 0; console.log(new Date().toLocaleTimeString() + '  recarga ao vivo LIBERADA' + (pending ? ' (havia mudanças: recarregando)' : '')); if (pending) { pending = false; changed('index.html'); } }
 function changed(rel) {
   rel = String(rel || '').replace(/\\/g, '/'); if (!rel || /(~|\.tmp|\.swp|\.crdownload|\.lock)$/i.test(rel) || /(^|\/)\./.test(rel)) return;
   if (!/\.css$/i.test(rel)) onlyCss = false; count++;
   clearTimeout(timer); timer = setTimeout(() => {
+    if (pausedUntil > Date.now()) { pending = true; return; }   /* pausada: guarda (não zera onlyCss/count) e avisa uma vez ao liberar */
     const ev = onlyCss ? 'css' : 'reload', n = count; onlyCss = true; count = 0;
     if (clients.size) console.log(new Date().toLocaleTimeString() + '  ' + n + ' arquivo(s) mudaram: ' + (ev === 'css' ? 'estilo trocado' : 'recarregando') + ' em ' + clients.size + ' tela(s)');
     for (const c of clients) { try { c.write('event: ' + ev + '\ndata: ' + Date.now() + '\n\n'); } catch (e) { clients.delete(c); } }
