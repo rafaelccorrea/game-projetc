@@ -35,7 +35,7 @@ t('aprender: Senhor da Era ensina a 1ª, chefe da fase 50 ensina a 2ª; instânc
   r=G.grant(S,h,'instance'); assert.strictEqual(r.pages,null,'a B da era 1 ainda não foi aprendida');
   r=G.grant(S,h,'chief50',{era:1}); assert.strictEqual(r.learned,'minotaurSpear');
   r=G.grant(S,h,'instance'); assert.deepStrictEqual(r.pages,{id:'minotaurSpear',n:1}); assert.strictEqual(G.ensure(S).own.minotaurSpear.pages,1);
-  assert.strictEqual(G.ensure(S).ink,20+10+5+5);
+  assert.strictEqual(G.ensure(S).ink,20+10+2*G.DATA.grants.instance.ink);   /* instância: tinta das fontes do dia (DATA.sources, hoje 3) */
 }));
 
 t('Senhor da Era repetido: 1 página por era por dia; no dia seguinte volta',()=>withOn(()=>{

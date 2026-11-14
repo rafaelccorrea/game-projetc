@@ -56,11 +56,28 @@ const DATA={
     eraLord:      {learn:'A', ink:20},             // 1ª vitória sobre o Senhor da Era: aprende a A + 20 tinta
     eraLordRepeat:{pages:'A', n:1, daily:1},       // Senhor da Era de novo: 1 página da A, 1 por era por dia
     chief50:      {learn:'B', ink:10},             // 1ª vitória sobre o chefe da fase 50: aprende a B + 10 tinta
-    instance:     {pagesEra:'B', n:1, ink:5},      // cada instância diária vencida: 1 página da B da era liberada + 5 tinta
-    tower:        {ink:15},                        // a cada 10 andares da Torre: 15 tinta
-    daily:        {ink:5},                         // missões diárias completas: 5 tinta
-    event:        {pick:true, n:3},                // prêmio fixo de evento: 3 páginas da magia que o evento diz
+    /* as 4 abaixo são o TEXTO da tela (js/p_grim.js lê daqui) e o caminho antigo sem teto. No jogo elas entram por onSource() (DATA.sources, com teto
+       diário e id único); os números aqui são os MESMOS de DATA.sources (o teste grimoire-fontes confere). */
+    instance:     {pagesEra:'B', n:1, ink:3},      // instância diária vencida: 1 página da B da era (se já aprendida) + 3 tinta
+    tower:        {ink:5},                         // a cada 10 andares da Torre: 5 tinta
+    daily:        {ink:5},                         // missões diárias resgatadas: 1 tinta cada, até 5 por dia
+    event:        {pick:true, n:1},                // prêmio de evento resgatado: 1 página da magia que o evento diz
   },
+  /* FONTES DO DIA (pedido do PO: o protótipo aprovado GrimorioV3 diz que Instância diária, Torre, Missões diárias e Eventos dão páginas e tinta).
+     Entram por onSource(S, host, src, ctx). Quantias PEQUENAS, teto por fonte e teto do dia somado, id único por prêmio (nunca paga 2 vezes).
+     CONTA (calibração): o jogador ATIVO vence ~1 era por dia (10 fases). Os chefes dão nesse dia: Senhor da Era 1ª vez 20 tinta + 1 magia (1 página),
+     chefe do meio da era 1ª vez 10 tinta + 1 magia (1 página), e ~2 repetições do Senhor da Era (1 página cada) = 30 tinta e 4 páginas por dia.
+     Metade disso = 15 tinta e 2 páginas. As 4 fontes somadas, no teto de cada uma, dão 3+5+5+2 = 15 tinta e 1+1 = 2 páginas; o TETO DO DIA corta
+     para 12 tinta e 2 páginas (40% da tinta e 50% das páginas dos chefes). Para comparar: subir UMA magia do nível 1 ao 10 custa 65 páginas e
+     1.090 de tinta, então as fontes do dia sozinhas levam ~3 meses para isso. No fim do jogo (eras mais lentas) o teto fixo segura o ritmo.
+     Tudo fixo, nada sorteado, nada à venda. */
+  sources:{
+    instance:{pages:1, ink:3, cap:{pages:1, ink:3}},   // por instância vencida (ou varrida): página da B da era só se a B já foi aprendida
+    tower:   {ink:5, every:10, cap:{ink:5}},           // só no andar múltiplo de 10 (ctx.floor); outros andares devolvem reason 'skip'
+    mission: {ink:1, cap:{ink:5}},                     // por missão DIÁRIA resgatada; o id vale só no dia (o módulo junta o dia ao id)
+    event:   {pages:1, ink:2, cap:{pages:1, ink:2}},   // por prêmio de evento: página da magia ctx.spell (pode ensinar, como o grant 'event'); sem ctx.spell, só a tinta
+  },
+  sourceCap:{pages:2, ink:12},                         // teto do DIA, as 4 fontes somadas
   forbidden:['shop','gems','offer','pack','pay','gacha'],   // fontes RECUSADAS (regra: nada à venda dá poder sorteado; menores jogam)
 };
 const IDX={}; DATA.spells.forEach((s,i)=>{ IDX[s.id]=i; });
@@ -146,6 +163,43 @@ function grant(S,host,src,opt){ if(!on()) return {ok:false,reason:'off'}; if(bad
   if(src==='eraLord') o.first.eraLord[era]=1; if(src==='chief50') o.first.chief50[era]=1;
   changed(host); return out; }
 
+/* FONTES DO DIA: onSource(S, host, src, ctx) com src 'instance' | 'tower' | 'mission' | 'event' e ctx = {id (OBRIGATÓRIO, único por prêmio),
+   era (instância: era do nível jogado; padrão = era liberada), floor (Torre: andar vencido), spell (evento: id da magia)}.
+   → {ok, src, pages, ink, spell (id da magia que ganhou a página ou null), learned, reason}
+   reason: '' pagou (pode ser parte, se o teto cortou) · 'off' chave desligada · 'cap' teto do dia (da fonte ou o somado) · 'dup' este id já pagou
+           · 'skip' andar da Torre que não é múltiplo de 10 · 'id' sem ctx.id · 'src' fonte desconhecida. Só grava quando paga algo.
+   Os ids pagos ficam guardados no dia e no dia anterior (o resgate perto da meia-noite não paga de novo); a missão diária junta o dia ao id. */
+const SRC_IDS=60;   // por dia; com os tetos acima no máximo ~8 ids pagam por dia
+function srcDay(o,host){ const k=dayKey(nowOf(host)); let d=(o.src&&typeof o.src==='object')?o.src:{};
+  if(d.k!==k){ d={k,prevK:typeof d.k==='string'?d.k:'',prev:(d.ids&&typeof d.ids==='object')?d.ids:{},ids:{},by:{},tot:{pages:0,ink:0}}; }
+  if(!d.ids||typeof d.ids!=='object') d.ids={}; if(!d.prev||typeof d.prev!=='object') d.prev={};
+  if(!d.by||typeof d.by!=='object') d.by={}; if(!d.tot||typeof d.tot!=='object') d.tot={pages:0,ink:0};
+  d.tot.pages=int0(d.tot.pages); d.tot.ink=int0(d.tot.ink); o.src=d; return d; }
+function onSource(S,host,src,ctx){ const no=(reason)=>({ok:false,src,pages:0,ink:0,spell:null,learned:false,reason});
+  if(!on()) return no('off'); const D=DATA.sources[src]; if(!D) return no('src'); ctx=ctx||{};
+  const raw=ctx.id==null?'':String(ctx.id).slice(0,80); if(!raw) return no('id');
+  const o=ensure(S), d=srcDay(o,host), id=src+':'+(src==='mission'?d.k+':':'')+raw;
+  if(d.ids[id]||d.prev[id]) return no('dup');
+  if(src==='tower'){ const f=int0(ctx.floor); if(!f||f%D.every!==0) return no('skip'); }
+  const by=d.by[src]=(d.by[src]&&typeof d.by[src]==='object')?d.by[src]:{pages:0,ink:0}; by.pages=int0(by.pages); by.ink=int0(by.ink);
+  const C=D.cap||{}, T=DATA.sourceCap;
+  /* quanto cabe: o menor entre o que sobra no teto da fonte e no teto do dia */
+  const left=k=>Math.max(0,Math.min(int0(C[k])-by[k],int0(T[k])-d.tot[k]));
+  let sp=null;
+  if(int0(D.pages)>0){
+    if(src==='instance'){ const era=ctx.era!=null?clamp(int0(ctx.era),0,8):eraMaxOf(host), b=spellOfEra(era,'B'); if(o.own[b.id]) sp=b; }   // só junta página de magia já aprendida
+    else if(src==='event'){ sp=spell(ctx.spell); } }
+  const pages=sp?Math.min(int0(D.pages),left('pages')):0, ink=Math.min(int0(D.ink),left('ink'));
+  if(!pages&&!ink) return no('cap');
+  let learned=false; if(pages){ const r=addPages(S,sp.id,pages,src); learned=!!(r&&r.learned); }
+  if(ink) o.ink+=ink;
+  by.pages+=pages; by.ink+=ink; d.tot.pages+=pages; d.tot.ink+=ink;
+  if(Object.keys(d.ids).length<SRC_IDS) d.ids[id]=1;
+  changed(host); return {ok:true,src,pages,ink,spell:pages?sp.id:null,learned,reason:''}; }
+/* quanto ainda cabe hoje (para a tela, se quiser mostrar "hoje: 3/12 de tinta") */
+function sourceToday(S,host){ const o=ensure(S), d=srcDay(o,host), out={day:d.k,tot:{pages:d.tot.pages,ink:d.tot.ink},cap:Object.assign({},DATA.sourceCap),by:{}};
+  for(const k in DATA.sources){ const b=d.by[k]||{}; out.by[k]={pages:int0(b.pages),ink:int0(b.ink),cap:Object.assign({},DATA.sources[k].cap)}; } return out; }
+
 /* ---------------- subir de nível ---------------- */
 function levelCost(S,id){ const x=ensure(S).own[id]; if(!x||x.lv>=DATA.maxLv) return null; return {pages:DATA.pages[x.lv-1],ink:DATA.ink[x.lv-1]}; }
 function canLevel(S,id){ if(!on()) return {ok:false,reason:'off'}; const o=ensure(S), x=o.own[id]; if(!spell(id)) return {ok:false,reason:'spell'}; if(!x) return {ok:false,reason:'notOwned'};
@@ -200,7 +254,7 @@ function view(S,host){ const o=ensure(S), b=bonus(S);
         cd:st.cd,effectText:effectText(sp,st),passiveText:`${PNAME[sp.passive]} +${fmt1(passiveOf(sp,lv))}${sp.passive==='critPct'?' pts':'%'}`,
         how:DATA.learn[letterOf(sp)],in:DATA.modes.filter(m=>o.sets[m].includes(sp.id))}; })}))}; }
 
-const API={cast,DATA,on,setOn,ensure,spell,catalog,stat,passiveOf,owned,levelOf,addPages,addInk,grant,levelCost,canLevel,levelUp,equip,setPreset,modeFor,loadout,bonus,view};
+const API={cast,DATA,on,setOn,ensure,spell,catalog,stat,passiveOf,owned,levelOf,addPages,addInk,grant,onSource,sourceToday,levelCost,canLevel,levelUp,equip,setPreset,modeFor,loadout,bonus,view};
 root.Sys=root.Sys||{}; root.Sys.grimoire=API;
 if(typeof module!=='undefined'&&module.exports) module.exports=API;
 })(typeof window!=='undefined'?window:globalThis);

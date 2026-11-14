@@ -500,3 +500,58 @@ TUDO OK
 6. **Grimório sem ícone na batalha**: a regra B7 fala em ícone com anel de recarga. Os patches só mostram a faixa com o nome; o ícone precisa de protótipo aprovado e dos 18 ícones (Arte).
 7. **Arena (PvP)**: os golpes têm teto de chefe/Arena (`pvp:true`) e o Grimório tem o conjunto "Arena", mas a Arena não usa o `js/battle.js`. Ligar no simulador da Arena é um passo à parte.
 8. **Arco/bumerangue**: cada fração do golpe básico conta como um acerto `s1`, então o combo tem mais chances por golpe que na espada. Se o QA achar forte, o módulo pode receber `frac` no `ctx` e sortear proporcional.
+
+---
+
+## 7. Grimório: fontes do dia (Instância diária, Torre, Missões diárias, Eventos) (Sistemas, 14/11/2026)
+
+O protótipo aprovado (`docs/proto/v2/GrimorioV3.html`, lista "De onde vêm páginas e tinta") promete páginas e tinta dessas 4 fontes. Até hoje só o Senhor da Era e o chefe do meio da era pagavam (`js/battle.js:533`, `Sys.grimoire.grant`). O módulo agora tem **uma função só** para as 4:
+
+`Sys.grimoire.onSource(S, Sys.host, src, ctx)` com `src` = `'instance' | 'tower' | 'mission' | 'event'` e `ctx = {id (obrigatório, único por prêmio), era, floor, spell}`
+→ `{ok, src, pages, ink, spell, learned, reason}`; `reason`: `''` pagou · `'off'` chave desligada · `'cap'` teto do dia · `'dup'` este id já pagou · `'skip'` andar da Torre que não é múltiplo de 10 · `'id'` sem id · `'src'` fonte desconhecida. Com a chave desligada nada é gravado.
+
+| Fonte | Paga | Teto do dia |
+|---|---|---|
+| Instância vencida ou varrida | 1 página da 2ª magia da era jogada (só se já aprendida) + 3 tinta | 1 página, 3 tinta |
+| Torre, andar múltiplo de 10 | 5 tinta | 5 tinta |
+| Missão diária resgatada | 1 tinta (o módulo junta o dia ao id: `d_kill` paga de novo amanhã) | 5 tinta |
+| Prêmio de evento resgatado | 1 página da magia `ctx.spell` (pode ensinar) + 2 tinta; sem `spell`, só a tinta | 1 página, 2 tinta |
+| **Somado** | | **2 páginas, 12 tinta** |
+
+Conta: o jogador ativo vence ~1 era por dia; os chefes dão 20 + 10 = 30 tinta e 4 páginas (2 magias novas + ~2 repetições do Senhor da Era). As 4 fontes somadas param em 12 tinta (40%) e 2 páginas (50%). A tela `js/p_grim.js` já lê os números certos (`DATA.grants` espelha `DATA.sources`). `Sys.grimoire.sourceToday(S, host)` devolve o que já entrou hoje, se uma tela quiser mostrar.
+
+**Onde colar (o Engenheiro; nenhum arquivo dele foi mexido).** Todas as chamadas ficam DEPOIS do prêmio já entregue pelo módulo da fonte e dentro de `try`. O aviso é opcional; o texto sai do retorno:
+
+```js
+/* aviso curto do Grimório (colar uma vez, por exemplo em js/ui.js, ao lado do toast) */
+function grimSrc(src,ctx){ try{ const G=window.Sys&&Sys.grimoire; if(!G||typeof G.onSource!=='function') return null; const g=G.onSource(S,Sys.host,src,ctx);
+  if(g&&g.ok&&typeof toast==='function'){ const t=[g.pages?'+'+g.pages+(g.pages>1?' páginas':' página'):'',g.ink?'+'+g.ink+' de tinta':''].filter(Boolean).join(' · '); if(t) toast('Grimório: '+t); }
+  return g; }catch(er){ console.error('grimoire',er); return null; } }
+```
+
+1. **Instância diária vencida**: `js/instfx.js:46`, logo depois da linha do `Sys.instances.finish` (antes de `S.stage = I.back.stage`). O `run.id` já é único (`tipo-nível-hora`, `js/sys/instances.js:131`):
+   ```js
+   if(out&&out.ok!==false&&out.win&&typeof grimSrc==='function') grimSrc('instance',{id:I.run.id,era:(Sys.instances.levelInfo(out.level)||{}).era});
+   ```
+   **Instância varrida**: `js/p_inst.js:92`, depois de `const r=I.sweep(...)` e do `if(!r||!r.ok){...}`:
+   ```js
+   if(typeof grimSrc==='function') grimSrc('instance',{id:'sweep-'+t+'-'+L+'-'+Date.now(),era:(I.levelInfo(L)||{}).era});
+   ```
+2. **Andar da Torre vencido**: `js/p_tower2.js:307` (a linha `let r=null; try{ r=T.fight(S,host()); }...`), logo depois do `if(!r||!r.ok){...return;}` (linha 308). O andar é o id (cada andar só se vence uma vez); andar que não é múltiplo de 10 volta `'skip'` sem aviso:
+   ```js
+   if(r.win&&typeof grimSrc==='function') grimSrc('tower',{id:'floor-'+r.floor,floor:r.floor});
+   ```
+   Na Torre antiga (`js/p_tower.js:138`, `const r=Sys.tower.fight(S,Sys.host); if(!r||!r.ok){...}`), a mesma linha logo depois.
+3. **Missão diária resgatada**: `js/p_missions.js`, nos dois lugares que já chamam `mPlayerXp(id)` depois de um resgate certo: linha 91 (`mClaim`) e linha 97 (`tryOne` do "Resgatar tudo"). Só as diárias (a mesma conta do `mPlayerXp`, linha 86), sem as semanais:
+   ```js
+   if((id==='bonus'||((Sys.pass.DATA&&Sys.pass.DATA.daily)||[]).some(x=>x.id===id))&&typeof grimSrc==='function') grimSrc('mission',{id:id});
+   ```
+4. **Prêmio de evento resgatado**: `js/p_events.js:518` (`etNode`) e `js/p_events.js:523` (`etClaimAll`), dentro do `if(r&&r.ok)`. O id é evento + marco:
+   ```js
+   if(typeof grimSrc==='function') grimSrc('event',{id:M.cur.ev.id+':'+m.at,spell:M.cur.ev.grimSpell||null});
+   ```
+   No "Resgatar tudo" só o 1º marco do dia paga a página (teto); os outros voltam `'cap'` sem aviso.
+
+Chave: tudo isso só vale com `Sys.grimoire.setOn(true)` (já está no `SYS_LIVE` de `js/farm.js`, hoje linha 105: o grimório já nasce ligado no jogo). Teste: `node test/sys/grimoire-fontes.test.js` (11).
+
+Lacuna (para a Sistemas e o PO): os eventos ainda não dizem qual magia trazem. Falta um campo `grimSpell` (id da magia) em cada evento de `Sys.events`; até lá o evento paga só os 2 de tinta.
