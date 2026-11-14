@@ -21,7 +21,7 @@ t('marcos 10..90 (nível máximo 100); regra e mestre (mentor da era) fixos por 
   assert.deepStrictEqual(TR.marks(), [10, 20, 30, 40, 50, 60, 70, 80, 90]);
   assert.strictEqual(TR.rule(10).id, 'nopet'); assert.strictEqual(TR.rule(20).sec, 30); assert.strictEqual(TR.rule(60).id, 'nopet');
   assert.strictEqual(TR.master(10).name, MT.byEra(0).name); assert.strictEqual(TR.master(30).name, 'Bertoldo'); assert.strictEqual(TR.master(90).era, 8);
-  assert.deepStrictEqual(TR.rewardOf(10).opens.map(x => x.id), ['bonfireAuto']);
+  assert.deepStrictEqual(TR.rewardOf(10).opens, []); assert.deepStrictEqual(TR.DATA.opens, {});   // 14/11: nenhuma provação promete abrir função (já são livres)
 });
 
 t('teto: o herói para no Nv 10 e a XP de sobra fica guardada (até 1 nível)', () => {
@@ -46,7 +46,7 @@ t('perder não custa nada e tentar de novo é grátis; vencer sobe o teto, dá p
   assert.strictEqual(F.ensure(S).stones, 4); assert.strictEqual(PET.ensure(S).food, 20);
   assert.strictEqual(LV.level(S), 11); assert.strictEqual(TR.ensure(S).bank, 0); assert.strictEqual(w.cap, 20);
   assert.deepStrictEqual(TR.bonus(S), { atkPct: 1, hpPct: 1, goldPct: 0, critPct: 0, defPct: 0, fc: 0 });
-  assert.strictEqual(TR.isOpen(S, 'bonfireAuto'), true); assert.strictEqual(TR.isOpen(S, 'loadoutsAuto'), false);
+  assert.strictEqual(TR.isOpen(S, 'bonfireAuto'), true); assert.strictEqual(TR.isOpen(S, 'loadoutsAuto'), true); assert.deepStrictEqual(w.reward.opens, []);
   assert.strictEqual(TR.start(S, h, 10).reason, 'done'); assert.strictEqual(TR.start(S, h, 20).reason, 'level');
 });
 
@@ -88,6 +88,44 @@ t('ouro da 1ª vitória: 3 min de abate da fase atual (72 × goldUnit), FIXO em 
   assert.strictEqual(TR.rewardOf(90).gold, 72); assert.strictEqual(TR.rewardOf(90).stones, 36); assert.strictEqual(TR.rewardOf(90).food, 180);   // pedras e ração seguem × k
   TR.DATA.on = true; const S = world(10), h2 = makeHost({ unit: 50 }); TR.start(S, h2, 10); const w = TR.finish(S, h2, { won: true, sec: 10 });
   assert.strictEqual(w.reward.gold, 3600); assert.strictEqual(h2.gold, 3600); TR.DATA.on = false;
+});
+
+t('sair no meio (quit): não conta tentativa, não mexe na XP guardada nem no teto, não chama prêmio; sem luta = none', () => {
+  TR.DATA.on = true; const S = world(9), h = makeHost(); feed(S, h, 100000); const bank = TR.ensure(S).bank, gold = h.gold; assert.ok(bank > 0);
+  TR.start(S, h); TR.finish(S, h, { won: false }); assert.strictEqual(TR.ensure(S).tries['10'], 1);
+  const s = TR.start(S, h); assert.ok(s.ok); assert.strictEqual(TR.ensure(S).tries['10'], 2);
+  const q = TR.quit(S, h); assert.deepStrictEqual(q, { ok: true, lvl: 10, quit: true, free: true });
+  assert.strictEqual(TR.ensure(S).tries['10'], 1, 'a tentativa do start foi desfeita'); assert.strictEqual(TR.ensure(S).bank, bank); assert.strictEqual(TR.ensure(S).cur, null);
+  assert.strictEqual(LV.level(S), 10); assert.strictEqual(TR.cap(S, h), 10); assert.strictEqual(h.gold, gold); assert.strictEqual(TR.passed(S, 10), false);
+  assert.strictEqual(TR.quit(S, h).reason, 'none'); assert.strictEqual(TR.finish(S, h, { won: true }).reason, 'none', 'depois de sair não dá para vencer a luta largada');
+  TR.start(S, h); TR.quit(S, h); assert.strictEqual(TR.ensure(S).tries['10'], 1);
+  const S2 = world(9), h2 = makeHost(); feed(S2, h2, 100000); TR.start(S2, h2); TR.quit(S2, h2); assert.strictEqual(TR.ensure(S2).tries['10'], undefined, 'primeira luta largada: nada anotado');
+  TR.DATA.on = false; assert.strictEqual(TR.quit(S, h).reason, 'off');
+});
+
+t('mestre: fator da 1ª provação mais leve (0,85) e o resto 1,2; sem o jogo vale o fator puro; fase = maior fase vencida (host.bestStage)', () => {
+  const h = makeHost(); h.bestStage = () => 7;
+  const e10 = TR.spec(10, h).enemy, e20 = TR.spec(20, h).enemy;
+  assert.deepStrictEqual(e10, { kind: 'boss', stage: 7, hpMul: 0.85, dmgMul: 1, src: 'today' }); assert.strictEqual(e20.hpMul, 1.2); assert.strictEqual(e20.src, 'today');
+  h.bestStage = () => 0; assert.strictEqual(TR.spec(10, h).enemy.stage, 1);
+});
+
+t('mestre com a dificuldade nova: chefe da campanha (diffBoss) × fator; hpMul/dmgMul ficam o fator da tela; hpMulToday/dmgMulToday convertidos para o chefe de hoje (mkEnemy); fúria da tabela', () => {
+  const g = globalThis, keep = { DIFF_ON: g.DIFF_ON, diffBoss: g.diffBoss, BAL: g.BAL, eraOf: g.eraOf, DIFF: g.DIFF, diffByEra: g.diffByEra };
+  try {
+    g.BAL = { enemyHpBase: 22, enemyHpGrowth: 1.282, enemyDmgBase: 3.5, enemyDmgGrowth: 1.2, bossHpMult: 6, eraBossHpMult: 1.5, bossDmgMult: 1.8, eraBossDmgMult: 0.9, earlyEase: [5, 6, 7, 8, 8, 7.5, 7, 6.5, 6, 6], earlyBossDmg: [7, 6.4, 5.4, 4.5, 3.6, 2.6, 1.8, 1.3, 1, 0.6], eraMult: [1] };
+    g.eraOf = s => Math.floor((s - 1) / 10); g.diffBoss = s => ({ hp: 1000 * s, dmg: 10 * s }); g.DIFF = { tbl: { boss: { furyAtSec: [30, 28], furyDmgMult: 4 } } }; g.diffByEra = (v, s) => Array.isArray(v) ? v[g.eraOf(s)] : v;
+    const h = makeHost(), B = g.BAL; h.bestStage = () => 7;
+    g.DIFF_ON = false; assert.strictEqual(TR.spec(10, h).enemy.src, 'today', 'dificuldade desligada: fator puro sobre o chefe de hoje');
+    g.DIFF_ON = true; const e = TR.spec(10, h).enemy;
+    const th = B.enemyHpBase * Math.pow(B.enemyHpGrowth, 6) * 7 * B.bossHpMult, td = B.enemyDmgBase * Math.pow(B.enemyDmgGrowth, 6) * B.bossDmgMult * 1.8;
+    assert.strictEqual(e.src, 'diff'); assert.strictEqual(e.stage, 7); assert.ok(Math.abs(e.hp - 7000 * 0.85) < 1e-6 && Math.abs(e.dmg - 70) < 1e-9);
+    assert.strictEqual(e.hpMul, 0.85); assert.strictEqual(e.dmgMul, 1);
+    assert.ok(Math.abs(e.hpMulToday * th - e.hp) < 1e-6, 'hpMulToday × chefe de hoje = alvo'); assert.ok(Math.abs(e.dmgMulToday * td - e.dmg) < 1e-9, 'dmgMulToday × chefe de hoje = alvo');
+    assert.deepStrictEqual(e.fury, { atSec: 30, dmgMult: 4 });
+    h.bestStage = () => 10; const e2 = TR.spec(20, h).enemy; assert.ok(Math.abs(e2.hp - 12000) < 1e-6 && Math.abs(e2.hpMulToday * B.enemyHpBase * Math.pow(B.enemyHpGrowth, 9) * 6 * B.bossHpMult * B.eraBossHpMult - 12000) < 1e-6, 'Senhor da Era: conta do eraBoss');
+    g.diffBoss = () => null; assert.strictEqual(TR.spec(10, h).enemy.src, 'today', 'sem chefe da campanha: fator puro');
+  } finally { for (const k in keep) { if (keep[k] === undefined) delete g[k]; else g[k] = keep[k]; } }
 });
 
 TR.DATA.on = false;

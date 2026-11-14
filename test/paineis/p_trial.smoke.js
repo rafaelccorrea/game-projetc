@@ -99,14 +99,14 @@ open(); assert(gateSeen.length >= 1 && gateSeen[gateSeen.length - 1].includes('a
   has('>' + g.esc2(row.master.name) + '<'); has('>' + g.esc2(row.rule.name) + '<'); has(g.esc2(row.rule.text) + ' Luta de ' + sp.sec + ' s.');
   has('fase mais alta: 3-5'); has('src="assets/enemies/era2_boss.png"'); has('Vida ×' + String(sp.enemy.hpMul).replace('.', ',')); has('e o mesmo dano'); has('Vença antes de <b>1:00</b>');
   has('+' + rw.stat.atkPct + '% ATK'); has('+' + rw.stat.hpPct + '% Vida'); has('>' + g.kf(rw.gold) + '</span>'); has('+' + rw.stones + ' pedras'); has('+' + rw.food + ' ração');
-  has('Teto sobe para o <em>Nv 20</em> e a XP guardada volta: <em>' + g.n0(bank) + ' XP</em>.'); for (const o of rw.opens) has(g.esc2(o.name)); has('abre ao vencer esta provação');
+  has('Teto sobe para o <em>Nv 20</em> e a XP guardada volta: <em>' + g.n0(bank) + ' XP</em>.'); assert.deepStrictEqual(rw.opens, []); not('abre ao vencer esta provação');   /* 14/11: nada a prometer */
   has('data-x="go"'); has('>Lutar<'); has('Tentar de novo é grátis'); has('sem limite, sem energia, sem gema'); not('tentativas:'); has('url(assets/bg/era2.png)'); assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['go']); }
 sane('no teto');
 // nada inventado: mudar o módulo muda a tela (e o texto do módulo sai escapado)
-{ const D = T.DATA, k = { hp: D.enemy.hpMul, dm: D.enemy.dmgMul, st: D.reward.stones, nm: D.rules[0].name, tx: D.rules[0].text, sc: D.sec, at: D.stat.atkPct, gm: D.reward.goldMin };
+{ const D = T.DATA, k = { hp: D.enemy.hpMul, dm: D.enemy.dmgMul, st: D.reward.stones, nm: D.rules[0].name, tx: D.rules[0].text, sc: D.sec, at: D.stat.atkPct, gm: D.reward.goldMin, ea: D.enemyAt }; D.enemyAt = {};   /* o ajuste por marco (1ª provação 0,85) sai para o teste ver o DATA.enemy na tela */
   D.enemy.hpMul = 1.5; D.enemy.dmgMul = 1.25; D.reward.stones = 7; D.rules[0].name = 'Regra <b>"X"</b>'; D.rules[0].text = 'Texto & novo.'; D.sec = 45; D.stat.atkPct = 2.5; D.reward.goldMin = 9;
   try { open(); has('Vida ×1,5'); has('dano ×1,25'); has('+7 pedras'); has('Regra &lt;b&gt;&quot;X&quot;&lt;/b&gt;'); not('Regra <b>"X"'); has('Texto &amp; novo. Luta de 45 s.'); has('Vença antes de <b>0:45</b>'); has('+2,5% ATK'); has('>' + g.kf(T.rewardOf(10, host).gold) + '</span>'); sane('módulo alterado'); }
-  finally { D.enemy.hpMul = k.hp; D.enemy.dmgMul = k.dm; D.reward.stones = k.st; D.rules[0].name = k.nm; D.rules[0].text = k.tx; D.sec = k.sc; D.stat.atkPct = k.at; D.reward.goldMin = k.gm; } }
+  finally { D.enemy.hpMul = k.hp; D.enemy.dmgMul = k.dm; D.reward.stones = k.st; D.rules[0].name = k.nm; D.rules[0].text = k.tx; D.sec = k.sc; D.stat.atkPct = k.at; D.reward.goldMin = k.gm; D.enemyAt = k.ea; } }
 { const F = Sys.forge.addStones; Sys.forge.addStones = null; open(); not(' pedras'); Sys.forge.addStones = F; open(); has(' pedras'); }
 { P.ART.portrait = true; open(); has('<img src="' + T.master(10).portrait + '" alt="">'); not('retrato provisório'); assert(P.urls().includes(T.master(10).portrait), 'com a arte ligada o retrato entra na espera de carga'); P.ART.portrait = false; open(); has('retrato provisório'); }
 out.push('no teto: mestre, regra, tempo, inimigo (Vida ×' + String(T.DATA.enemy.hpMul).replace('.', ',') + '), prêmio, o que libera e a XP guardada vêm do módulo; mudar o módulo muda a tela; texto escapado');
@@ -119,7 +119,7 @@ out.push('sem PTrial.battle: o Lutar avisa que a luta não está ligada e não c
 // 5) LUTAR: UMA chamada ao Sys.trial.start; o spec do módulo vai para a batalha; toques repetidos não chamam de novo
 open(); log.length = 0; tap('go');
 assert.strictEqual(starts.length, 1, 'start chamado UMA vez'); assert.strictEqual(starts[0], 10); assert.strictEqual(specs.length, 1);
-{ const sp = specs[0]; assert.strictEqual(sp.lvl, 10); assert.strictEqual(sp.noPet, true); assert.strictEqual(sp.sec, 60); assert.strictEqual(sp.enemy.kind, 'boss'); assert.strictEqual(sp.enemy.stage, 25); assert.strictEqual(sp.enemy.hpMul, T.DATA.enemy.hpMul); assert.strictEqual(sp.master.name, T.master(10).name); }
+{ const sp = specs[0]; assert.strictEqual(sp.lvl, 10); assert.strictEqual(sp.noPet, true); assert.strictEqual(sp.sec, 60); assert.strictEqual(sp.enemy.kind, 'boss'); assert.strictEqual(sp.enemy.stage, 25); assert.strictEqual(sp.enemy.hpMul, T.DATA.enemyAt[10].hpMul, '1ª provação: fator do marco (0,85)'); assert.strictEqual(sp.enemy.hpMul, T.spec(10, host).enemy.hpMul); assert.strictEqual(sp.master.name, T.master(10).name); }
 assert.deepStrictEqual(P.running().lvl, 10); assert(log.includes('stats') || log.includes('save'), 'grava a tentativa'); assert.strictEqual(T.ensure(g.S).tries['10'], 1);
 tap('go'); tap('go'); tap('retry'); assert.strictEqual(P.start(10), false); assert.strictEqual(starts.length, 1, 'com a luta em curso o toque não vale');
 out.push('Lutar: Sys.trial.start UMA vez, o spec do módulo (sem pet, 60 s, chefe da fase 25) entregue ao PTrial.battle');
@@ -151,16 +151,16 @@ out.push('vencer fora do tempo: "Passou do tempo", conta como derrota (regra do 
 
 // 9) VITÓRIA: prêmio entregue pelo módulo UMA vez; teto novo, XP liberada, função aberta; Continuar fecha
 tap('retry'); assert.strictEqual(starts.length, 3);
-{ fins = []; const g0 = host.gold, st0 = Sys.forge.ensure(g.S).stones, rw = T.rewardOf(10, host); log.length = 0; assert.strictEqual(T.isOpen(g.S, 'bonfireAuto'), false);
+{ fins = []; const g0 = host.gold, st0 = Sys.forge.ensure(g.S).stones, rw = T.rewardOf(10, host); log.length = 0; assert.deepStrictEqual(rw.opens, [], '14/11: a provação não promete abrir função');
   const r = P.finish({ won: true, sec: 31 }); assert.strictEqual(fins.length, 1, 'finish chamado UMA vez'); assert(r.ok && r.won); assert.strictEqual(host.gold, g0 + rw.gold, 'ouro entregue pelo módulo'); assert.strictEqual(Sys.forge.ensure(g.S).stones, st0 + rw.stones);
   assert(log.includes('stats'), 'pede para recalcular e gravar'); assert(log.includes('snd:claim'));
   has('Provação vencida!'); has(g.esc2(T.master(10).name) + ' reconhece a sua força · regra ' + g.esc2(T.rule(10).name)); has('Teto liberado: agora até o Nv ' + r.cap); assert.strictEqual(r.cap, 20);
   has('XP guardada liberada: <em>+' + g.n0(r.released) + ' XP</em>'); assert(r.released > 0); assert.strictEqual(LV.level(g.S), 11); has('você subiu para o <em>Nv 11</em>');
-  has('>+' + g.kf(r.reward.gold) + '</span>'); has('+' + r.reward.stones + ' pedras'); has('+' + r.reward.food + ' ração'); has('+' + rw.stat.atkPct + '% ATK'); has('Abriu: ' + g.esc2(rw.opens[0].name));
-  assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['cont']); sane('vitória'); assert.strictEqual(T.isOpen(g.S, 'bonfireAuto'), true);
+  has('>+' + g.kf(r.reward.gold) + '</span>'); has('+' + r.reward.stones + ' pedras'); has('+' + r.reward.food + ' ração'); has('+' + rw.stat.atkPct + '% ATK'); not('Abriu:'); not('abre ao vencer');
+  assert.deepStrictEqual(buttons().map(b => b.dataset.x), ['cont']); sane('vitória'); assert.strictEqual(T.isOpen(g.S, 'bonfireAuto'), true, 'isOpen não tranca nada');
   def.render(); def.render(); def.tick(); assert.strictEqual(host.gold, g0 + rw.gold, 'redesenhar não entrega de novo'); assert.strictEqual(fins.length, 1);
   log.length = 0; tap('cont'); assert(log.includes('close'), 'Continuar volta para o jogo'); assert.strictEqual(X.mode, 'card'); }
-out.push('vitória: prêmio do módulo uma vez só, "Teto liberado: agora até o Nv 20", XP guardada liberada, função aberta');
+out.push('vitória: prêmio do módulo uma vez só, "Teto liberado: agora até o Nv 20", XP guardada liberada, sem prometer função');
 
 // 10) RECUSAS do módulo: a tela mostra o motivo
 open(); has('Você está no Nv 11. Faltam 9 níveis para a provação do Nv 20.'); not('data-x="go"');
