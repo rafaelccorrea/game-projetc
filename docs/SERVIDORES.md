@@ -76,6 +76,7 @@ Contas de TESTE criadas no banco de produção. Apagar todas antes de abrir ao p
 | 14/11/2026 (Brasília) | +1 convidado "Viajante9932" (S1) | `smoke-real.mjs` (17ª execução, deploy 0a65598) | idem |
 | 14/11/2026 (Brasília) | +1 convidado (S1, nome não impresso pelo smoke) | `smoke-real.mjs` (18ª execução, deploy 9385f83) | idem |
 | 14/11/2026 (Brasília) | +2 convidados (S1, nomes não impressos) e +1 do switch-check | `smoke-real.mjs` (19ª e 20ª execuções, deploy 302e87f e --ligar DUO_ON) | idem |
+| 14/11/2026 (Brasília) | +1 convidado do smoke (deploy 07a5075) e +1 do switch-check à mão | `smoke-real.mjs` 21ª execução; `switch-check.mjs` | idem |
 | 13/11/2026 21:xx (Brasília) | Viajante6053 e Viajante2902 (contas do e2e) | `scripts/e2e-duo.ts` (teste combinado da Dupla) | ficaram: código de amigo de cada um, BLOQUEIO entre os dois, espera de 24 h do 2902, 1 carta "Dupla das Eras" no 6053; somem com as contas |
 
 **APK DEV (br.com.intellisys.eonbound.dev, 13/11):** carrega o jogo de `http://localhost:8080` (adb reverse) e fala com a EC2. Essa origem já está liberada pelo `CORS_ORIGINS_TEST` (preflight conferido em 13/11: PUT com authorization, content-type, x-client-version e x-device-id → 204 com Allow-Origin certo). Ao tirar as origens de teste antes do lançamento, decidir se o APK DEV continua falando com a produção (aí fica só `http://localhost:8080`).
