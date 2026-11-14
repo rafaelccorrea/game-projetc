@@ -278,6 +278,19 @@ out.push('registro: profile2 desligada, ' + def.actions.length + ' ações com t
   } finally { dims = {}; T.removeTitle('evt_teste'); for (const m of MT.DATA.list) T.removeTitle('mentor_' + m.id); EE.setOn(false); }
   assert.strictEqual(T.DATA.titles.length, base, 'a tabela de títulos voltou ao que era'); }
 
+// 5c) skin de arma de EVENTO (js/wskin.js, dono 14/11): o bloco só existe para quem tem uma; Usar / Tirar pela ação wsk; só o visual (S.skinEq.weapon)
+{ const keep = { SPR: g.SPR, J: g.J, IMGS: g.IMGS }; g.IMGS = {}; g.SPR = () => ({ c: {}, w: 10, h: 30 }); g.J = () => ({ cacada_weapon: { type: 'melee', grip: [0.363, 0.863] }, forja_weapon: { type: 'melee', grip: [0.273, 0.815] } });
+  vm.runInThisContext(fs.readFileSync(path.join(R, 'js/wskin.js'), 'utf8'), { filename: 'wskin.js' }); const W = g.WSkin; let isBow = false; g.wIsGun = () => false; g.wFamLook0 = w => isBow ? { id: 'wf_bow_raro', wk: 'bow_raro', wt: 'bow', e: 1, r: 1 } : (w || { id: 'w00', e: 0, r: 0 });
+  try { for (const w of [320, 390, 412]) { dims = { H: 704, Wb: w }; g.S = newSave(); open({ tab: 'vis' }); not('Visual da arma'); assert(!buttons().some(b => b.dataset.x === 'wsk'), 'sem skin de evento o bloco não existe');
+      g.S.skins.push('cacada_weapon'); open({ tab: 'vis' }); has('Visual da arma'); has('Só muda o visual. O poder é o da arma equipada.'); has('Lâmina do Caçador'); not('Martelo das Eras'); check('wsk ' + w);
+      let b = buttons().filter(q => q.dataset.x === 'wsk'); assert.strictEqual(b.length, 1); assert.strictEqual(b[0].dataset.op, 'use'); assert(/min-height:44px/.test(b[0].tag)); const fc0 = Sys.fc.compute(g.S, host);
+      def.click(b[0]); assert.strictEqual(g.S.skinEq.weapon, 'cacada_weapon'); has('O poder continua o da arma equipada'); has('>Em uso<'); check('wsk em uso ' + w); assert.strictEqual(Sys.fc.compute(g.S, host), fc0, 'a FC não muda com o visual');
+      b = buttons().filter(q => q.dataset.x === 'wsk'); assert.strictEqual(b[0].dataset.op, 'clear'); has('>Tirar</button>'); def.click(b[0]); assert.strictEqual(g.S.skinEq.weapon, 'w00'); has('Visual de volta ao da arma equipada'); has('>Usar</button>');
+      /* arco equipado: opção apagada com o motivo; o toque repete o motivo e não troca nada */
+      isBow = true; open({ tab: 'vis' }); has('Não dá com arco'); b = buttons().filter(q => q.dataset.x === 'wsk'); assert(/aria-disabled="true"/.test(b[0].tag)); def.click(b[0]); assert.strictEqual(g.S.skinEq.weapon, 'w00'); check('wsk arco ' + w); isBow = false; }
+    out.push('skin de arma de evento: sem a skin o bloco não existe; com ela, Usar / Tirar trocam só S.skinEq.weapon (FC igual), 44 px, 320 / 390 / 412; arco equipado = opção apagada com o motivo');
+  } finally { dims = {}; for (const k in keep) { if (keep[k] === undefined) delete g[k]; else g[k] = keep[k]; } delete g.wIsGun; delete g.wFamLook0; } }
+
 // 6) larguras de 320 e 390 e tela baixa; todos os botões de todas as abas, save novo e avançado
 { let taps = 0; for (const [w, h] of [[320, 520], [390, 704]]) for (const mk of [() => { g.S = newSave(); }, () => { advSave(); }]) for (const t of ['vis', 'col', 'tit', 'num']) { mk(); dims = { H: h, Wb: w }; open({ tab: t }); const n = buttons().length; check(w + ' ' + t);
       for (let i = 0; i < n; i += (t === 'tit' ? 3 : 1)) { open({ tab: t }); const b = buttons()[i]; if (!b) continue; try { def.click(b); taps++; } catch (e) { assert.fail('toque em ' + b.tag + ': ' + e.stack); } g.view = 'profile2'; check('toque ' + b.dataset.x); } }

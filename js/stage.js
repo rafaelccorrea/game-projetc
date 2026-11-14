@@ -168,12 +168,12 @@ function heroPreload(era){ const set = heroSet(era), out = [sheetLoad(set.run).p
   return out; }
 /* ESPECIAL ANIMADO (Corte Giratório, era 2): folha composta (corpo + arma + rastro) assets/anim/hyb/R/kael_spin_era2_t<tier>, quadro 448x256,
    pés em x = padLeft + 128 e y = feetY (do .json). Só entra com a chave ART_ON['s2_era2_t<tier>'] ligada; senão vale o golpe por código. */
-function spinBase(ws){ if (!ws || ws.wk || ws.e !== 2 || ws.r % 2 || formSkinDir()) return null;   /* skin fixa: a folha composta traz o corpo padrão pintado → corpo da skin + arma na mão */ const t = tierOf(ws.r); return ART_ON['s2_era2_t' + t] === true ? HERO_DIR + 'kael_spin_era2_t' + t : null; }
+function spinBase(ws){ if (!ws || ws.wk || ws.vk || ws.e !== 2 || ws.r % 2 || formSkinDir()) return null;   /* skin fixa: a folha composta traz o corpo padrão pintado → corpo da skin + arma na mão */ const t = tierOf(ws.r); return ART_ON['s2_era2_t' + t] === true ? HERO_DIR + 'kael_spin_era2_t' + t : null; }
 /* GOLPE BÁSICO COM RASTRO (s1-era2_t<tier>, aprovado): folha composta assets/anim/hyb/R/kael_attack_trail_era2_t<tier> (17 quadros, 448x256,
    pés em x = padLeft + 128, y = feetY; golpe no quadro 6). Toca dentro da duração do golpe básico (o ritmo do balanceamento não muda): os quadros
    0-6 até o instante do acerto e os 7-16 na volta. Só com skin de arma da era 2 e a chave ART_ON['s1_era2_t<tier>']. */
 const TRAIL_HIT = 6;
-function trailBase(ws){ if (!ws || ws.wk || ws.e !== 2 || ws.r % 2 || formSkinDir()) return null; const t = tierOf(ws.r); return ART_ON['s1_era2_t' + t] === true ? HERO_DIR + 'kael_attack_trail_era2_t' + t : null; }
+function trailBase(ws){ if (!ws || ws.wk || ws.vk || ws.e !== 2 || ws.r % 2 || formSkinDir()) return null; const t = tierOf(ws.r); return ART_ON['s1_era2_t' + t] === true ? HERO_DIR + 'kael_attack_trail_era2_t' + t : null; }
 function heroTrailSheet(ws){ const b = trailBase(ws); if (!b) return null; const s = sheetLoad(b, true); return s.ok ? s : null; }
 function heroSpinSheet(ws){ const b = spinBase(ws); if (!b) return null; const s = sheetLoad(b, true); return s.ok ? s : null; }
 /* AURA DE FORTALECIMENTO (auras +4/+7/+10/+13 aprovadas): o nível vem do +N do espaço da ARMA no Sys.forge (Sys.forge.aura(S).id).
@@ -263,7 +263,7 @@ const HFL = document.createElement('canvas'); HFL.width = HFL.height = 256; cons
    assets/anim/hyb/R/kael_<run|idle|attack>_era2_t<tier>.png (corpo + roupa + arma num quadro só; mesmos quadros, fps e pés do .json do corpo, que é o
    .json do conjunto). Em qualquer outro caso (roupa ou arma de outra era, tiers diferentes) vale corpo + arma na mão. Chave: ART_ON.kael_hybR_t<tier>.
    A hyb-attack-era2_t* (assets/anim/hyb/, REPROVADA) nunca é usada: só a pasta R. */
-function heroCompTier(sk, ws){ if (!sk || !ws || ws.wk || sk.e !== 2 || ws.e !== 2 || ws.r % 2 || formSkinDir()) return -1;   /* Raro e Mítico têm arte própria: corpo + arma na mão */ const t = tierOf(sk.r); return t === tierOf(ws.r) && ART_ON['kael_hybR_t' + t] === true ? t : -1; }
+function heroCompTier(sk, ws){ if (!sk || !ws || ws.wk || ws.vk || sk.e !== 2 || ws.e !== 2 || ws.r % 2 || formSkinDir()) return -1;   /* Raro e Mítico têm arte própria: corpo + arma na mão */ const t = tierOf(sk.r); return t === tierOf(ws.r) && ART_ON['kael_hybR_t' + t] === true ? t : -1; }
 /* GOLPE: folha LARGA aprovada pelo PO como correção técnica (kael_attack_wide_era2_t<tier>: 17 quadros, 448x256, padLeft 96, pés em x = padLeft+128,
    feetY 243): a de 256 cortava a arma em alguns quadros. Parado e corrida continuam nas de 256. */
 const HERO_WIDE_PAD = 96, HERO_WIDE_W = 448;

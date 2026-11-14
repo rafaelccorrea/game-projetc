@@ -85,7 +85,11 @@ function lookReady(w){ if(!SPR(wPng(w),'weapon')) return false; const pe=typeof 
    (fromEra) para nome, som, ícone e efeitos em código}. Com a família desligada nada disto é criado (um teste por quadro). */
 const WARM={}, W_FKEY=['basico','raro','epico','mitico','lendario'];
 function wItemNow(){ return (S.eq&&S.eq.weapon?itemOf(S.eq.weapon):null)||null; }   /* decisão do dono: vale SEMPRE o item equipado (S.skinEq.weapon é ignorado) */
-function wFamLook(w){ const it=wItemNow(); if(!it||!(window.Sys&&Sys.stats&&typeof Sys.stats.weaponType==='function')) return w;
+/* SKIN DE ARMA DE EVENTO (dono 14/11, js/wskin.js): só o VISUAL de festival_weapon / cacada_weapon / forja_weapon por cima da arma equipada. WSkin.look devolve uma
+   cópia da arma equipada com vk = id da skin (o wKey lê vk primeiro: sprite e grip da skin); sem skin escolhida, sem a skin, sem arte carregada ou com
+   arma de tiro / arremesso devolve a própria arma equipada. wFamLook0 = a arma equipada, como sempre foi. */
+function wFamLook(w){ const b=wFamLook0(w); try{ if(window.WSkin&&typeof WSkin.look==='function') return WSkin.look(b)||b; }catch(e){} return b; }
+function wFamLook0(w){ const it=wItemNow(); if(!it||!(window.Sys&&Sys.stats&&typeof Sys.stats.weaponType==='function')) return w;
   try{ const t=Sys.stats.weaponType(it), W=Sys.stats.DATA.weaponTypes[t]; if(!W) return w; const r=Math.max(0,Math.min(4,it.r|0));
     if(W.artEra!=null) return SKIN('w'+W.artEra+r)||w;
     if(W.on!==true||(W.style!=='ranged'&&W.style!=='return')) return w;
@@ -873,7 +877,7 @@ const heroKey = sk => `era${sk.e}_t${tierOf(sk.r)}`;
 /* v0.12.5 ARMAS POR RARIDADE (arte nova): cada raridade tem a SUA imagem. Básico = eraN_t0 · Raro = eraN_raro · Épico = eraN_t1 · Mítico = eraN_mitico ·
    Lendário = eraN_t2 (assets/weapons/ e as mesmas chaves no meta.json). wKey/wPng valem para a ARMA; heroKey/tierOf continuam para a roupa. */
 const W_RKEY=['t0','raro','t1','mitico','t2'];
-const wKey = ws => ws.wk||('era'+ws.e+'_'+W_RKEY[Math.max(0,Math.min(4,ws.r|0))]);   /* ws.wk: arma de família sem arte de era (bow_<raridade>, boomerang_<raridade>) */
+const wKey = ws => ws.vk||ws.wk||('era'+ws.e+'_'+W_RKEY[Math.max(0,Math.min(4,ws.r|0))]);   /* ws.wk: arma de família sem arte de era (bow_<raridade>, boomerang_<raridade>) */
 const wPng = ws => 'assets/weapons/'+wKey(ws)+'.png';
 const SWT=0.4;                                  // duração do ataque básico
 let HS=155;                                     // lado do quadro do herói em px lógicos (recalculado no resize)

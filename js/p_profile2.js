@@ -332,6 +332,7 @@ function recHtml(recs){ if(!Array.isArray(recs)) return ''; const L=recs.filter(
   const val=r=>r.id==='fc'?fcT(r.v):(r.id==='arenaRank'||r.id==='arenaLeague')?String(r.text):n0(r.v)+(r.unit?' '+r.unit:'');
   return `<div class="p5-card"><h4><span>Recordes</span></h4>${L.length?L.map((r,i)=>{ const sub=[dayBR(r.day),typeof r.info==='string'?r.info:''].filter(Boolean).join(' · '); return `<div class="p5-rec${i?'':' first'}"><span>${esc2(r.name)}${sub?'<em>'+esc2(sub)+'</em>':''}</span><b class="p5-lil">${esc2(val(r))}</b></div>`; }).join(''):'<p class="p5-hint" role="note" style="margin:0">Seus recordes aparecem aqui conforme você joga.</p>'}</div>`; }
 function visHtml(v,av){ let h='<p class="p5-hint">Tocou, trocou: o que você tem vai para o herói na hora. O que falta aparece como <b>prévia</b> no herói.</p>';
+  try{ if(window.WSkin&&typeof WSkin.html==='function') h+=WSkin.html({attr:'data-x="wsk"',btn:'p5-bt',btnOff:'p5-bt blue',sec:'p5-sec',hint:'p5-hint'}); }catch(e){}   /* visual de arma de EVENTO (js/wskin.js): só aparece para quem tem uma; Usar / Tirar */
   for(const [k,l] of KINDS){ const L=LIST[k](); if(!L.length) continue; h+=`<div class="p5-sec"><span>${l}${k==='skin'?' · '+esc2(heroN()):''}</span><span>${n0(L.filter(i=>i.own).length)}/${n0(L.length)}</span></div><div class="p5-grid">${L.map(cell).join('')}</div>`; }
   return h+(v?cosHtml(v,av):''); }
 function colHtml(){ const all=[].concat(...KINDS.map(k=>LIST[k[0]]())), own=all.filter(i=>i.own).length; if(!LIST[X.ct]) X.ct='skin'; const L=LIST[X.ct](), nm=(KINDS.find(k=>k[0]===X.ct)||[])[1]||'';
@@ -468,6 +469,9 @@ const ACT={
       else { sndP('ui_tap'); X.flash='Não foi possível trocar agora'; }
       redraw(); return; }
     sndP('ui_tap'); X.det=null; const same=X.pv&&X.pv.kind===it.kind&&X.pv.id===it.id; X.pv=same?null:{kind:it.kind,id:it.id}; redraw(); },
+  /* skin de arma de evento (js/wskin.js): só o visual da arma na mão; o poder é o da arma equipada */
+  wsk(b){ let r=null; try{ r=window.WSkin?WSkin.act(String(b.dataset.id||''),String(b.dataset.op||'')):null; }catch(e){ r=null; }
+    X.flash=(r&&typeof r.msg==='string'&&r.msg)||'Não foi possível trocar agora'; if(r&&r.ok){ sndP('claim'); X.pv=null; changed(); } else sndP('ui_tap'); redraw(); },
   sair(){ sndP('ui_tap'); X.pv=null; X.det=null; X.flash=''; redraw(); },
   mode(b){ const m=b.dataset.m==='foot'?'foot':'ride'; sndP('ui_tap'); if(X.pv&&X.pv.kind==='mount') X.pv=null; X.mode=m; redraw(); },
   ct(b){ const k=String(b.dataset.k||''); if(!LIST[k]||k===X.ct) return; sndP('ui_tap'); X.ct=k; X.cf='all'; redraw(); },
