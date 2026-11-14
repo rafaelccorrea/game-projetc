@@ -138,7 +138,7 @@ DATA.hookProposal={offer:{kael:'kael_ninja',kaia:'kaia_ninja'},pass:{kael:'kael_
 DATA.skinsOn=true;   // LIGADO (dono, 14/11, próxima versão): fontes de skin entregam; as 4 adultas seguem off (retired) em qualquer caminho
 DATA.offerSkin={kael:'kael_ninja',kaia:'kaia_ninja'}; DATA.passSkin={kael:'kael_angel',kaia:'kaia_angel'};
 for(const k of [
-  {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward'],
+  {id:'kael_demon',  name:'Kael Demônio',   hero:'kael', r:4, how:'Prêmio: VIP 7', sources:['reward'], visualOnly:true,
    dir:'assets/anim/skins/kael_demon', avatar:'kael_demon', art:true, families:[]},   // ARTE ENTREGUE (e6800d4); arco/bumerangue por código
   {id:'kael_angel',  name:'Kael Anjo',      hero:'kael', r:4, how:'Fim do Passe premium', sources:['pass'],
    /* REGRA DO DONO (14/11, via PO): SKIN NUNCA COM ASA NO CORPO. O Kael Anjo usa SEMPRE a pasta sem asa (kael_angel_nowing), com ou sem item de asa equipado;
@@ -156,7 +156,7 @@ for(const k of [
    dir:'assets/anim/skins/kaia_harlequin', avatar:'kaia_harlequin', art:true, families:[]},   // ARTE ENTREGUE (f5a3615): 8 animações + masks + back; sem bow/ e boomerang/
   {id:'kaia_ninja',  name:'Kaia Ninja',     hero:'kaia', r:2, how:'Oferta de 1ª compra', sources:['offer'],
    dir:'assets/anim/skins/kaia_ninja', avatar:'kaia_ninja', art:true, families:[]},   // ARTE ENTREGUE (ac9702c); arco/bumerangue por código
-  {id:'kaia_demon',  name:'Kaia Demônia',   hero:'kaia', r:4, how:'Prêmio: VIP 7', sources:['reward'],
+  {id:'kaia_demon',  name:'Kaia Demônia',   hero:'kaia', r:4, how:'Prêmio: VIP 7', sources:['reward'], visualOnly:true,
    dir:'assets/anim/skins/kaia_demon', avatar:'kaia_demon', art:true, families:[]},   // ARTE ENTREGUE (f8c3421); arco/bumerangue por código
   {id:'kaia_angel',  name:'Kaia Anjo',      hero:'kaia', r:4, how:'Fim do Passe premium', sources:['pass'],
    dir:'assets/anim/skins/kaia_angel', avatar:'kaia_angel', art:true, families:[]},   // ARTE ENTREGUE (565a16a); arco/bumerangue por código
@@ -174,7 +174,7 @@ const fixedEquipped=S=>{ if(!S||typeof S!=='object') return null; const id=fixed
 /* para a vitrine: [{id, name, hero, r, owned, equipped, available (do herói atual), how, bonus (texto '+7% ATK e Vida'), bonusPct:{equipped, collection}, soon, avatar, scale, mountArt}] */
 function fixedSkins(S,host){ const f=fixedState(S), h=heroOf(S), K=root.Sys&&root.Sys.skin&&root.Sys.skin.DATA;
   return FIXED.filter(k=>k.off!==true).map(k=>({id:k.id,name:k.name,hero:k.hero,r:k.r,owned:f.owned.includes(k.id),equipped:f.eq[k.hero]===k.id,available:fitsHero(k,h),how:k.how,
-    soon:DATA.fixedGrant!==true||k.art===false,art:k.art!==false,bonus:K?'+'+String(K.equippedPct[k.r]).replace('.',',')+'% ATK e Vida':'',bonusPct:{equipped:K?K.equippedPct[k.r]:0,collection:K?K.collectionPer:0},avatar:k.avatar,scale:DATA.skinScale,mountArt:k.mountArt})); }
+    soon:DATA.fixedGrant!==true||k.art===false,art:k.art!==false,bonus:k.visualOnly?'Só visual':K?'+'+String(K.equippedPct[k.r]).replace('.',',')+'% ATK e Vida':'',bonusPct:{equipped:K&&!k.visualOnly?K.equippedPct[k.r]:0,collection:K&&!k.visualOnly?K.collectionPer:0},visualOnly:!!k.visualOnly,avatar:k.avatar,scale:DATA.skinScale,mountArt:k.mountArt})); }
 /* obter: {ok, reason: id|owned|off}. Enquanto DATA.fixedGrant=false só o Modo dono ({owner:true}) libera. */
 function grantFixed(S,id,opt){ if(id&&typeof id==='object') id=id[heroOf(S)];   // gancho por herói ({kael, kaia})
   if(!FX[id]) return {ok:false,reason:'id'}; const own=!!(opt&&opt.owner===true), viaSrc=!!(opt&&opt.source);
@@ -186,7 +186,7 @@ function equipFixed(S,id){ const f=fixedState(S), h=heroOf(S); if(id==null){ f.e
   const k=FX[id]; if(!k) return {ok:false,reason:'id'}; if(k.off===true) return {ok:false,reason:'retired'}; if(k.art===false) return {ok:false,reason:'art'}; if(!fitsHero(k,h)) return {ok:false,reason:'hero'}; if(!f.owned.includes(id)) return {ok:false,reason:'owned'};   // art:false = sem a folha ainda: fica na coleção, não equipa
   f.eq[h]=id; return {ok:true,id}; }
 /* skin fixa para o Sys.skin: raridade da equipada (r, -1 = nenhuma) e quantas possui (o Sys.skin converte em pontos %) */
-function fixedPct(S){ if(!S||typeof S!=='object'||!S.look) return {r:-1,owned:0}; const e=fixedEquipped(S); return {r:e?e.r:-1,owned:fixedState(S).owned.filter(id=>FX[id]&&FX[id].off!==true).length}; }   // skin retirada (off) não dá bônus nem conta na coleção
+function fixedPct(S){ if(!S||typeof S!=='object'||!S.look) return {r:-1,owned:0}; const e=fixedEquipped(S); return {r:e&&!e.visualOnly?e.r:-1,owned:fixedState(S).owned.filter(id=>FX[id]&&FX[id].off!==true&&!FX[id].visualOnly).length}; }   /* visualOnly (skin do VIP 7, PO 14/11): só visual, sem ATK/Vida nem coleção, pelo teto de +10% do VIP */   // skin retirada (off) não dá bônus nem conta na coleção
 /* retrato: 'kael_phase0' | 'kael_phase2' | ... (assets/hero/avatar/<key>.png) */
 const avatarKey=(S,host)=>{ const e=fixedEquipped(S); return e?e.avatar:DEFAULT_LOOK[heroOf(S)].avatar; };
 /* pasta das folhas pela SKIN FIXA equipada (não há mais fase). stage = índice da pasta antiga (0 padrão, 2 cavaleiro, 3 lendário) só por compatibilidade. */
