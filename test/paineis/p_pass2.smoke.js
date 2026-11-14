@@ -148,6 +148,31 @@ for (const hero of ['kael', 'kaia']) for (const prem of [false, true]) { g.S = n
 for (let e = 0; e <= 8; e++) { host._eraMax = e; g.S = newSave(); setLv(120); def.onOpen(); def.render(); sane('era ' + e); } host._eraMax = 2;
 assert(imgs.size >= 10, 'imagens coletadas: ' + imgs.size);
 for (const u of imgs) { assert(!/^(https?:|\/\/)/.test(u), 'imagem de fora: ' + u); if (/^data:/.test(u)) continue; assert(fs.existsSync(path.join(R, u.split('?')[0])), 'imagem não existe em disco: ' + u); }
+// 8) ARTE PINTADA: toda peça citada existe em disco; a tela usa as peças; cada uma tem reserva (onerror → Pass2.bad, canvas por código, ou a borda/degradê em CSS que continuam no cartão)
+{ const A = g.Pass2, U = A.artUrls(), css = g.document.head.children.map(c => c.textContent).join('');
+  assert.strictEqual(U.length, 4 + 6, 'arte: 4 peças + 6 ícones de prêmio'); for (const u of U) assert(fs.existsSync(path.join(R, u)), 'arte não existe em disco: ' + u);
+  for (const k of ['faixa', 'pedestal', 'gratis', 'premium']) assert(A.SKIN[k] && fs.existsSync(path.join(R, A.SKIN[k])), 'peça sem arquivo: ' + k);
+  for (const m of SRC.matchAll(/'(assets\/(?:ui|icons)\/pass\/[^']+\.png)'/g)) assert(fs.existsSync(path.join(R, m[1])), 'imagem citada no arquivo não existe: ' + m[1]);
+  assert(!/pegaso/.test(SRC), 'o pégaso não entra (o palco é o herói)'); assert(!/100% 100% no-repeat/.test(SRC), 'nenhuma peça esticada nos dois eixos');
+  // cartões da trilha: 9 fatias da peça por cima da borda e do degradê em CSS (que ficam como reserva nativa quando a imagem não carrega)
+  assert(css.includes('.ps2-cell{border-image:url(' + A.SKIN.gratis + ') 24 fill/12px}') && css.includes('.ps2-cell.pr{border-image:url(' + A.SKIN.premium + ') 75 24 75 50 fill/'), 'cartões em 9 fatias');
+  assert(/\.ps2-cell\{[^}]*background:linear-gradient\(180deg,var\(--free1\),var\(--free2\)\);border:2px solid var\(--blue\)/.test(css) && /\.ps2-cell\.pr\{background:linear-gradient/.test(css), 'reserva dos cartões: borda e degradê em CSS continuam');
+  // pedestal: desenhado no canvas quando a imagem está pronta; sem imagem (como aqui, em node) ou em falha, o pedestal por código
+  assert(/drawImage\(ped,/.test(SRC) && /x\.fillRect\(PX-RX,GY,RX\*2,PH\)/.test(SRC) && /pedOwn\.onerror=/.test(SRC), 'pedestal: arte no canvas com a reserva por código');
+  { const I0 = g.Image, seen = []; g.Image = function () { this.complete = true; this.naturalWidth = 520; this.naturalHeight = 160; }; const d0 = ctx.drawImage; ctx.drawImage = (im, ...a) => { seen.push(a); };
+    try { g.S = newSave(); setLv(60); def.onClose(); raf.length = 0; els.ps2_stc = mkEl('ps2_stc'); els.ps2_stc.getContext = () => ctx; def.onOpen(); def.render(); heroCalls = []; raf.shift()(1000); assert.strictEqual(seen.length, 1, 'a peça do pedestal é desenhada uma vez por quadro'); const a = seen[0]; assert(Math.abs(a[2] / a[3] - 520 / 160) < 0.01, 'pedestal na proporção da peça');
+      assert.strictEqual(heroCalls.length, 1); assert(Math.abs(heroCalls[0].y - (a[1] + 46 * a[3] / 160)) < 0.6 && Math.abs(heroCalls[0].x - (a[0] + 262 * a[2] / 520)) < 0.6, 'os pés do herói ficam no centro do tampo pintado');
+      A.bad('pedestal'); seen.length = 0; heroCalls = []; raf.shift()(1100); assert.strictEqual(seen.length, 0, 'pedestal em falha: reserva por código'); assert.strictEqual(heroCalls.length, 1); }
+    finally { g.Image = I0; ctx.drawImage = d0; delete A.BAD.pedestal; } }
+  // faixa e ícones: na tela com a arte; em falha, o desenho de antes
+  g.S = newSave(); setLv(60); setXp(D.tiers * D.xpPerTier); P.setPremium(g.S, true); def.onOpen({ tab: 'track' }); def.render(); sane('arte: trilha');
+  has('<span class="sk"><img src="assets/ui/pass/passe_faixa.png"'); has('class="ps2-rib sk'); has('src="assets/icons/pass/diamonds.png"'); has('src="assets/icons/pass/mountfrag.png"'); has('src="assets/icons/pass/stones.png"'); has('src="assets/icons/pass/essence.png"');
+  def.onOpen({ tab: 'mis' }); def.render(); sane('arte: missões'); has('src="assets/icons/pass/xp.png"'); has('src="assets/icons/pass/diamonds.png"');
+  for (const k of ['faixa', 'diamonds', 'xp', 'mountfrag', 'stones', 'essence', 'petfood']) A.bad(k);
+  not('assets/icons/pass/'); has('<img src="assets/ui/gem.png" alt="">+'); sane('reserva: missões');
+  def.onOpen({ tab: 'track' }); def.render(); not('assets/icons/pass/'); not('passe_faixa.png'); not('class="ps2-rib sk'); has('src="assets/ui/gem.png"'); has('<svg viewBox="0 0 24 24" width="16" height="16"'); has('Prêmio da temporada (nível ' + D.tiers + '): <b>'); sane('reserva: trilha');
+  for (const k of Object.keys(A.BAD)) delete A.BAD[k]; def.render(); has('class="ps2-rib sk'); }
+out.push('arte pintada: 10 arquivos em disco; faixa, pedestal no canvas (pés no centro do tampo), cartões em 9 fatias e ícones de diamante, XP, fragmento, pedra e essência; cada peça com reserva');
 def.tick(); def.onClose(); assert.strictEqual(def.busy(), false);
 out.push('toques: ' + taps + ' botões tocados sem exceção (2 heróis, com e sem premium, 2 abas); ' + imgs.size + ' imagens citadas, todas em disco (eras 0 a 8)');
 console.log(out.join('\n') + '\nTODOS OS TESTES PASSARAM');

@@ -44,10 +44,20 @@ const V2_UNIT={offlineH:' h',bag:' espaços'};   /* unidade do valor da conveni�
 const V2_SVG={
   eye:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
   info:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#1e5a8c" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="10"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>' };
-/* ARTE QUE A TELA AINDA DESENHA EM CSS/SVG (mock vp_vb). Quando a Arte entregar os arquivos, o caminho entra AQUI e só aqui (vazio = desenho em CSS):
-   aba = aba dourada do "VIP N" · cartao = papel do cartão · medalha/medalhaOn = medalhão do trilho dos níveis (normal e escolhido) */
-const V2_SKIN={aba:'',cartao:'',medalha:'',medalhaOn:''};
-const vSkinBg=k=>V2_SKIN[k]?' style="background:url('+V2_SKIN[k]+') center/100% 100% no-repeat"':'';
+/* ARTE PINTADA (Arte, aprovada pelo dono; mock vp_vb). O caminho entra AQUI e só aqui (vazio = desenho em CSS). Toda peça tem RESERVA: se a imagem falhar
+   (onerror → PVip2.bad), a tela redesenha com o CSS/SVG de antes.
+   cartao (720x620) = papel do cartão do nível: a faixa do alto (com a plaqueta, onde vai o "VIP N") e a de baixo entram na proporção da peça; só o miolo
+     (bordas retas e papel liso) acompanha a altura do conteúdo · aba (520x90) = faixa creme logo abaixo da plaqueta, com a linha "A partir de N pontos VIP"
+     (a plaqueta do "VIP N" já vem pintada no cartão) · medalha/medalhaOn (96x96, com a coroa) = medalhão do trilho dos níveis (normal e escolhido) */
+const V2_SKIN={aba:'assets/ui/vip/vip_aba.png',cartao:'assets/ui/vip/vip_cartao.png',medalha:'assets/ui/vip/vip_medalha.png',medalhaOn:'assets/ui/vip/vip_medalha_on.png'};
+const V2_BAD={};
+const vSkOk=k=>!!V2_SKIN[k]&&!V2_BAD[k];
+function vBad(k){ k=String(k||''); if(!k||V2_BAD[k]) return; V2_BAD[k]=1; vRedraw(); }
+const vImg=(k,u,cls)=>'<img'+(cls?' class="'+cls+'"':'')+' src="'+u+'" alt="" onerror="try{PVip2.bad(&quot;'+k+'&quot;)}catch(e){}">';
+/* ícone pintado de cada linha de benefício (campo do Sys.vip.levelInfo, ou "conv:"+id da conveniência do Sys.vip.convTable). Linha sem entrada aqui fica com o desenho de antes:
+   Ouro (moeda do jogo), Baús (baú do jogo), Moldura (a própria moldura VIP) e as conveniências que não são "sozinho"/"fora do jogo" (engrenagem) */
+const V2_BART={speedTier:'assets/icons/vip/speed.png',atkPct:'assets/icons/vip/atkhp.png',xpPct:'assets/icons/vip/xp.png',xp9:'assets/icons/vip/xp.png',keys:'assets/icons/vip/key.png',offlineMult:'assets/icons/vip/offline.png',
+  'conv:offlineH':'assets/icons/vip/offline.png','conv:autoCollect':'assets/icons/vip/auto.png','conv:autoFuse':'assets/icons/vip/auto.png','conv:autoSell':'assets/icons/vip/auto.png','conv:autoEquip':'assets/icons/vip/auto.png','conv:autoForge':'assets/icons/vip/auto.png'};
 const V2_FRAME=n=>'assets/ui/frames/vip'+n+'.png';   /* moldura VIP N (arte aprovada, 256x256 com janela de 160) */
 /* ícone de cada linha de benefício (pelo campo do Sys.vip.levelInfo); conveniência sem ícone próprio usa a engrenagem */
 const V2_K='stroke="#3a2413" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"';
@@ -62,7 +72,9 @@ const V2_BI={
   offlineMult:vSvg('<path d="M20.5 14.5A8.6 8.6 0 119.5 3.5a7 7 0 0011 11z" fill="#9db7e6" '+V2_K+'/>'),
   conv:vSvg('<path d="M12 2.3l1.6 2.7 3-.9.6 3 3 .6-.9 3 2.7 1.6-2.7 1.6.9 3-3 .6-.6 3-3-.9L12 21.7l-1.6-2.7-3 .9-.6-3-3-.6.9-3L2 12.3l2.7-1.6-.9-3 3-.6.6-3 3 .9z" fill="#8f9aad" '+V2_K+'/><circle cx="12" cy="12" r="3.3" fill="#dcc396" '+V2_K+'/>') };
 V2_BI.xp9=V2_BI.xpPct;
-function vBenIcon(key,val){ if(key==='frameVip'&&val>0) return '<img src="'+V2_FRAME(val|0)+'" alt="">'; return V2_BI[key]||V2_BI.conv; }
+function vBenIcon(key,val){ if(key==='frameVip'&&val>0) return '<img src="'+V2_FRAME(val|0)+'" alt="">';
+  const u=V2_BART[key]; if(u&&!V2_BAD['b:'+key]) return vImg('b:'+key,u,'');
+  return V2_BI[key]||V2_BI.conv; }
 
 (function(){ if(typeof document==='undefined'||!document.head) return; const st=document.createElement('style'); st.textContent=`
 .v2-root{--v-bg:#f3e6c6;--v-paper:#fbf1dc;--v-paper2:#f1e0bc;--v-row:#ecd9b2;--v-tile:#dcc396;--v-line:#c9a35a;--v-gold:#e2a93b;--v-gold2:#8a5a1c;--v-ink:#3a2413;--v-ink2:#5c4630;--v-brand:#7a3d0c;--v-ok:#185a2a;--v-lock:#7a4700;--v-soon:#5a5346;--v-rose:#b3264f;--v-blue:#1e3a52;
@@ -176,6 +188,31 @@ function vBenIcon(key,val){ if(key==='frameVip'&&val>0) return '<img src="'+V2_F
 .v2-foot small{text-align:center;font-size:10.5px;font-weight:800;color:var(--v-ink2);line-height:1.3;overflow-wrap:anywhere}
 .v2-gate{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px 16px;text-align:center}
 .v2-gate span{font-weight:900;font-size:14px;line-height:1.35;color:var(--v-ink);overflow-wrap:anywhere}
+/* ---- arte pintada (atributo data-sk; sem ele vale o desenho em CSS acima) ---- */
+.v2-lv[data-sk],.xs .v2-lv[data-sk]{border-color:transparent;background:none;box-shadow:none;color:#1a0c02;padding-top:4px}
+.v2-lv[data-sk][aria-pressed="true"],.xs .v2-lv[data-sk][aria-pressed="true"]{border-color:transparent;background:none;box-shadow:none;color:#2a1403;transform:scale(1.12)}
+.v2-lv[data-sk].me,.xs .v2-lv[data-sk].me{box-shadow:0 0 0 3px #fff7df}
+.v2-lv[data-sk]>img{position:absolute;left:-10px;top:-14px;width:56px;height:56px;max-width:none;pointer-events:none}
+.v2-lv[data-sk]:not(.got)>img{filter:saturate(.5)}
+.v2-lv[data-sk][aria-pressed="true"]>img{top:-12px;filter:none}
+.v2-lv[data-sk]>.n{position:relative;z-index:1;display:block}
+.v2-main[data-sk]{position:relative;z-index:0;border:0;border-radius:0;background:none;box-shadow:none;padding:0 8.6% 8.6%}
+.v2-skc{position:absolute;left:0;right:0;top:0;bottom:0;z-index:-1;display:flex;flex-direction:column;pointer-events:none}
+.v2-skc>span{position:relative;display:block;flex:none;overflow:hidden}
+.v2-skc>.t{aspect-ratio:720/140}
+.v2-skc>.m{flex:1;min-height:0;margin:-1px 0}
+.v2-skc>.b{aspect-ratio:720/130}
+.v2-skc img{position:absolute;left:0;width:100%;max-width:none;display:block}
+.v2-skc>.t img{top:0;height:auto}
+.v2-skc>.m img{top:-40%;height:177.15%}
+.v2-skc>.b img{bottom:0;height:auto}
+.v2-lvh[data-sk]{position:relative;display:block;width:auto;margin:0 -10.39% 9px;padding:16.8% 10.39% 0;border-radius:0;background:none;box-shadow:none}
+.v2-lvh[data-sk]>b{position:absolute;left:26.4%;top:0;width:46.1%;margin-top:1.4%;aspect-ratio:332/52;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;color:var(--v-ink)}
+.v2-abx{position:relative;display:flex;align-items:center;justify-content:center;aspect-ratio:520/90;padding:2px 6%;min-width:0}
+.v2-abx>img{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;object-fit:cover}
+.v2-abx>.tx{position:relative;min-width:0;font-size:10.5px;font-weight:800;line-height:1.22;color:var(--v-ink);text-align:center;overflow-wrap:anywhere}
+.v2-abx.no{aspect-ratio:auto;padding:0}
+.v2-lvh[data-sk]>.v2-pill{display:table;margin:5px auto 0}
 @media (prefers-reduced-motion:reduce){.v2-root *{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 `; document.head.appendChild(st); })();
 
@@ -219,7 +256,7 @@ function vTable(L){ const b=vInfo(0), h=vInfo(L), out=[];
 function vOpens(L){ if(L<1) return []; const a=vInfo(L-1), h=vInfo(L), b=vInfo(0), out=[];
   for(const r of vBaseRows()) if(vRowVal(r,h)!==vRowVal(r,a)){ const f=r[2](b); out.push([r[1],r[2](h),f&&f!=='—'?'Grátis: '+f:'',r[0],vRowVal(r,h)]); }   /* 4º e 5º: campo e valor cru, só para o ícone da linha */
   for(const c of vConvs()){ const ch=c.vals?(L>=c.vip&&(+c.vals[L]||0)!==(+c.vals[L-1]||0)):L===c.vip; if(!ch) continue;
-    out.push([c.name,c.vals?vConvTxt(c,L):'Abre',[c.sub,c.free?'grátis: '+c.free:''].filter(Boolean).join(' · ')]); }
+    out.push([c.name,c.vals?vConvTxt(c,L):'Abre',[c.sub,c.free?'grátis: '+c.free:''].filter(Boolean).join(' · '),'conv:'+c.id]); }   /* 4º: só para o ícone da linha */
   return out; }
 
 /* ---------- PRÊMIOS: lidos das regras dos módulos; inteiros, uma vez, sem sorteio ---------- */
@@ -302,7 +339,11 @@ function vDetHtml(p,cur){ const st=vStat(p,cur), v='<b>VIP '+n0(p.v)+'</b>';
 /* ordem do mock: cartão do nível (aba "VIP N", o que abre, prêmios do nível, barra de pontos) e, no cartão de baixo, o resto (prog = barra de pontos; mid = prêmios e regra) */
 function vLevelPanel(L,cur,P,list,prog,mid){ const max=vMax();
   const status=L===0?'O que todo jogador tem':L<=cur?'<em>Você tem</em>':(()=>{ const f=Math.max(0,vPts(L)-P.points); return (f===1?'Falta <em>1 ponto VIP</em>':'Faltam <em>'+n0(f)+' pontos VIP</em>'); })();
-  let h=`<div class="v2-main"><div class="v2-lvh"${vSkinBg('aba')}><b class="v2-lil">${L?'VIP '+n0(L):'Sem VIP'}</b><span class="tx">${L?'A partir de <em>'+n0(vPts(L))+(vPts(L)===1?' ponto VIP':' pontos VIP')+'</em> no total':'Jogador grátis'}<br>${status}</span>${L&&L<=cur?'<span class="v2-pill on">Liberado</span>':L?'<span class="v2-pill off">VIP '+n0(L)+'</span>':''}</div>`;
+  const hT=`<b class="v2-lil">${L?'VIP '+n0(L):'Sem VIP'}</b>`, hX=`<span class="tx">${L?'A partir de <em>'+n0(vPts(L))+(vPts(L)===1?' ponto VIP':' pontos VIP')+'</em> no total':'Jogador grátis'}<br>${status}</span>`, hP=L&&L<=cur?'<span class="v2-pill on">Liberado</span>':L?'<span class="v2-pill off">VIP '+n0(L)+'</span>':'';
+  /* com a arte: o cartão pintado em 3 faixas (alto e baixo na proporção; o miolo acompanha a altura), o "VIP N" na plaqueta do cartão e a linha dos pontos na aba. Sem a arte: o cabeçalho em CSS de antes */
+  const ci=vSkOk('cartao')?vImg('cartao',V2_SKIN.cartao,''):'', ab=vSkOk('aba');
+  let h=ci?`<div class="v2-main" data-sk="1"><span class="v2-skc" aria-hidden="true"><span class="t">${ci}</span><span class="m">${ci}</span><span class="b">${ci}</span></span><div class="v2-lvh" data-sk="1">${hT}<span class="v2-abx${ab?'':' no'}">${ab?vImg('aba',V2_SKIN.aba,''):''}${hX}</span>${hP}</div>`
+    :`<div class="v2-main"><div class="v2-lvh">${hT}${hX}${hP}</div>`;
   if(L>0){ const op=vOpens(L);
     h+=`<div class="v2-sec"><span>Abre no VIP ${n0(L)}</span><span>${n0(op.length)} ${op.length===1?'item':'itens'}</span></div>`;
     h+=op.length?op.map(o=>`<div class="v2-pk nw"><span class="v2-pi" aria-hidden="true">${vBenIcon(o[3],o[4])}</span><span class="tx">${esc2(o[0])}${o[2]?'<small>'+esc2(o[2])+'</small>':''}</span><em>${esc2(o[1])}</em></div>`).join(''):'<p class="v2-hint">Os mesmos benefícios do nível anterior.</p>';
@@ -350,8 +391,8 @@ function vRender(){
       return `<button class="v2-rc${X.pv===p.key?' pv':''}${p.live?'':' sn'}" style="--rc:${vRc(p)}" data-x="pv" data-id="${esc2(p.key)}" aria-pressed="${X.pv===p.key}" aria-label="${esc2((p.canPv?'Prévia: ':'')+p.name+', VIP '+p.v+', '+st.t)}">${p.icon?`<img class="v2-art" src="${esc2(p.icon)}" alt="">`:`<span class="v2-art v2-lil" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;font-size:26px;color:${vRc(p)}">${esc2(String(p.name).charAt(0))}</span>`}${p.canPv?`<span class="v2-ey" aria-hidden="true">${V2_SVG.eye}</span>`:''}<span class="v2-nm">${esc2(p.name)}</span><span class="v2-st ${st.c}">${esc2(st.t)}</span></button>`; }).join('')}</div>`:'';
 
   /* ----- NÍVEIS 0 a máximo (grade que quebra em 2 linhas) ----- */
-  let lv=''; for(let i=0;i<=max;i++){ const dot=list.some(p=>p.v===i);
-    lv+=`<button class="v2-lv${i<=cur?' got':''}${i===cur?' me':''}" data-x="lv" data-l="${i}" aria-pressed="${L===i}"${vSkinBg(L===i?'medalhaOn':'medalha')} aria-label="${esc2(i?'VIP '+i+', a partir de '+n0(vPts(i))+' pontos VIP'+(dot?', com prêmio':''):'Sem VIP')}">${i?n0(i):'<small>Sem</small><small>VIP</small>'}${dot?'<span class="v2-rd" aria-hidden="true"></span>':''}</button>`; }
+  let lv=''; for(let i=0;i<=max;i++){ const dot=list.some(p=>p.v===i), mk=L===i?'medalhaOn':'medalha', ms=vSkOk(mk), nb=i?n0(i):'<small>Sem</small><small>VIP</small>';
+    lv+=`<button class="v2-lv${i<=cur?' got':''}${i===cur?' me':''}" data-x="lv" data-l="${i}" aria-pressed="${L===i}"${ms?' data-sk="1"':''} aria-label="${esc2(i?'VIP '+i+', a partir de '+n0(vPts(i))+' pontos VIP'+(dot?', com prêmio':''):'Sem VIP')}">${ms?vImg(mk,V2_SKIN[mk],'')+'<span class="n">'+nb+'</span>':nb}${dot?'<span class="v2-rd" aria-hidden="true"></span>':''}</button>`; }
   const lvls=`<div class="v2-top"><div class="v2-lvls" role="group" aria-label="Níveis do VIP: escolha um">${lv}${list.length?'<span class="v2-lvcap" aria-hidden="true">ponto rosa = prêmio</span>':''}</div></div>`;
 
   const foot=`<div class="v2-foot"><button class="v2-bt" data-x="shop"><img src="assets/icons/menu/shop.png" alt="">Ir para a Loja</button><small>${vBuyOn()?'O VIP sobe com as compras da Loja. Aqui nada se compra.':'O VIP sobe com as compras da Loja. As compras ainda não abriram: nada é cobrado.'}</small></div>`;
@@ -382,7 +423,8 @@ function vClick(b){ const a=b&&b.dataset?b.dataset.x:''; if(!a||!Object.prototyp
   if(!vOk()) return;
   return ACT[a](b); }
 /* imagens que a tela mostra agora (para a espera de carga do jogo, xGate) */
-function vUrls(){ const u=[V2_VIP_IC,'assets/icons/menu/shop.png']; try{ if(vOk()) for(const p of vPrizes()) if(p.icon&&u.indexOf(p.icon)<0) u.push(p.icon); }catch(e){} return u; }
+const vArtUrls=()=>{ const u=[]; for(const k in V2_SKIN) if(V2_SKIN[k]&&u.indexOf(V2_SKIN[k])<0) u.push(V2_SKIN[k]); for(const k in V2_BART) if(u.indexOf(V2_BART[k])<0) u.push(V2_BART[k]); return u; };
+function vUrls(){ const u=[V2_VIP_IC,'assets/icons/menu/shop.png'].concat(vArtUrls()); try{ if(vOk()) for(const p of vPrizes()) if(p.icon&&u.indexOf(p.icon)<0) u.push(p.icon); }catch(e){} return u; }
 
 if(!('vip2' in PANEL_ON)) PANEL_ON.vip2=false;
 Panels.add(N,{title:'Clube VIP',actions:Object.keys(ACT),
@@ -394,4 +436,6 @@ Panels.add(N,{title:'Clube VIP',actions:Object.keys(ACT),
     if(vOk()){ const c=vCur(), m=vMax(); X.sel=c>=m?m:vClamp(c+1,0,m);
       try{ if(window.Sys&&Sys.pet&&Sys.pet.prismVipMax) Sys.pet.prismVipMax(S,Sys.host); }catch(e){} } },   /* igual à tela de hoje: VIP no máximo, o Sys.pet entrega os fragmentos do Prismático uma vez (idempotente) */
   onClose(){ vStop(); X.pv=null; } });
+/* para o onerror das imagens da arte (reserva), o teste de fumaça e o console */
+window.PVip2={SKIN:V2_SKIN,BART:V2_BART,BAD:V2_BAD,bad:vBad,urls:vUrls,artUrls:vArtUrls};
 })();

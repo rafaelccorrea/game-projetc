@@ -21,7 +21,12 @@ const T3_ART={
   /* DRAGÃO da direção B. Hoje: a folha idle do pet dragão do jogo, estágio evoluído (tira de 12 quadros de 512x352, pés em y=307).
      A Arte troca por uma folha própria da Tela Inicial (dragão voando, virado para o herói): mudar base e os números ao lado. */
   dragon:{base:'assets/anim/pets/era2_dragon_evo_idle',frames:12,cols:0,fps:12,w:512,h:352,cx:224,feetY:307,body:256,rel:0.92,x:0.80,flip:false},
-  /* FUNDO: a cena da era do jogador [arquivo, linha do chão (assets/bg/meta.json), foco horizontal]. A Arte troca por um fundo próprio (castelo ao entardecer do mock A). */
+  /* FUNDO PINTADO (Arte, aprovado pelo dono): o castelo ao entardecer do mock A, 1080x1920, com o logo pintado já apagado do céu (o logo real continua no alto).
+     ground = linha do chão na pintura, como fração da altura: 0,79 (y = 1517 de 1920, o meio da clareira de terra, que vai de y 1400 a 1620 e de x 180 a 960); é aí que ficam os pés do herói e do dragão.
+     A pintura cobre a largura da tela, centrada (focus), sem esticar; a altura é a que põe a linha do chão logo acima dos botões, e a base da pintura passa por trás deles.
+     RESERVA: se a imagem não carregar (evento de erro), a tela volta sozinha para a cena da era (bg, abaixo), com a tinta de entardecer de antes. */
+  bgArt:{url:'assets/ui/title/title_bg_a.png',ratio:1080/1920,ground:0.79,focus:0.50},
+  /* RESERVA do fundo: a cena da era do jogador [arquivo, linha do chão (assets/bg/meta.json), foco horizontal]. */
   bg:[['assets/bg/era0.png',0.77,0.50],['assets/bg/era1.png',0.64,0.50],['assets/bg/era2.png',0.78,0.60],['assets/bg/era3.png',0.70,0.50],['assets/bg/era4.png',0.76,0.50],
       ['assets/bg/era5.png',0.68,0.50],['assets/bg/era6.png',0.67,0.50],['assets/bg/era7_ref.png',0.73,0.50],['assets/bg/era8_ref.png',0.79,0.50]],
   bgRatio:1600/1073,   /* largura / altura dos fundos */
@@ -30,7 +35,7 @@ const T3_ART={
   heroX:0.40,          /* centro do herói na largura da tela */
   avatarDir:'assets/hero/avatar/'
 };
-const T3_NEW_DIRECT=true;   /* jogador novo: JOGAR cria o convidado e segue para o Prólogo (a conta fica no ícone). false = JOGAR abre a tela de Login de hoje */
+const T3_NEW_DIRECT=true;   /* jogador novo: JOGAR cria o convidado e segue para o Prólogo (quem já tem conta Google entra pelo botão logo abaixo do JOGAR, ou pelo ícone de conta). false = JOGAR abre a tela de Login de hoje */
 
 if(typeof W.TITLE3_ON==='undefined') W.TITLE3_ON=false;   /* A CHAVE */
 try{ if(typeof DEBUG!=='undefined'&&DEBUG&&typeof QP!=='undefined'&&QP&&QP.get('titulo')==='3') W.TITLE3_ON=true; }catch(e){}
@@ -39,7 +44,7 @@ const ON=()=>W.TITLE3_ON===true;
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tr=(f,d)=>{ try{ const v=f(); return v==null?d:v; }catch(e){ return d; } };
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const T={inst:false,PI:null,el:null,parts:null,live:false,raf:0,last:0,t:0,sheet:null,note:'',gBusy:false,played:false,geo:null,herr:0,h1:null,h2:null,show0:null,fin0:null,toast0:null};
+const T={inst:false,PI:null,el:null,parts:null,bgBad:false,probe:null,live:false,raf:0,last:0,t:0,sheet:null,note:'',gBusy:false,played:false,geo:null,herr:0,h1:null,h2:null,show0:null,fin0:null,toast0:null};
 const SAVE=()=>{ try{ return (typeof S!=='undefined'&&S)?S:{}; }catch(e){ return {}; } };
 const snd=n=>{ try{ if(T.PI&&T.PI.g&&T.PI.g.snd) T.PI.g.snd(n); }catch(e){} };
 const say=m=>{ try{ if(T.PI&&T.PI.toast) T.PI.toast(m); }catch(e){} };
@@ -102,9 +107,16 @@ function uiHTML(st){ const nt=NET_TXT[st.net]||NET_TXT.off, wait=st.net==='cloud
     ?'<button type="button" class="t3-srv" data-t3="srv" aria-label="Servidor '+esc(st.realm)+(nt[0]?', '+esc(nt[0]):'')+'. Trocar servidor">'+srvIn+'<span class="t3-tr">Trocar '+IC.chev+'</span></button>'
     :'<div class="t3-srv" role="status" aria-label="Servidor '+esc(st.realm)+(nt[0]?', '+esc(nt[0]):'')+'">'+srvIn+'</div>';
   const foot=st.acct==='google'?'Salvo na nuvem':st.acct==='guest'?'Salvo neste celular':'Sem conta ainda';
+  /* JOGADOR NOVO SEM CONTA (aparelho novo): quem já tem conta Google entra nela por aqui, à vista, sem virar convidado novo. É a MESMA ação do ícone de conta
+     (ACTIONS.google -> PIntro.google: sem conexão avisa e não tenta; no app DEV o PIntro avisa; conta que já tem personagem carrega o save da nuvem pelo caminho de hoje).
+     O JOGAR continua criando o convidado só no toque. Quem já tem conta (convidado ou Google) não vê este botão. */
+  const noNet=st.net==='offline'||st.net==='maint';
+  const gAlt=(st.isNew&&st.acct==='none'&&st.net!=='off')
+    ?'<button type="button" class="t3-alt" data-t3="google"'+((T.gBusy||(noNet&&!st.dev))?' aria-disabled="true"':'')+'><i aria-hidden="true">G</i><span>'+(T.gBusy?'Conectando com Google':'Já tenho conta: entrar com Google')+'</span></button>'
+      +'<p class="t3-terms">Convidado: o progresso fica neste celular até você ligar uma conta.</p>':'';
   return '<button type="button" class="t3-acct" data-t3="acct" aria-label="'+ACCT_ARIA[st.acct]+'">'+IC.user+tag+'</button>'
     +'<div class="t3-stack"><div class="t3-col">'+bannerHTML(st)+pcard+srv
-    +'<button type="button" class="t3-play'+(wait?' t3-wait':'')+'" data-t3="play"'+(wait?' aria-disabled="true"':'')+'>JOGAR<small>'+esc(playSub(st))+'</small></button>'
+    +'<button type="button" class="t3-play'+(wait?' t3-wait':'')+'" data-t3="play"'+(wait?' aria-disabled="true"':'')+'>JOGAR<small>'+esc(playSub(st))+'</small></button>'+gAlt
     +(st.isNew?'<p class="t3-terms">Ao jogar você aceita os Termos de Uso e a Política de Privacidade (em Configurações › Sobre).</p>':'')
     +'<div class="t3-ft"><span>'+foot+'</span><span>Versão '+esc(st.ver)+'</span></div></div></div>'; }
 function sheetHTML(st){ const noNet=st.net==='offline'||st.net==='maint';
@@ -173,11 +185,20 @@ const px=v=>Math.round(v)+'px';
 function layout(){ const el=T.el, P=T.parts; if(!el||!P) return; const W0=el.clientWidth||390, H0=el.clientHeight||844, A=T3_ART, D=A.dragon;
   const st=T.snapNow||snap(), B=A.bg[clamp(st.sceneEra|0,0,A.bg.length-1)];
   const stack=tr(()=>P.ui.querySelector('.t3-stack'),null), top=(stack&&stack.offsetTop>0)?stack.offsetTop:Math.round(H0*0.68);
-  const gy=Math.min(0.95,B[1]+A.bgFeet), gT=Math.max(Math.round(H0*0.40),top-14);
-  const bh=Math.max(gT/gy,W0/A.bgRatio), bw=bh*A.bgRatio, feet=Math.round(bh*gy), left=clamp(W0/2-bw*B[2],W0-bw,0);
-  P.bg.style.cssText='left:'+px(left)+';top:0;width:'+px(bw)+';height:'+px(bh)+';background-image:url('+B[0]+')';
-  P.fade.style.cssText='top:'+px(feet+4)+';height:'+px(Math.max(48,bh-feet-4));
-  P.floor.style.cssText='top:'+px(Math.max(feet+52,bh));
+  const gT=Math.max(Math.round(H0*0.40),top-14), art=(A.bgArt&&A.bgArt.url&&!T.bgBad)?A.bgArt:null;
+  let feet=0, bh=0;
+  if(art){   /* fundo pintado: cobre a largura sem esticar; se a largura mandar e o chão passar dos botões, a pintura sobe (corta um pouco do céu) e o chão fica à vista */
+    bh=Math.max(gT/art.ground,W0/art.ratio); const bw=bh*art.ratio, f0=Math.round(bh*art.ground), ty=Math.min(0,gT-f0), left=clamp(W0/2-bw*art.focus,W0-bw,0), end=ty+bh; feet=f0+ty;
+    P.bg.style.cssText='left:'+px(left)+';top:'+px(ty)+';width:'+px(bw)+';height:'+px(bh)+';background-image:url('+art.url+')';
+    const f1=feet+Math.round(bh*0.05);   /* o escuro só começa abaixo da clareira onde o herói pisa */
+    P.fade.style.cssText='top:'+px(f1)+';height:'+px(Math.max(48,end-f1));
+    P.floor.style.cssText='top:'+px(Math.max(f1+48,end)); }
+  else {     /* reserva: a cena da era, como antes */
+    const gy=Math.min(0.95,B[1]+A.bgFeet); bh=Math.max(gT/gy,W0/A.bgRatio); const bw=bh*A.bgRatio, left=clamp(W0/2-bw*B[2],W0-bw,0); feet=Math.round(bh*gy);
+    P.bg.style.cssText='left:'+px(left)+';top:0;width:'+px(bw)+';height:'+px(bh)+';background-image:url('+B[0]+')';
+    P.fade.style.cssText='top:'+px(feet+4)+';height:'+px(Math.max(48,bh-feet-4));
+    P.floor.style.cssText='top:'+px(Math.max(feet+52,bh)); }
+  P.scene.className='t3-scene'+(art?' t3-art':'');
   const logoB=64+Math.min(W0*0.80,340)*317/1024+24, mounted=!!tr(()=>heroLook().mount,null);
   let F=clamp(W0*0.40,112,176)*(mounted?0.84:1); F=clamp(F,88,Math.max(88,(feet-logoB)/(mounted?1.7:1.25)));
   const ch=Math.round(3*F), cy=ch-Math.round(0.3*F);
@@ -206,6 +227,8 @@ const T3_CSS=`#pin .t3{position:absolute;inset:0;z-index:3;overflow:hidden;backg
 #pin .t3-bg{position:absolute;background-size:100% 100%;background-repeat:no-repeat}
 #pin .t3-tint{position:absolute;inset:0;background:linear-gradient(180deg,rgba(46,26,84,.72) 0%,rgba(112,54,112,.38) 34%,rgba(255,140,80,.14) 56%,rgba(11,8,6,0) 74%)}
 #pin .t3-glow{position:absolute;inset:0;background:radial-gradient(ellipse 70% 34% at 50% 56%,rgba(255,214,150,.20),rgba(255,214,150,0) 70%)}
+#pin .t3-art .t3-tint{background:linear-gradient(180deg,rgba(28,14,54,.36) 0%,rgba(46,22,70,.12) 26%,rgba(11,8,6,0) 50%)}
+#pin .t3-art .t3-glow{opacity:.45}
 #pin .t3-em{position:absolute;border-radius:50%;background:rgba(255,170,80,.95);box-shadow:0 0 8px 3px rgba(255,150,70,.5);animation:t3_rise 9s linear infinite}
 #pin .t3-shade{position:absolute;border-radius:50%;background:rgba(0,0,0,.42);filter:blur(2px)}
 #pin .t3-dragon{position:absolute}
@@ -244,6 +267,11 @@ const T3_CSS=`#pin .t3{position:absolute;inset:0;z-index:3;overflow:hidden;backg
 #pin .t3-play small{font:900 12.5px/1.2 Nunito,system-ui,sans-serif;letter-spacing:0;color:#2a1403;margin-top:3px}
 #pin .t3-play:active{transform:translateY(4px);box-shadow:0 2px 0 #8a4f0c}
 #pin .t3-play.t3-wait{animation:none;filter:saturate(.4) brightness(.82);cursor:default}
+#pin .t3-alt{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:48px;min-width:0;padding:6px 12px;border-radius:16px;border:2px solid #d9b877;background:#1b140e;color:#ffffff;font-size:14.5px;font-weight:900;line-height:1.2;text-align:center}
+#pin .t3-alt i{font-style:normal;width:26px;height:26px;flex:none;border-radius:50%;background:#ffffff;color:#1f1f1f;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900}
+#pin .t3-alt span{min-width:0;overflow-wrap:anywhere}
+#pin .t3-alt:active{transform:translateY(2px)}
+#pin .t3-alt[aria-disabled="true"]{opacity:.6}
 #pin .t3-terms{margin:0;font-size:12px;font-weight:700;color:#d8cbb8;text-align:center;line-height:1.4}
 #pin .t3-ft{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;font-size:12px;font-weight:800;color:#d8cbb8}
 #pin .t3-sheet{position:absolute;inset:0;z-index:4;pointer-events:none}
@@ -291,6 +319,8 @@ function mount(PI){ if(!PI||!PI.el||!PI.root) return false;
   P.logo.setAttribute('alt','Eonbound');
   P.logo.addEventListener('error',()=>{ try{ const t=mk('div','t3-logot'); t.textContent='EONBOUND'; el.replaceChild(t,P.logo); }catch(e){} },{once:true});
   P.logo.setAttribute('src',T3_ART.logo);
+  /* pede a carga do fundo pintado junto com o logo; se falhar, a cena volta para a reserva (cenário da era) e é redesenhada */
+  if(!T.bgBad&&T3_ART.bgArt&&T3_ART.bgArt.url){ const pr=mk('img','t3-probe'); pr.addEventListener('error',()=>{ if(T.bgBad) return; T.bgBad=true; if(T.el){ try{ layout(); }catch(e){} } },{once:true}); pr.setAttribute('src',T3_ART.bgArt.url); T.probe=pr; }
   el.appendChild(scene); el.appendChild(P.logo); el.appendChild(P.ui); el.appendChild(P.sheet);
   el.addEventListener('click',onClick);
   PI.el.appendChild(el);

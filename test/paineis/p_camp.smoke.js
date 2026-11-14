@@ -84,6 +84,12 @@ els.ac_hero = mkEl('ac_hero'); els.ac_hero.getContext = () => ctx;
 open(); hours(2); def.render(); { const v = C.view(g.S, host); assert.strictEqual(v.tents.length, 3); has(g.esc2(v.text));
   for (const t of v.tents) { has('>' + g.esc2(t.name) + '</span>'); has('<span>' + t.stored + ' / ' + t.cap + '</span>'); has('style="width:' + t.pct + '%"'); has('data-x="collect" data-t="' + t.id + '"'); has('data-x="tent" data-t="' + t.id + '"');
     has('+' + String(t.perHour).replace('.', ',') + ' por hora'); has('src="' + g.PCamp.ART_IMG[t.id] + '"'); }
+  // AJUDANTE: a arte existe em disco e está na lista de carga; um por tenda, dentro da caixa da arte da tenda (antes da placa, da barra e do Coletar), sem toque próprio e sem número; a reserva (imagem que falha) é a tenda sem ele
+  { const hp = g.PCamp.HELPER_IMG; assert.strictEqual(hp, 'assets/ui/camp/helper.png'); assert(fs.existsSync(path.join(R, hp)), 'ajudante não existe em disco'); assert(g.PCamp.urls().includes(hp), 'ajudante na lista de carga');
+    const h = H(), n = (h.match(/<img class="ac-help" src="assets\/ui\/camp\/helper\.png"/g) || []).length; assert.strictEqual(n, v.tents.length, 'um ajudante por tenda');
+    assert.strictEqual((h.match(/<span class="ac-ta"><(?:img|svg) class="ac-tart[^>]*>(?:<\/svg>)?<img class="ac-help"[^>]*onerror="this\.style\.display='none'"[^>]*><\/span><span class="ac-sign/g) || []).length, v.tents.length, 'o ajudante fica na caixa da arte da tenda, antes da placa, com reserva no onerror');
+    assert(!/<button[^>]*class="ac-help|ac-help[^>]*data-x/.test(h), 'o ajudante não é botão'); assert(/\.ac-help\{[^}]*bottom:0[^}]*pointer-events:none/.test(CSS), 'ajudante apoiado na base da arte e sem capturar toque');
+    assert(/\.ac-tart\{[^}]*\}/.test(CSS) && /ART_SVG/.test(SRC), 'a reserva em SVG das tendas continua'); }
   assert.deepStrictEqual(v.tents.map(t => t.stored), [6, 2, 4], 'números do módulo em 2 h'); has('Enchendo'); not('<b>Cheia</b>'); has('>Coletar tudo<'); not('role="dialog"');
   has('url(assets/bg/era2.png)'); has('class="ac-veil"'); assert(/rgba\(13,10,8,0\)/.test(H()), 'cenário da era sem escurecer (de dia)'); has('id="ac_hero"');
   assert(gateSeen.length && gateSeen[gateSeen.length - 1].includes('assets/bg/era2.png') && gateSeen[gateSeen.length - 1].includes('assets/ui/camp/tent_gold.png'), 'pede a carga do fundo e das tendas antes de desenhar');

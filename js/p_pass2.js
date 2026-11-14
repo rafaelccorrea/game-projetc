@@ -46,6 +46,23 @@ const rarW=(r,sl)=>{ const b=rnm(r), g=GEN[sl]||'m'; if(g==='m') return b; const
 const icoOf=(sl,e,r)=>{ try{ return String(slotIcon(sl,e,r)||''); }catch(er){ return ''; } };
 const IMG_COIN='assets/ui/coin.png', IMG_GEM='assets/ui/gem.png';
 const MATN={forge:['pedra de forja','pedras de forja'],essence:['essência','essências'],food:['ração de pet','rações de pet']};
+/* ARTE PINTADA (Arte, aprovada pelo dono; mock vp_pb). O caminho entra AQUI e só aqui (vazio = desenho em CSS/canvas). Toda peça tem RESERVA:
+   faixa (640x80) = pergaminho do prêmio da temporada, na proporção da peça (imagem que falha: onerror → Pass2.bad → a faixa em CSS) ·
+   pedestal (520x160; o corpo ocupa x108-412 e o centro do tampo fica em 262,46) = desenhado no canvas do palco (função frame); enquanto não carrega, ou se falhar, vale o pedestal desenhado por código ·
+   gratis/premium (360x160, limpas) = fundo de cada prêmio da trilha, em 9 fatias (cantos na proporção; só as bordas retas e o miolo liso acompanham o tamanho do cartão);
+     se a imagem não carregar, o navegador usa sozinho a borda e o degradê em CSS que continuam no cartão. A coroa pintada da premium fica no canto de cima à esquerda do cartão (fatia de canto, sem deformar), atrás do ícone do prêmio. */
+const PS2_SKIN={faixa:'assets/ui/pass/passe_faixa.png',pedestal:'assets/ui/pass/passe_pedestal.png',gratis:'assets/ui/pass/passe_faixa_gratis.png',premium:'assets/ui/pass/passe_faixa_premium.png'};
+/* ícones pintados dos prêmios que ESTA tela mostra (o Sys.pass entrega: ouro, diamantes, itens, pedras de forja, essência, fragmentos de montaria e XP do passe).
+   Ouro continua a moeda do jogo e os itens continuam o ícone do próprio item. Reserva de cada um: o ícone de antes (gema do jogo, SVG do fragmento, só texto). */
+const PS2_IC={diamonds:'assets/icons/pass/diamonds.png',xp:'assets/icons/pass/xp.png',mountfrag:'assets/icons/pass/mountfrag.png',stones:'assets/icons/pass/stones.png',essence:'assets/icons/pass/essence.png',petfood:'assets/icons/pass/petfood.png'};
+const MAT_IC={forge:'stones',essence:'essence',food:'petfood'};
+const PS2_BAD={};
+function bad(k){ k=String(k||''); if(!k||PS2_BAD[k]) return; PS2_BAD[k]=1; redraw(); }
+const skOk=k=>!!PS2_SKIN[k]&&!PS2_BAD[k];
+const skErr=k=>' onerror="try{Pass2.bad(&quot;'+k+'&quot;)}catch(e){}"';
+const icOk=k=>!!PS2_IC[k]&&!PS2_BAD[k];
+const icImg=(k,fb)=>{ const ok=icOk(k), u=ok?PS2_IC[k]:(fb||''); return u?'<img src="'+u+'" alt=""'+(ok?skErr(k):'')+'>':''; };
+const artUrls=()=>Object.keys(PS2_SKIN).map(k=>PS2_SKIN[k]).filter(Boolean).concat(Object.keys(PS2_IC).map(k=>PS2_IC[k]));
 
 /* portões: as MESMAS leituras do Sys.pass (canReceive, needLevel e seasonR não são exportados pelo módulo) */
 const maxR=()=>{ try{ const L=Sys.loot; return L&&L.maxAllowedR?L.maxAllowedR(Sys.host):4; }catch(e){ return 4; } };
@@ -83,10 +100,10 @@ const eqWeapon=()=>{ try{ const id=S.eq&&S.eq.weapon; if(id==null) return ''; co
    {rc, ic, av, name (HTML já escapado), sub (HTML já escapado), label (texto), pv (prévia no herói ou null), mini:{ic|frag, rc, pv, label}} */
 function wpv(e,r){ const sk=skinOf('w'+e+r); let nm=''; try{ nm=String(iname({slot:'weapon',r:r,e:e})||''); }catch(er){} nm=nm||('Arma '+rarW(r,'weapon'));
   return sk?{kind:'weapon',name:nm,st:{weapon:sk}}:null; }
-function rwInfo(trk,t){ const rw=PS().reward(trk,t), o={rc:rcol(0),ic:'',av:false,name:'',sub:'',label:'',pv:null,mini:null}; if(!rw) return o;
+function rwInfo(trk,t){ const rw=PS().reward(trk,t), o={rc:rcol(0),ic:'',ik:'',av:false,name:'',sub:'',label:'',pv:null,mini:null}; if(!rw) return o;   /* ik: chave do ícone pintado (PS2_IC), para a reserva */
   const e=eraNow();
   if(rw.goldk){ let u=1; try{ u=Math.max(1,+Sys.host.goldUnit()||1); }catch(er){} o.ic=IMG_COIN; o.rc='#ffd25e'; o.label=kfT(Math.round(rw.goldk*u))+' de ouro'; o.name=esc2(o.label); o.sub='= '+n0(rw.goldk)+' abates da sua fase'; }
-  else if(rw.gems&&!rw.item){ o.ic=IMG_GEM; o.rc='#5ee7ff'; o.label=n0(rw.gems)+' diamantes'; o.name=esc2(o.label); }
+  else if(rw.gems&&!rw.item){ o.ik=icOk('diamonds')?'diamonds':''; o.ic=o.ik?PS2_IC.diamonds:IMG_GEM; o.rc='#5ee7ff'; o.label=n0(rw.gems)+' diamantes'; o.name=esc2(o.label); }
   if(rw.item){ const sp=rw.item;
     if(sp.season){ const r=seasonR(sp); o.rc=rcol(r); o.ic=icoOf(sp.slot,e,r); o.pv=sp.slot==='weapon'?wpv(e,r):null; o.label=sln(sp.slot)+' da temporada'; o.name=esc2(o.label);
       o.sub=r<sp.r?'chega <b>'+esc2(rarW(r,sp.slot))+'</b>, evolui até '+esc2(rarW(sp.r,sp.slot)):esc2(rarW(sp.r,sp.slot)); }
@@ -96,13 +113,13 @@ function rwInfo(trk,t){ const rw=PS().reward(trk,t), o={rc:rcol(0),ic:'',av:fals
     else { o.rc=rcol(sp.r); o.ic=icoOf(sp.slot,e,sp.r); o.pv=sp.slot==='weapon'?wpv(e,sp.r):null; o.label=sln(sp.slot)+' '+rarW(sp.r,sp.slot);
       o.name=esc2(sln(sp.slot))+' <em>'+esc2(rarW(sp.r,sp.slot))+'</em>'; o.sub=canRecv(sp)?esc2(eraName(e))+' (era liberada)':'guardada até o <b>nível '+n0(needLv(sp))+'</b>'; } }
   /* pacote do nível: materiais e fragmentos de montaria (números do prêmio) */
-  { const ex=[], m=rw.mat&&typeof rw.mat==='object'?rw.mat:{}; for(const k in m){ const q=int0(m[k]); if(q) ex.push('+'+n0(q)+' '+(MATN[k]?MATN[k][q===1?0:1]:k)); }
-    const mf=int0(rw.mountFrags); if(mf){ const mt=mountTarget(mf); ex.push('+'+n0(mf)+' frag. '+(mt?'de '+mt.name:'de montaria (guardados até a 1ª montaria)'));
+  { const ex=[], exH=[], m=rw.mat&&typeof rw.mat==='object'?rw.mat:{}; for(const k in m){ const q=int0(m[k]); if(q){ const tx='+'+n0(q)+' '+(MATN[k]?MATN[k][q===1?0:1]:k); ex.push(tx); exH.push(icImg(MAT_IC[k],'')+esc2(tx)); } }
+    const mf=int0(rw.mountFrags); if(mf){ const mt=mountTarget(mf), tx='+'+n0(mf)+' frag. '+(mt?'de '+mt.name:'de montaria (guardados até a 1ª montaria)'); ex.push(tx); exH.push(esc2(tx));
       o.mini={frag:true,rc:mt?rcol(mt.r):'#ffd25e',label:mt?mt.name+' com '+mt.stars+' estrelas':'',pv:mt&&mt.ride?{kind:'mount',name:mt.name+' · '+mt.stars+' estrelas',st:{mount:{id:mt.id,stars:mt.stars}}}:null}; }
-    if(ex.length){ o.sub=esc2(ex.join(' · ')); o.label+=', '+ex.join(', '); } }
+    if(ex.length){ o.sub=exH.join(' · '); o.label+=', '+ex.join(', '); } }
   /* último nível premium: a skin do passe na frente; o item do nível vira o selo pequeno */
   if(trk==='premium'&&t===PD().tiers){ const sk=passSkin();
-    if(sk){ o.mini={ic:o.ic,rc:o.rc,pv:o.pv,label:o.label}; const was=o.label; o.rc=rcol(sk.r); o.ic=sk.av; o.av=true; o.label='Skin '+sk.name+', mais '+was;
+    if(sk){ o.mini={ic:o.ic,rc:o.rc,pv:o.pv,label:o.label}; const was=o.label; o.rc=rcol(sk.r); o.ic=sk.av; o.ik=''; o.av=true; o.label='Skin '+sk.name+', mais '+was;
       o.pv=sk.art?{kind:'skin',name:sk.name+' ('+rarW(sk.r,'wing')+')',st:{skin:sk.id}}:null; o.name='Skin <em>'+esc2(sk.name)+'</em>'; o.sub='+ '+esc2(was)+(o.sub?' · '+o.sub:''); } }
   return o; }
 const pending=()=>{ const o=PS().ensure(S), t=PS().tier(S); let c=0; for(let i=1;i<=t;i++){ if(!o.free.includes(i)) c++; if(o.premium&&!o.prem.includes(i)) c++; } return c; };
@@ -273,6 +290,16 @@ button.ps2-cb{min-height:40px;font-size:12.5px}
 .ps2-gate{position:relative;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;margin:auto 24px;padding:20px 18px;text-align:center;border-radius:16px;background:linear-gradient(180deg,var(--paper),var(--paper2));border:3px solid var(--gold);box-shadow:0 0 0 2px var(--gold2),0 5px 0 rgba(58,36,19,.32);color:var(--ink)}
 .ps2-gtag{padding:6px 14px;border-radius:999px;border:2px solid var(--gold2);background:#fff3d0;color:var(--brand);font-size:15px;font-weight:900;line-height:1.2}
 .ps2-msg{color:var(--ink2);font-size:12px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+/* ---- arte pintada (classe .sk e as 9 fatias dos cartões; sem a imagem vale o desenho em CSS acima) ---- */
+.ps2-rib.sk{left:2%;right:2%;width:96%;max-width:96%}
+.ps2-rib>span.sk{position:relative;display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:640/80;min-height:0;padding:0 9% 3.1%;border:0;border-radius:0;background:none;box-shadow:none;font-size:10.5px;line-height:1.15}
+.ps2-rib>span.sk>img{position:absolute;left:0;top:0;width:100%;height:100%;max-width:none;object-fit:cover}
+.ps2-rib>span.sk>i{position:relative;min-width:0;font-style:normal;overflow-wrap:anywhere}
+.ps2-rib>span.sk b{display:block;font-size:11.5px}
+.ps2-rib.pvon>span.sk>img{filter:drop-shadow(0 0 3px var(--rose))}
+${PS2_SKIN.gratis?'.ps2-cell{border-image:url('+PS2_SKIN.gratis+') 24 fill/12px}':''}
+${PS2_SKIN.premium?'.ps2-cell.pr{border-image:url('+PS2_SKIN.premium+') 75 24 75 50 fill/37px 12px 37px 25px}':''}
+.ps2-cs img{display:inline-block;width:14px;height:14px;margin-right:2px;vertical-align:-3px;object-fit:contain}
 @keyframes ps2-fade{from{opacity:0}}
 @keyframes ps2-tin{0%{opacity:0;transform:translate(-50%,-8px)}10%{opacity:1;transform:translate(-50%,0)}82%{opacity:1}100%{opacity:0}}
 @keyframes ps2-lv{0%{opacity:0;transform:scale(.4)}18%{opacity:1;transform:scale(1.15)}30%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}
@@ -286,13 +313,23 @@ function say(m){ X.toast=String(m||''); X.toastT=now(); try{ const el=document.g
 
 /* ================= PALCO (canvas): chão e o herói do jogo, com a peça da prévia ================= */
 function pvState(t){ const st={t:t,mount:false}, pv=X.pv; if(pv&&pv.st) Object.assign(st,pv.st); return st; }
+/* a imagem do pedestal para o canvas: a do Preload do jogo quando ele já tem; senão uma carga própria. Devolve a imagem só quando está pronta; falhou = reserva de vez */
+const PED_WH=[520,160], PED_C=[262,46];
+let pedOwn=0;
+function pedImage(){ if(!skOk('pedestal')) return 0;
+  try{ const P=window.Preload, im=P&&typeof P.image==='function'?P.image(PS2_SKIN.pedestal):0; if(im&&im.naturalWidth>0) return im; }catch(e){}
+  try{ if(!pedOwn&&typeof Image==='function'){ pedOwn=new Image(); pedOwn.onerror=()=>{ PS2_BAD.pedestal=1; }; pedOwn.src=PS2_SKIN.pedestal; } return pedOwn&&pedOwn.complete&&pedOwn.naturalWidth>0?pedOwn:0; }catch(e){ return 0; } }
 function frame(c,ts){ const dpr=Math.min(window.devicePixelRatio||1,2), w=c.clientWidth||390, h=c.clientHeight||226;
   if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
   if(!X.t0) X.t0=ts; const t=Math.max(0,(ts-X.t0)/1000), x=c.getContext('2d'), base=()=>x.setTransform(dpr,0,0,dpr,0,0);
   base(); x.clearRect(0,0,w,h);
   /* o herói fica em cima do pedestal dourado do mock; a faixa de pergaminho (HTML) passa na frente da base do pedestal, nunca dos pés */
-  const ride=!!(X.pv&&X.pv.kind==='mount'), hk=Math.min(.8,(h-56)/256)*(ride?0.78:1), HX=w*(ride?0.46:0.5), GY=h-42, PX=w*0.5, RX=Math.min(118,w*0.33), RY=15, PH=16;
-  try{ const g=x.createRadialGradient(PX,GY,10,PX,GY,150); g.addColorStop(0,'rgba(255,224,122,.6)'); g.addColorStop(1,'rgba(255,224,122,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(PX,GY,150,30,0,0,7); x.fill();
+  /* com a arte do pedestal: a peça é alta (a base desce atrás da faixa), então a linha dos pés sobe (27% da altura do palco) e o herói encolhe só o que falta para caber */
+  const ped=pedImage(), ride=!!(X.pv&&X.pv.kind==='mount'), GY=ped?h-Math.round(h*0.27):h-42, hk=Math.min(.8,(h-56)/256,ped?(GY-6)/256:1)*(ride?0.78:1), HX=w*(ride?0.46:0.5), PX=w*0.5, RX=Math.min(118,w*0.33), RY=15, PH=16;
+  if(ped){ try{ const s=0.62*Math.min(1,h/226), g=x.createRadialGradient(PX,GY,10,PX,GY,150); g.addColorStop(0,'rgba(255,224,122,.6)'); g.addColorStop(1,'rgba(255,224,122,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(PX,GY,150,30,0,0,7); x.fill();
+      x.drawImage(ped,PX-PED_C[0]*s,GY-PED_C[1]*s,PED_WH[0]*s,PED_WH[1]*s);                                                                          /* a peça inteira, na proporção dela; o centro do tampo fica nos pés */
+      x.strokeStyle=X.pv?'rgba(179,38,79,.8)':'rgba(138,90,28,.5)'; x.setLineDash([5,6]); x.lineDashOffset=-t*10; x.lineWidth=1.5; x.beginPath(); x.ellipse(PX,GY,96*s,19*s,0,0,7); x.stroke(); x.setLineDash([]); }catch(e){} }
+  else try{ const g=x.createRadialGradient(PX,GY,10,PX,GY,150); g.addColorStop(0,'rgba(255,224,122,.6)'); g.addColorStop(1,'rgba(255,224,122,0)'); x.fillStyle=g; x.beginPath(); x.ellipse(PX,GY,150,30,0,0,7); x.fill();
     x.fillStyle='#8a5a1c'; x.beginPath(); x.ellipse(PX,GY+PH,RX,RY,0,0,7); x.fill(); x.fillRect(PX-RX,GY,RX*2,PH);                                  /* corpo do pedestal */
     x.fillStyle='#c98f2e'; x.fillRect(PX-RX,GY,RX*2,PH*0.45);
     const top=x.createLinearGradient(0,GY-RY,0,GY+RY); top.addColorStop(0,'#fff0b0'); top.addColorStop(1,'#e9b949'); x.fillStyle=top; x.beginPath(); x.ellipse(PX,GY,RX,RY,0,0,7); x.fill();   /* tampo */
@@ -309,10 +346,8 @@ function loopStart(){ try{ if(!X.raf&&typeof requestAnimationFrame==='function'&
 function loopStop(){ try{ if(X.raf&&typeof cancelAnimationFrame==='function') cancelAnimationFrame(X.raf); }catch(e){} X.raf=0; X.t0=0; }
 
 /* ================= HTML ================= */
-/* ARTE QUE A TELA AINDA DESENHA EM CSS/CANVAS (mock vp_pb). Quando a Arte entregar os arquivos, o caminho entra AQUI e só aqui (vazio = desenho em CSS):
-   faixa = pergaminho do prêmio da temporada · (o pedestal é desenhado no canvas do palco, na função frame) */
-const PS2_SKIN={faixa:''};
-const skinBg=k=>PS2_SKIN[k]?' style="background:url('+PS2_SKIN[k]+') center/100% 100% no-repeat;border:0;box-shadow:none"':'';
+/* a faixa de pergaminho com a arte (PS2_SKIN.faixa, no alto do arquivo): a peça na proporção dela, o texto por cima; sem a arte, a faixa em CSS */
+const ribSpan=inner=>skOk('faixa')?'<span class="sk"><img src="'+PS2_SKIN.faixa+'" alt=""'+skErr('faixa')+'><i>'+inner+'</i></span>':'<span>'+inner+'</span>';
 /* fundo: regra da casa (cenário da era atual pelo xEraBg, sem escurecer) com um véu claro por cima, mais forte para baixo, onde fica o texto (mock claro) */
 const bgHtml=()=>{ let bg=''; try{ if(typeof xEraBg==='function') bg='linear-gradient(180deg,rgba(255,250,236,.24) 0,rgba(253,244,222,.42) 28%,rgba(246,234,204,.93) 44%),'+xEraBg(0,0); }catch(e){ bg=''; } return bg?'<div class="ps2-bg" style="background:'+bg+'"></div>':''; };
 function gateHtml(soon){ return '<div class="ps2">'+bgHtml()+'<div class="ps2-gate" role="dialog" aria-label="Passe indisponível"><span class="ps2-lil" style="font-size:26px">Passe</span>'
@@ -321,9 +356,9 @@ function gateHtml(soon){ return '<div class="ps2">'+bgHtml()+'<div class="ps2-ga
   +'<button class="ps2-cb gold" data-x="back" style="min-height:48px;padding:0 26px;font-size:15px">Voltar</button></div></div>'; }
 /* faixa aos pés do pedestal: o prêmio do ÚLTIMO nível da trilha premium (o que o Sys.pass entrega; tocar mostra no herói quando há prévia) */
 function ribHtml(){ try{ const T=PD().tiers, inf=rwInfo('premium',T), sk=passSkin(), nm=sk?'Skin '+sk.name:inf.label; if(!nm) return '';
-    const tx='<span'+skinBg('faixa')+'>Prêmio da temporada (nível '+n0(T)+'): <b>'+esc2(nm)+'</b></span>';
-    return inf.pv?'<button class="ps2-rib'+(pvSame(inf.pv)?' pvon':'')+'" data-x="pv" data-t="premium" data-lv="'+T+'" data-m="main" aria-pressed="'+pvSame(inf.pv)+'" aria-label="Prêmio da temporada, nível '+n0(T)+'. Ver no herói: '+esc2(inf.pv.name)+'">'+tx+'</button>'
-      :'<div class="ps2-rib">'+tx+'</div>'; }catch(e){ return ''; } }
+    const tx=ribSpan('Prêmio da temporada (nível '+n0(T)+'): <b>'+esc2(nm)+'</b>'), rk=skOk('faixa')?' sk':'';
+    return inf.pv?'<button class="ps2-rib'+rk+(pvSame(inf.pv)?' pvon':'')+'" data-x="pv" data-t="premium" data-lv="'+T+'" data-m="main" aria-pressed="'+pvSame(inf.pv)+'" aria-label="Prêmio da temporada, nível '+n0(T)+'. Ver no herói: '+esc2(inf.pv.name)+'">'+tx+'</button>'
+      :'<div class="ps2-rib'+rk+'">'+tx+'</div>'; }catch(e){ return ''; } }
 
 const NOTES={skin:'Mesmo corpo do herói · arma equipada na mão',mount:'Montado · aura da estrela depois do prêmio',pet:'O pet fica na frente do herói',weapon:'Na mão do herói · ainda não equipada'};
 function stageHtml(SH){ const pv=X.pv, w=eqWeapon();
@@ -331,7 +366,7 @@ function stageHtml(SH){ const pv=X.pv, w=eqWeapon();
     :'<div class="ps2-who"><i></i><span>'+esc2(heroName())+' · Nível '+n0(pLevel())+(w?' · '+esc2(w)+' na mão':'')+'</span></div>';
   const note=pv?(pv.kind==='wing'?'Asa nas costas · equipa a partir do nível '+n0(wingRule().lv):NOTES[pv.kind]||''):'';
   return '<div class="ps2-stage" style="height:'+SH+'px"><canvas id="ps2_stc" role="img" aria-label="Seu herói com a arma equipada na mão e o pet na frente" style="position:absolute;left:0;top:0;width:100%;height:100%"></canvas>'
-    +who+(note?'<div class="ps2-rib"><span>'+esc2(note)+'</span></div>':ribHtml())+'</div>'; }
+    +who+(note?'<div class="ps2-rib'+(skOk('faixa')?' sk':'')+'">'+ribSpan(esc2(note))+'</div>':ribHtml())+'</div>'; }
 
 function seaHtml(pr,sea){ const T=PD().tiers, days=Math.max(0,Math.ceil((sea.end-hostNow())/86400000)), pct=xpPct();
   return '<div class="ps2-sea"><div class="ps2-lvb" role="img" aria-label="Nível do passe '+pr.tier+' de '+T+'"><span><b>'+pr.tier+'</b><small>DE '+T+'</small></span></div>'
@@ -349,9 +384,9 @@ function cellState(o,trk,t,cur){ if((trk==='free'?o.free:o.prem).includes(t)) re
 function isHeld(trk,t){ try{ const rw=PS().reward(trk,t), sp=rw&&rw.item; if(!sp||sp.season||canRecv(sp)) return 0; return PS().held(S).some(h=>h.slot===sp.slot&&h.r===sp.r)?needLv(sp):0; }catch(e){ return 0; } }
 function cellHtml(o,trk,t,cur,prod){ const inf=rwInfo(trk,t), st=cellState(o,trk,t,cur), pr=trk==='premium', lab=(pr?'Premium':'Grátis')+', nível '+t+': '+inf.label;
   const main=inf.pv?'<button class="ps2-ci'+(inf.av?' av':'')+(pvSame(inf.pv)?' pvon':'')+'" data-x="pv" data-t="'+trk+'" data-lv="'+t+'" data-m="main" aria-pressed="'+pvSame(inf.pv)+'" aria-label="Ver no herói: '+esc2(inf.pv.name)+'">'
-      +'<img src="'+esc2(inf.ic)+'" alt=""><span class="ps2-eye">'+SV.eye+'</span>'+(st==='lockp'?'<span class="ps2-pl">'+SV.lock('#ffd25e')+'</span>':'')+'</button>'
-    :'<span class="ps2-ci'+(inf.av?' av':'')+'">'+(inf.ic?'<img src="'+esc2(inf.ic)+'" alt="">':'')+(st==='lockp'?'<span class="ps2-pl">'+SV.lock('#ffd25e')+'</span>':'')+'</span>';
-  let mini=''; if(inf.mini){ const m=inf.mini, art=m.frag?SV.frag:(m.ic?'<img src="'+esc2(m.ic)+'" alt="">':'');
+      +'<img src="'+esc2(inf.ic)+'" alt=""'+(inf.ik?skErr(inf.ik):'')+'><span class="ps2-eye">'+SV.eye+'</span>'+(st==='lockp'?'<span class="ps2-pl">'+SV.lock('#ffd25e')+'</span>':'')+'</button>'
+    :'<span class="ps2-ci'+(inf.av?' av':'')+'">'+(inf.ic?'<img src="'+esc2(inf.ic)+'" alt=""'+(inf.ik?skErr(inf.ik):'')+'>':'')+(st==='lockp'?'<span class="ps2-pl">'+SV.lock('#ffd25e')+'</span>':'')+'</span>';
+  let mini=''; if(inf.mini){ const m=inf.mini, art=m.frag?(icImg('mountfrag','')||SV.frag):(m.ic?'<img src="'+esc2(m.ic)+'" alt="">':'');
     mini=m.pv?'<button class="ps2-mini'+(pvSame(m.pv)?' pvon':'')+'" style="--mc:'+m.rc+'" data-x="pv" data-t="'+trk+'" data-lv="'+t+'" data-m="mini" aria-pressed="'+pvSame(m.pv)+'" aria-label="Ver no herói: '+esc2(m.pv.name)+'"><span>'+art+'</span></button>'
       :'<span class="ps2-mini" style="--mc:'+m.rc+'" aria-hidden="true"><span>'+art+'</span></span>'; }
   const held=st==='done'?isHeld(trk,t):0;
@@ -368,12 +403,13 @@ function trackHtml(o,cur,prod){ const T=PD().tiers; let h='<div class="ps2-thead
 /* ----- missões (Sys.pass.list: o módulo decide quais aparecem) ----- */
 const MIS_GO={summon:'summon',upgrade:'gear'};
 const misKind=id=>{ try{ const m=PD().daily.concat(PD().weekly).find(x=>x.id===id); return m?m.k:''; }catch(e){ return ''; } };
-const gemTag=n=>n?'<span class="g"><img src="'+IMG_GEM+'" alt="">+'+n0(n)+'</span>':'';
+const gemTag=n=>n?'<span class="g">'+icImg('diamonds',IMG_GEM)+'+'+n0(n)+'</span>':'';
+const xpTag=v=>'<span>'+icImg('xp','')+'+'+n0(v)+' XP do passe</span>';
 function misRow(m,first){ const pct=Math.round(Math.min(1,m.p/Math.max(1,m.need))*100);
   const b=m.claimed?'<span class="ps2-cb ok">'+SV.ok+'Feito</span>':m.done?'<button class="ps2-cb go" data-x="mclaim" data-id="'+esc2(m.id)+'" aria-label="'+esc2(m.txt)+', resgatar">Resgatar</button>'
     :'<button class="ps2-cb lk" data-x="mgo" data-id="'+esc2(m.id)+'" aria-label="'+esc2(m.txt)+', '+n0(m.p)+' de '+n0(m.need)+', ir jogar">Ir</button>';
   return '<div class="ps2-ms'+(first?' f':'')+'"><div class="ps2-mt"><div class="t">'+esc2(m.txt)+'</div><div class="ps2-mbar"><i><span class="'+(m.done?'full':'')+'" style="width:'+pct+'%"></span></i><small>'+n0(m.p)+'/'+n0(m.need)+'</small></div>'
-    +'<div class="ps2-mr"><span>+'+n0(xpGain(m.pxp))+' XP do passe</span>'+gemTag(m.gems)+'</div></div>'+b+'</div>'; }
+    +'<div class="ps2-mr">'+xpTag(xpGain(m.pxp))+gemTag(m.gems)+'</div></div>'+b+'</div>'; }
 const petPv=dp=>dp&&dp.live?{kind:'pet',name:dp.name+' (pet)',st:{pet:{base:dp.base,stage:1,fly:dp.fly}}}:null;
 function misHtml(L){ const bo=L.bonus, dp=dailyPet(), pp=petPv(dp), nd=L.daily.length, cd=L.daily.filter(m=>m.claimed).length;
   const bb=bo.claimed?'<span class="ps2-cb ok">'+SV.ok+'Feito</span>':bo.ready?'<button class="ps2-cb go" data-x="mclaim" data-id="bonus" aria-label="'+esc2(bo.txt)+', resgatar">Resgatar</button>':'<span class="ps2-cb lk">'+cd+'/'+nd+'</span>';
@@ -381,7 +417,7 @@ function misHtml(L){ const bo=L.bonus, dp=dailyPet(), pp=petPv(dp), nd=L.daily.l
     pet=pp?'<button class="'+(pvSame(pp)?'pvon':'')+'" data-x="pv" data-t="pet" aria-pressed="'+pvSame(pp)+'" aria-label="Ver no herói: '+esc2(dp.name)+'">'+im+'<span>'+tx+'</span></button>':'<span class="pt">'+im+'<span>'+tx+'</span></span>'; }
   const sum=a=>a.reduce((s,m)=>s+int0(m.pxp),0), dB=sum(L.daily)+int0(bo.pxp), wB=sum(L.weekly), k=1+xpPct()/100, more=v=>k>1?' ('+n0(Math.round(v*k))+' com os seus bônus de XP)':'';
   return '<div class="ps2-pan"><div class="ps2-sec"><span>Diárias</span><span>renovam à meia-noite</span></div>'+L.daily.map((m,i)=>misRow(m,i===0)).join('')
-    +'<div class="ps2-ms bo"><div class="ps2-mt"><div class="t">'+esc2(bo.txt||'Complete as diárias')+'</div><div class="ps2-mr"><span>+'+n0(xpGain(bo.pxp))+' XP do passe</span>'+gemTag(bo.gems)+pet+'</div></div>'+bb+'</div>'
+    +'<div class="ps2-ms bo"><div class="ps2-mt"><div class="t">'+esc2(bo.txt||'Complete as diárias')+'</div><div class="ps2-mr">'+xpTag(xpGain(bo.pxp))+gemTag(bo.gems)+pet+'</div></div>'+bb+'</div>'
     +'<p class="ps2-hint">Todas as diárias com o bônus = <b>'+n0(dB)+' XP</b> por dia'+more(dB)+'.</p></div>'
     +'<div class="ps2-pan"><div class="ps2-sec"><span>Semanais</span><span>renovam na segunda</span></div>'+(L.weekly.length?L.weekly.map((m,i)=>misRow(m,i===0)).join(''):'<p class="ps2-hint">Nenhuma missão semanal agora.</p>')
     +'<p class="ps2-hint">Semanais = <b>'+n0(wB)+' XP</b> por semana'+more(wB)+'. O XP do passe sobe o nível do passe ('+n0(PD().xpPerTier)+' XP por nível); não muda o nível do jogador.</p></div>'; }
@@ -483,8 +519,9 @@ function click(b){ const a=b&&b.dataset?b.dataset.x:'', ds=(b&&b.dataset)||{};
 const def=Panels.add('pass2',{title:'Passe',render:draw,click:click,actions:ACTIONS,
   tick(){ if(X.sheet) return; if(X.sig&&isOn()&&sig()!==X.sig) redraw(); },
   busy(){ return false; },
-  onOpen(o){ X.anim=true; X.top=true; X.pv=null; X.sheet=false; X.toast=''; X.lvup=null; X.t0=0; X.tab=o&&(o.tab==='mis'||o.tab==='missions')?'mis':'track'; },
+  onOpen(o){ X.anim=true; X.top=true; X.pv=null; X.sheet=false; X.toast=''; X.lvup=null; X.t0=0; X.tab=o&&(o.tab==='mis'||o.tab==='missions')?'mis':'track';
+    try{ if(typeof pwLoad==='function') pwLoad(artUrls()); pedImage(); }catch(e){} },   /* pede a carga da arte pintada já na abertura (o desenho não espera: cada peça tem reserva) */
   onClose(){ X.pv=null; X.sheet=false; X.toast=''; X.lvup=null; loopStop(); } });
 /* para o teste de fumaça e para conferir no console: o estado da tela (somente leitura por convenção) */
-window.Pass2={X:X,actions:ACTIONS,def:def,reduced:reduced};
+window.Pass2={X:X,actions:ACTIONS,def:def,reduced:reduced,SKIN:PS2_SKIN,IC:PS2_IC,BAD:PS2_BAD,bad:bad,artUrls:artUrls};
 })();

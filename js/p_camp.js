@@ -40,6 +40,12 @@ const ART_SVG={
 const painted=id=>!!ART_IMG[id];
 function art(id){ const u=ART_IMG[id], wh=ART_WH[id]||[512,384]; if(u) return '<img class="ac-tart img" src="'+esc(u)+'" width="'+wh[0]+'" height="'+wh[1]+'" alt="">';
   return '<svg class="ac-tart" viewBox="0 0 120 90" aria-hidden="true">'+(ART_SVG[id]||ART_SVG.gold)+'</svg>'; }
+/* AJUDANTE: personagem fixo de cada tenda (a mesma arte nas 3, 258x512, com os pés na base da imagem). É só cenário: sempre trabalha, não tem número e não é tocável à parte.
+   Fica à direita da tenda, com os pés na mesma linha da base dela (dentro da caixa da arte da tenda: nunca em cima da barra nem do Coletar); os pets do jogador seguem nas vagas, à esquerda.
+   Caminho vazio, ou imagem que não carrega (onerror), = a tenda sem o ajudante, como era antes. */
+const HELPER_IMG='assets/ui/camp/helper.png';
+const helperHtml=()=>HELPER_IMG?'<img class="ac-help" src="'+esc(HELPER_IMG)+'" width="258" height="512" alt="" onerror="this.style.display=\'none\'">':'';
+const tentArt=id=>'<span class="ac-ta">'+art(id)+helperHtml()+'</span>';
 /* ícones dos recursos: a moeda do jogo e duas pedras desenhadas (as mesmas formas do Bem-vindo de volta, js/p_intro.js) */
 const COIN='assets/ui/coin.png', PET_FALLBACK='assets/icons/menu/pets.png';
 const stone=(fill,line)=>'<svg class="ac-ri" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 44 L20 22 L40 16 L54 30 L50 48 L28 54 Z" fill="'+fill+'" stroke="'+line+'" stroke-width="4" stroke-linejoin="round"/><path d="M20 22 L30 36 L54 30 M30 36 L28 54" fill="none" stroke="'+line+'" stroke-width="2.5"/></svg>';
@@ -94,6 +100,8 @@ const petBoostTx=(k,id)=>{ let b=0; try{ b=num(k.petBoost(S,id)); }catch(e){ b=0
 .ac.sm .ac-tart{width:62%}
 .ac-tart.img{width:74%;max-width:150px;margin-top:0}
 .ac.sm .ac-tart.img{width:58%}
+.ac-ta{position:relative;display:block}
+.ac-help{position:absolute;right:0;bottom:0;width:auto;height:62%;max-width:none;pointer-events:none;filter:drop-shadow(0 2px 1px rgba(42,30,10,.35))}
 .ac-sign.under{position:relative;left:auto;top:auto;transform:none;display:block;margin:-8px auto 0;font-size:12.5px}
 .ac-sign{position:absolute;left:50%;top:0;transform:translateX(-50%) rotate(-3deg);width:max-content;max-width:96%;padding:3px 9px 4px;border-radius:7px;background:linear-gradient(180deg,#9a6836,#6a4020);border:2px solid #3a220e;box-shadow:0 2px 0 rgba(42,22,8,.55);font-size:13px;line-height:1.1;color:#fff3d6;text-shadow:0 1px 0 #2a1608;text-align:center;overflow-wrap:anywhere}
 .ac-pws{position:absolute;left:4px;bottom:0;display:flex}
@@ -171,7 +179,7 @@ const pctOf=t=>Math.max(0,Math.min(100,Math.round(num(t.pct))));
 function cardHtml(t){ const has=num(t.stored)>0, p=pctOf(t), id=esc(t.id);
   const pets=(t.pets||[]).map(q=>'<img class="ac-pw" src="'+esc(petImg(q))+'" alt="">').join('');
   return '<div class="ac-card">'
-    +'<button class="ac-tent" data-x="tent" data-t="'+id+'" aria-label="'+esc(t.name+': abrir a tenda (pets e melhoria)')+'">'+art(t.id)+'<span class="ac-sign lil'+(painted(t.id)?' under':'')+'">'+esc(t.name)+'</span>'+(pets?'<span class="ac-pws">'+pets+'</span>':'')+'</button>'
+    +'<button class="ac-tent" data-x="tent" data-t="'+id+'" aria-label="'+esc(t.name+': abrir a tenda (pets e melhoria)')+'">'+tentArt(t.id)+'<span class="ac-sign lil'+(painted(t.id)?' under':'')+'">'+esc(t.name)+'</span>'+(pets?'<span class="ac-pws">'+pets+'</span>':'')+'</button>'
     +'<div class="ac-st"><div class="ac-bar'+(t.full?' full':'')+'" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+p+'" aria-label="'+esc(t.name+(t.full?': cheia':': enchendo'))+'"><i style="width:'+p+'%"></i></div>'
     +'<div class="ac-am">'+resIc(t.res)+'<span>'+esc(nf(t.stored)+' / '+nf(t.cap))+'</span></div>'
     +'<div class="ac-rt">'+(t.full?'<b>Cheia</b>':'Enchendo')+' · +'+esc(rateTx(t.perHour))+' por hora</div></div>'
@@ -256,7 +264,7 @@ function click(b){ const ds=(b&&b.dataset)||{}, a=ds.x||'', k=K();
     X.arm=''; redraw(); return; }
 }
 /* imagens que a tela mostra agora (para a espera de carga do jogo) */
-function urls(){ const u=[COIN]; try{ const bg=typeof xEraBgUrl==='function'?xEraBgUrl():''; if(bg) u.push(bg); for(const id in ART_IMG) if(ART_IMG[id]) u.push(ART_IMG[id]);
+function urls(){ const u=[COIN]; if(HELPER_IMG) u.push(HELPER_IMG); try{ const bg=typeof xEraBgUrl==='function'?xEraBgUrl():''; if(bg) u.push(bg); for(const id in ART_IMG) if(ART_IMG[id]) u.push(ART_IMG[id]);
     const k=K(); if(k){ const o=S&&S.sys&&S.sys.camp&&S.sys.camp.tents; if(o) for(const t in o) for(const p of (o[t].pets||[])){ const i=petImg(p); if(u.indexOf(i)<0) u.push(i); } } }catch(e){} return u; }
 
 const def=Panels.add(N,{title:TITLE,actions:ACTIONS,
@@ -269,5 +277,5 @@ const def=Panels.add(N,{title:TITLE,actions:ACTIONS,
   onOpen(){ loopStop(); X.msg=''; X.tone=''; X.sel=''; X.arm=''; X.sig=''; X.tk=0; X.herr=0; },
   onClose(){ loopStop(); X.msg=''; X.sel=''; X.arm=''; } });
 /* para o teste de fumaça e para conferir no console */
-window.PCamp={X:X,actions:ACTIONS,def:def,urls:urls,ART_IMG:ART_IMG,art:art,collectOne:collectOne};
+window.PCamp={X:X,actions:ACTIONS,def:def,urls:urls,ART_IMG:ART_IMG,HELPER_IMG:HELPER_IMG,art:art,collectOne:collectOne};
 })();

@@ -205,6 +205,41 @@ const keep = h => { ALL.push(h); return h; };
     PI.show('Prologo'); toasts = []; PI.toast('Verificando o nome...'); assert.deepStrictEqual(toasts, ['Verificando o nome...'], 'sem a tela nova o aviso não é mexido');
     ok('Google: app DEV e "esta conta Google já tem outro personagem" pelos avisos do PIntro.google, também escritos na folha; falha comum avisa'); }
 
+  // 5b) APARELHO NOVO, JOGADOR QUE JÁ TEM CONTA GOOGLE: "Já tenho conta: entrar com Google" à vista, logo abaixo do JOGAR (exigência do PO antes de ligar a tela)
+  { const fresh = () => { g.S = newS(); setNet({ booted: false, waitingPlay: true }, { last: { ok: false, reason: 'no_session' } }); const P = load(true); openPin(); PI.show('TituloV2B'); return P; };
+    const ALT = /<button type="button" class="t3-alt" data-t3="google"><i aria-hidden="true">G<\/i><span>Já tenho conta: entrar com Google<\/span><\/button>/;
+    let P = fresh(), h = keep(ui());
+    /* jogador novo vê os DOIS botões, nesta ordem: JOGAR, Já tenho conta, linha de apoio, termos */
+    assert((h.match(/data-t3="play"/g) || []).length === 1 && ALT.test(h), 'jogador novo: JOGAR e "Já tenho conta: entrar com Google"'); assert((h.match(/data-t3="google"/g) || []).length === 1);
+    { const at = s => h.indexOf(s); assert(at('data-t3="play"') < at('class="t3-alt"') && at('class="t3-alt"') < at('Convidado: o progresso fica neste celular até você ligar uma conta.') && at('até você ligar uma conta.') < at('Termos de Uso'), 'ordem: JOGAR, Já tenho conta, apoio, termos'); }
+    assert(/>JOGAR<small>Começa como convidado neste celular<\/small>/.test(h), 'o JOGAR do jogador novo não mudou');
+    { const css = P._css, r = /#pin \.t3-alt\{([^}]*)\}/.exec(css); assert(r && +(/min-height:(\d+)px/.exec(r[1]) || [0, 0])[1] >= 44, 'toque de 44 px'); assert(!/white-space:nowrap|text-overflow/.test(r[1]) && /#pin \.t3-alt span\{[^}]*overflow-wrap:anywhere/.test(css), 'o texto quebra em 320 px, sem reticências'); }
+    /* "Já tenho conta" chama PIntro.google UMA vez e NÃO chama PIntro.guest (não nasce convidado) */
+    let gC = 0, gu = 0; PI.google = () => { gC++; g.S.acct = 'google'; return Promise.resolve({}); }; PI.guest = () => { gu++; };
+    assert.strictEqual(P.act('google'), true); assert.strictEqual(gC, 1, 'chama PIntro.google'); assert(/class="t3-alt" data-t3="google" aria-disabled="true"><i aria-hidden="true">G<\/i><span>Conectando com Google<\/span>/.test(keep(ui())), 'durante o login o botão espera');
+    assert.strictEqual(P.act('google'), false, 'toque repetido não chama de novo'); await tickP();
+    assert.strictEqual(gC, 1, 'PIntro.google UMA vez'); assert.strictEqual(gu, 0, 'não chama PIntro.guest'); assert.strictEqual(plays, 0, 'nenhum convidado criado'); assert.strictEqual(sheet(), '', 'sem folha por cima');
+    h = keep(ui()); assert(!/t3-alt/.test(h) && /Conta: Google/.test(h) && /Começar a jornada/.test(h), 'entrou: o botão extra some e a conta é Google'); assert(toasts.some(t => /Conta Google conectada/.test(t)));
+    assert.strictEqual(P.act('play'), true); assert.strictEqual(gu, 0, 'quem entrou com Google não vira convidado no JOGAR'); assert.strictEqual(plays, 0);
+    /* JOGAR chama PIntro.guest UMA vez (o convidado só nasce no toque) e não chama o Google */
+    P = fresh(); gC = 0; gu = 0; PI.google = () => { gC++; return Promise.resolve({}); }; PI.guest = () => { gu++; }; store.eon_realm_seen = '1';
+    assert.strictEqual(gu, 0, 'abrir a tela não cria convidado'); assert.strictEqual(P.act('play'), true); assert.strictEqual(P.act('play'), false); assert.strictEqual(gu, 1, 'JOGAR chama PIntro.guest UMA vez'); assert.strictEqual(gC, 0); delete store.eon_realm_seen;
+    /* sem conexão: bloqueia com aviso, não tenta o Google; manutenção idem */
+    for (const why of ['offline', 'maintenance']) { P = fresh(); gC = 0; PI.google = () => { gC++; return Promise.resolve({}); }; setNet({ booted: false }, { last: { ok: false, reason: why } }); WL.find(x => x.t === 'onlineboot').f(); h = keep(ui());
+      assert(/class="t3-alt" data-t3="google" aria-disabled="true">/.test(h), why + ': botão marcado como indisponível'); assert.strictEqual(P.act('google'), false); assert.strictEqual(gC, 0, why + ': não tenta o Google'); assert(/Entrar com Google precisa de conexão/.test(toasts[toasts.length - 1]), why + ': avisa'); }
+    /* app DEV: o toque vai ao PIntro.google de hoje, que avisa */
+    P = fresh(); navigator.userAgent = 'Mozilla EonboundDev/1'; gReady = false; WL.find(x => x.t === 'onlineboot').f(); assert(ALT.test(keep(ui())), 'DEV: o botão aparece'); toasts = [];
+    assert.strictEqual(P.act('google'), true); await tickP(); await tickP(); assert(toasts.some(t => /No app DEV o login Google não funciona\. Jogue como convidado\./.test(t)), 'aviso do app DEV'); assert.strictEqual(plays, 0); assert(ALT.test(keep(ui())), 'depois do aviso o botão volta');
+    navigator.userAgent = 'node'; gReady = true; ALL.push(...toasts);
+    /* camada online desligada (jogo local): não há conta para entrar, o botão não aparece */
+    P = fresh(); setNet({ on: false, booted: false }); WL.find(x => x.t === 'onlineboot').f(); assert(!/t3-alt/.test(keep(ui())), 'online desligado: sem o botão');
+    /* quem VOLTA com conta Google: nada muda (sem botão extra; JOGAR = PIntro.nav de hoje, uma vez); quem volta como convidado também não vê */
+    g.S = oldS(); g.S.acct = 'google'; setNet(); P = load(true); openPin(); PI.show('TituloV2B'); h = keep(ui()); assert(!/t3-alt/.test(h) && !/Já tenho conta/.test(h) && !/até você ligar uma conta/.test(h), 'acct google: sem o botão extra'); assert(/Conta: Google/.test(h) && /Continuar a jornada/.test(h));
+    { let navs = []; gu = 0; gC = 0; PI.nav = function (t) { navs.push(t); }; PI.guest = () => { gu++; }; PI.google = () => { gC++; return Promise.resolve({}); };
+      assert.strictEqual(P.act('play'), true); assert.strictEqual(P.act('play'), false); assert.deepStrictEqual(navs, ['Prologo'], 'acct google: JOGAR chama PIntro.nav uma vez'); assert.strictEqual(gu, 0); assert.strictEqual(gC, 0); assert.strictEqual(plays, 0); }
+    g.S = oldS(); setNet(); P = load(true); openPin(); PI.show('TituloV2B'); assert(!/t3-alt/.test(keep(ui())), 'quem volta como convidado: sem o botão extra (vincular fica no ícone de conta)');
+    ok('aparelho novo: JOGAR e "Já tenho conta: entrar com Google"; o segundo chama PIntro.google uma vez e não cria convidado; JOGAR chama guest uma vez; sem conexão avisa; app DEV avisa; quem volta com conta não vê o botão'); }
+
   // 6) SEGURANÇA: erro ao montar = tela de hoje; chave desligada depois = tela de hoje
   { g.S = oldS(); setNet(); load(true); openPin(); failCreate = 1; const ce = console.error; console.error = () => {}; assert.strictEqual(PI.show('TituloV2B'), true); console.error = ce; assert.deepStrictEqual(shows, ['TituloV2B'], 'não montou: a tela de hoje é desenhada'); assert.strictEqual(layer(), undefined); assert.strictEqual(WL.length, 0);
     load(true); openPin(); g.TITLE3_ON = false; PI.show('TituloV2B'); assert.deepStrictEqual(shows, ['TituloV2B'], 'chave desligada em tempo real: tela de hoje'); assert.strictEqual(layer(), undefined);
@@ -221,14 +256,28 @@ const keep = h => { ALL.push(h); return h; };
     assert(Math.abs(num(cv, 'top') + calls[0].cy / 2 - geo.feet) <= 1, 'pés do herói na linha do chão'); assert(Math.abs(calls[0].k - geo.F * 2 / 155) < 1e-6, 'escala pelo HS do jogo');
     const dg = part('t3-dragon'), D = P.ART.dragon, k = num(dg, 'height') / D.h; assert(Math.abs(num(dg, 'top') + D.feetY * k - geo.feet) <= 4, 'dragão apoiado no chão (não flutua)');
     assert(dg.style.cssText.includes('url(' + D.base + '.png)') && /animation:/.test(dg.style.cssText), 'dragão animado pela folha'); assert(/1200% 100%/.test(dg.style.cssText), 'tira de 12');
-    const bg = part('t3-bg'); assert(bg.style.cssText.includes('url(assets/bg/era2.png)'), 'fundo da era do jogador (fase 27 = era 2)'); assert(num(bg, 'width') >= 390 && num(bg, 'left') <= 0 && num(bg, 'left') + num(bg, 'width') >= 390, 'fundo cobre a largura');
+    /* FUNDO PINTADO (castelo ao entardecer): é o fundo da tela; cobre a largura sem esticar (a caixa tem a proporção da peça); o chão da pintura (0,79 da altura) é a linha dos pés */
+    const bg = part('t3-bg'), BA = P.ART.bgArt; assert.strictEqual(BA.url, 'assets/ui/title/title_bg_a.png'); assert(exists(BA.url), 'fundo pintado em disco'); assert.strictEqual(BA.ground, 0.79, 'linha do chão da pintura');
+    { const b = fs.readFileSync(path.join(R, BA.url)); assert.strictEqual(b.readUInt32BE(16), 1080); assert.strictEqual(b.readUInt32BE(20), 1920); assert(Math.abs(BA.ratio - 1080 / 1920) < 1e-9, 'proporção = a do PNG'); }
+    assert(bg.style.cssText.includes('url(' + BA.url + ')') && !/assets\/bg\/era/.test(bg.style.cssText), 'o fundo é a pintura'); assert(Math.abs(num(bg, 'width') / num(bg, 'height') - BA.ratio) < 0.01, 'pintura na proporção dela (não estica)');
+    assert(Math.abs(num(bg, 'top') + num(bg, 'height') * BA.ground - geo.feet) <= 1.5, 'herói e dragão na linha do chão da pintura'); assert(num(bg, 'top') <= 0, 'a pintura nunca deixa vão no alto');
+    assert.strictEqual(part('t3-scene t3-art') && part('t3-scene t3-art').className, 't3-scene t3-art', 'tinta de entardecer leve sobre a pintura'); assert(/#pin \.t3-art \.t3-tint\{/.test(P._css) && /#pin \.t3-tint\{/.test(P._css));
+    assert(P._t.probe && P._t.probe.attrs.src === BA.url && P._t.probe.ls.some(x => x.t === 'error'), 'a carga da pintura é pedida ao montar, com tratamento de falha');
+    assert(num(bg, 'width') >= 390 && num(bg, 'left') <= 0 && num(bg, 'left') + num(bg, 'width') >= 390, 'fundo cobre a largura');
     assert(geo.feet > 844 * 0.38 && geo.feet < 844, 'chão dentro da tela');
     rafs[1](1010); assert.strictEqual(calls.length, 1, 'no máximo 30 quadros por segundo'); rafs[2](1040); assert.strictEqual(calls.length, 2);
     document.hidden = true; rafs[3](1100); assert.strictEqual(calls.length, 2, 'parado com o app no fundo'); document.hidden = false;
     /* telas estreitas: nada passa da largura */
     for (const w of [320, 390]) { PI.el.children.find(c => c.className === 't3').clientWidth = w; WL.find(x => x.t === 'resize').f(); const G2 = P._t.geo; assert.strictEqual(num(cv, 'width'), w); assert(G2.hx < w && G2.F <= w * 0.6); assert(num(bg, 'left') <= 0 && num(bg, 'left') + num(bg, 'width') >= w); }
     /* jogador novo: a cena do castelo do mock */
-    g.S = newS(); load(true); openPin(); PI.show('TituloV2B'); assert(part('t3-bg').style.cssText.includes('url(assets/bg/era2.png)'));
+    g.S = newS(); load(true); openPin(); PI.show('TituloV2B'); assert(part('t3-bg').style.cssText.includes('url(assets/ui/title/title_bg_a.png)'), 'jogador novo: a pintura');
+    /* RESERVA: a pintura não carregou (evento de erro) = a cena da era volta sozinha (jogador novo: a do castelo, era 2), sem a tinta leve, com o herói e o dragão no chão dela */
+    { const T0 = g.PTitle3._t, cv2 = part('t3-hero'), dg2 = part('t3-dragon'), D2 = g.PTitle3.ART.dragon; T0.probe.ls.find(x => x.t === 'error').f(); const b2 = part('t3-bg');
+      assert(b2.style.cssText.includes('url(assets/bg/era2.png)') && !/title_bg_a/.test(b2.style.cssText), 'reserva: cenário da era'); assert.strictEqual(part('t3-scene').className, 't3-scene', 'reserva: tinta de entardecer de antes');
+      assert(/;top:0;/.test(b2.style.cssText) && num(b2, 'left') <= 0 && num(b2, 'left') + num(b2, 'width') >= 390, 'reserva cobre a largura'); const k2 = num(dg2, 'height') / D2.h;
+      assert(Math.abs(num(dg2, 'top') + D2.feetY * k2 - T0.geo.feet) <= 4 && Math.abs(num(b2, 'height') * (g.PTitle3.ART.bg[2][1] + g.PTitle3.ART.bgFeet) - T0.geo.feet) <= 1, 'reserva: chão da cena da era'); ALL.push(b2.style.cssText);
+      g.S = oldS(); PI.show('Prologo'); PI.show('TituloV2B'); assert(part('t3-bg').style.cssText.includes('url(assets/bg/era2.png)'), 'a falha vale até a próxima abertura do jogo (não tenta de novo a cada tela)'); }
+    g.S = newS(); load(true); openPin(); PI.show('TituloV2B');
     /* sem o desenho do jogo: a tela continua de pé */
     delete g.drawHeroFull; load(true); openPin(); PI.show('TituloV2B'); rafs[0](1000); assert(layer());
     for (const p of ['t3-bg', 't3-dragon']) for (const el of [part(p)]) ALL.push(el.style.cssText);
@@ -262,7 +311,7 @@ const keep = h => { ALL.push(h); return h; };
     const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
     const cr = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
     for (const [fg, bgc, what] of [['#2a1403', '#f2a826', 'JOGAR'], ['#2a1403', '#ffe58a', 'JOGAR (topo)'], ['#d8cbb8', '#0b0806', 'rodapé'], ['#c9b9a2', '#2c2116', 'nota da folha'], ['#ffb38a', '#2c2116', 'aviso da folha'], ['#f6ecdf', '#33271d', 'botão'],
-      ['#1f1f1f', '#ffffff', 'Google'], ['#ffe2a8', '#3a2c1f', 'Trocar'], ['#3a2208', '#f2b52a', 'nível'], ['#f0e4d2', '#342c24', 'aviso sem conexão'], ['#ffe2cc', '#402012', 'aviso manutenção'], ['#dff4ff', '#142430', 'aviso nuvem'], ['#ffe9b0', '#16110d', 'mensagem'], ['#c9b9a2', '#16110d', 'conta']])
+      ['#1f1f1f', '#ffffff', 'Google'], ['#ffe2a8', '#3a2c1f', 'Trocar'], ['#3a2208', '#f2b52a', 'nível'], ['#f0e4d2', '#342c24', 'aviso sem conexão'], ['#ffe2cc', '#402012', 'aviso manutenção'], ['#dff4ff', '#142430', 'aviso nuvem'], ['#ffe9b0', '#16110d', 'mensagem'], ['#c9b9a2', '#16110d', 'conta'], ['#ffffff', '#1b140e', 'Já tenho conta'], ['#1f1f1f', '#ffffff', 'G do Já tenho conta']])
       assert(cr(fg, bgc) >= 4.5, 'contraste ' + what + ' = ' + cr(fg, bgc).toFixed(2));
     ok('varreduras: ' + ALL.length + ' desenhos e avisos sem reticências, emoji, valor cru, preço ou urgência; ' + nBtn + ' botões com ação; ' + nImg + ' imagens em disco; 44 px, área segura, contraste AA'); }
 

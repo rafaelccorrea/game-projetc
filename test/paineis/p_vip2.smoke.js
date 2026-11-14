@@ -90,6 +90,25 @@ assert(/grid-template-columns:repeat\(6,minmax\(0,1fr\)\)/.test(g.document.head.
 check('sem VIP'); { const st = frame(); assert(st.t >= 0); assert(st.skin === undefined && st.mount === undefined && st.pet === undefined, 'sem prévia: o herói é o do jogo (skin, montaria e pet do save)'); assert(!drawn.some(u => /aura/.test(u || '')), 'sem VIP: sem aura'); }
 out.push('sem VIP: desenha, barra em pontos VIP, ' + (D.maxLevel + 1) + ' níveis, abre no VIP 1');
 
+// 1b) ARTE PINTADA: toda peça citada existe em disco e está na lista de carga; a tela usa as peças; com a imagem em falha (onerror → PVip2.bad) volta o CSS/SVG de antes
+{ const P = g.PVip2, A = P.artUrls(); assert(P && A.length === 4 + 6, 'arte: 4 peças + 6 ícones de benefício');
+  for (const u of A) { assert(fs.existsSync(path.join(R, u)), 'arte não existe em disco: ' + u); assert(P.urls().includes(u), 'arte fora da lista de carga: ' + u); }
+  for (const k of ['aba', 'cartao', 'medalha', 'medalhaOn']) assert(P.SKIN[k] && fs.existsSync(path.join(R, P.SKIN[k])), 'peça sem arquivo: ' + k);
+  for (const k of ['speedTier', 'atkPct', 'xpPct', 'xp9', 'keys', 'offlineMult']) assert(P.BART[k], 'benefício sem ícone pintado: ' + k);
+  for (const k of Object.keys(P.BART)) if (/^conv:/.test(k)) assert(D.conv.some(c => 'conv:' + c.id === k), 'ícone para conveniência que não existe no módulo: ' + k);
+  assert(/onerror="try\{PVip2\.bad\(/.test(SRC), 'toda imagem da arte cai na reserva pelo onerror'); assert(!/100% 100% no-repeat/.test(SRC), 'nenhuma peça esticada nos dois eixos');
+  open(); has('class="v2-main" data-sk="1"'); has('class="v2-lvh" data-sk="1"'); assert.strictEqual((H().match(/src="assets\/ui\/vip\/vip_cartao\.png"/g) || []).length, 3, 'cartão em 3 faixas (alto, miolo, baixo)'); has('src="assets/ui/vip/vip_aba.png"');
+  assert.strictEqual((H().match(/src="assets\/ui\/vip\/vip_medalha\.png"/g) || []).length, D.maxLevel, 'medalhão normal nos níveis não escolhidos'); assert.strictEqual((H().match(/src="assets\/ui\/vip\/vip_medalha_on\.png"/g) || []).length, 1, 'medalhão aceso só no escolhido');
+  for (const i of ['speed', 'atkhp', 'xp', 'key', 'offline', 'auto']) { let seen = false; for (let L = 1; L <= D.maxLevel && !seen; L++) { def.click(btn('lv', { l: String(L) })); seen = H().includes('src="assets/icons/vip/' + i + '.png"'); } assert(seen, 'ícone pintado nunca aparece numa linha de benefício: ' + i); }
+  def.click(btn('lv', { l: '1' })); check('arte pintada');
+  // reserva, peça por peça
+  P.bad('aba'); not('vip_aba.png'); has('class="v2-abx no"'); has('vip_cartao.png');
+  P.bad('cartao'); not('vip_cartao.png'); not('data-sk="1"><span class="v2-skc"'); has('<div class="v2-main"><div class="v2-lvh"><b class="v2-lil">VIP 1</b><span class="tx">');
+  P.bad('medalha'); P.bad('medalhaOn'); not('assets/ui/vip/'); not('data-sk'); assert(/data-l="1" aria-pressed="true" aria-label=/.test(H()), 'reserva: medalhão em CSS');
+  for (const k of Object.keys(P.BART)) P.bad('b:' + k); for (let L = 1; L <= D.maxLevel; L++) { def.click(btn('lv', { l: String(L) })); not('assets/icons/vip/'); assert(/class="v2-pi" aria-hidden="true"><svg/.test(H()), 'reserva: ícone de benefício em SVG'); check('reserva nível ' + L); }
+  for (const k of Object.keys(P.BAD)) delete P.BAD[k]; open(); has('class="v2-main" data-sk="1"'); }
+out.push('arte pintada: 10 arquivos em disco e na lista de carga; cartão em 3 faixas, aba, medalhões e 6 ícones de benefício na tela; cada peça cai na reserva em CSS/SVG');
+
 // 2) VIP 3 e VIP 8 (pontos pelo próprio módulo): nível, barra, selos
 setPts(853); assert.strictEqual(VIP.level(g.S), 3); open(); has('>VIP 3</div>'); has('· VIP 3</span>'); has('853 de ' + g.n0(D.points[4]) + ' pontos para o VIP 4'); assert(/data-l="4" aria-pressed="true"/.test(H()), 'VIP 3 abre no VIP 4');
 assert(/class="v2-lv got me" data-x="lv" data-l="3"/.test(H()), 'o nível do jogador vem marcado'); has('Faltam <em>' + g.n0(D.points[4] - 853) + ' pontos VIP</em>'); check('VIP 3');
