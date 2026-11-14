@@ -66,6 +66,7 @@ Sys.host = {
   addItem: o => addItemToBag(o),
   /* Sys.pass: mochila (o Item da Temporada evolui no level up) e skin da temporada; Sys.titles: tamanho do catálogo de skins */
   items: () => S.inv,
+  bestStage: () => Math.max(0, (S.best | 0) - 1),   /* maior fase VENCIDA (Sys.mapChest: baús de marco do Mapa V4) */
   /* FOGUEIRA DAS ERAS (Sys.bonfire, da Sistemas): o que o módulo precisa do jogo. O item forjado NÃO entra sozinho na mochila: a tela decide Equipar, Guardar ou Desmontar.
      bagMax = espaços da mochila · removeItem(item) tira da mochila (equipado nunca) · fcOf(item) = FC da peça · delta(item) = quanto a FC do herói muda se equipar
      (> 0 = melhor que a equipada) · equip(item) equipa uma peça QUE JÁ ESTÁ na mochila (sem o equipar automático do addItem). */
