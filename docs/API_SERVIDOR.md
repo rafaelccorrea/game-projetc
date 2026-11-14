@@ -286,6 +286,8 @@ Decisões do PO (13/11): 15 contra 15 (configurável), batalhas sexta e sábado 
 - `GET /guild-ranking?kind=power|territory|tournament&week=` (top 100 + a minha). Prêmios do torneio aos domingos pelo correio (1º: 300 moedas + 3
   fragmentos do Prismático...), para quem lutou ou estava escalado, inclusive quem foi expulso nos últimos 3 dias.
 - `GET /guild/boss` · `POST /guild/boss/hit` → `{ damage, seed, log, hitsLeft }` (2 por dia; dano simulado no servidor). Prêmio fixo por faixa de dano.
+  - Campos da barra do chefe na batalha (SERVIDOR_LOM §2.3, no ar com `GUILD_ON`): `name, level, hp, hpMax, myDamageToday, myDamageWeek, hitsToday, hitsMax, hitsLeft, extraHit, killed, resetsAt`; o `boss/hit` devolve os mesmos já atualizados. Sem golpes: 429 `daily_limit` (não `limit`; é o que a tela de hoje lê).
+- **"Ajudar todos"** (SERVIDOR_LOM §2.1/§2.2, formato exato lá): `GET /guild/help` · `POST /guild/help/request {kind}` · `POST /guild/help/:id` · `POST /guild/help-all` · `POST /guild/help/claim`. **Chave própria `GUILDHELP_ON` (DESLIGADA; fps-server 14/11)**: desligada = 404 `not_found` nas 5 rotas, e sem resgate não existe golpe extra (`extraHit` fica `false`). Ligar junto com o `Sys.guildBoss.DATA.on` do jogo. Prova de ligada no `switch-check.mjs`: 403 `not_member` de quem não tem guilda.
 - `GET /guild/shop` · `POST /guild/shop/buy { itemId }` (Brasões, limite semanal, nada sorteado).
 - `POST /guild/donate { kind: "gold_s"|"gold_l"|"gems" }` (1 de cada por dia). Os ids são os do `Sys.guild.DATA.donate` do jogo, que o servidor lê; "gold_small"/"gold_big" eram o rascunho antigo. Id fora da lista: 400 `bad_request` `fields:["kind"]`.
   - A de 💎 (50 → 40 Brasões + 80 XP) foi mantida pelo PO, com limite de 1 por dia.
