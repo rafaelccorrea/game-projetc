@@ -54,6 +54,9 @@ const WHY={off:'As guildas ainda não foram ligadas',server:'Em breve: abre com 
   brasas:'Faltam Brasas: jogue para ganhar mais na sua Fogueira',brasas_over:'Suas Brasas ainda estão sendo salvas: jogue um pouco e tente de novo',
   brasas_unverified:'Seu progresso ainda não foi enviado: tente de novo em instantes',hook:'Dar Brasas ainda não está disponível',done:'Já feito hoje. Volta à meia-noite de Brasília',
   day:'Limite de Brasas de hoje atingido',guild:'Entre numa guilda para alimentar a fogueira',
+  limit:'Você já deu todas as ajudas de hoje. Voltam à meia-noite de Brasília',self:'Não dá para ajudar o próprio pedido',helped:'Você já ajudou este pedido',full:'Este pedido já está cheio',
+  request:'Este pedido não existe mais',not_full:'O pedido ainda não encheu',claimed:'Você já resgatou este pedido',already:'Você já fez o pedido de hoje',bad_kind:'Esse tipo de pedido não existe',
+  not_member:'Entre numa guilda para pedir ajuda',
   net_off:'Sem conexão: tente de novo',timeout:'Sem conexão: tente de novo',offline:'Sem conexão: tente de novo'};
 const why=r=>WHY[r]||'Não foi possível agora. Tente de novo';
 /* recusa inteira ({reason, details, retryAfterMs}): no 429 daily_limit (contrato 10.5) mostra o tempo que falta quando o retryAfterMs chega; sem ele, a virada de Brasília */
@@ -134,6 +137,11 @@ const bossUrl=lv=>'assets/enemies/era'+Math.max(0,Math.min(8,(lv|0)-1))+'_boss.p
 .gd2-tabs{position:relative;z-index:3;flex:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin:6px 12px 0}
 .gd2-tab,.xs .gd2-tab{min-width:0;min-height:40px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-weight:900;font-size:11.5px;line-height:1.1;color:#9aa6d6;padding:0 2px;overflow-wrap:anywhere}
 .gd2-tab[aria-selected="true"],.xs .gd2-tab[aria-selected="true"]{background:linear-gradient(180deg,#3d4fb8,#26338a);color:#fff;border-color:#7f93ff}
+.gd2-tab{position:relative}
+.gd2-dot{position:absolute;right:4px;top:4px;width:9px;height:9px;border-radius:50%;background:#ff4d5e;box-shadow:0 0 0 2px #0b1030;pointer-events:none}
+.gd2-help .gd2-bt{min-height:44px}
+.gd2-help .gd2-bt.wide{min-height:48px;font-size:15px;margin-bottom:2px}
+.gd2-help .gd2-bar{display:block;margin:4px 0 2px}
 .gd2-busy{position:relative;z-index:3;flex:none;margin:6px 12px 0;padding:6px 10px;border-radius:11px;background:rgba(94,231,255,.12);border:1px solid rgba(94,231,255,.45);font-size:12px;font-weight:900;color:#cdeffd;text-align:center}
 .gd2-conf{position:relative;z-index:3;flex:none;margin:6px 12px 0;padding:9px 10px;border-radius:14px;background:#2a1530;border:2px solid var(--rose);min-width:0}
 .gd2-conf p{margin:0 0 8px;font-size:12.5px;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
@@ -224,9 +232,10 @@ function run(label,fn,okMsg,after){ if(X.busy) return; X.busy=label||'Carregando
 /* leituras por aba (lista de guildas, chefe, loja, missões): {st:'load'|'ok'|'err', d, why} */
 function loadSec(k){ const n=GN(); if(!n||!online()) return; const h=host();
   /* busca sem texto: GET /guilds?a=<nameA>&b=<nameB> (uma parte, as duas ou nenhuma = todas); docs/GUILDA_NOME.md seção 5 */
-  const fn={list:()=>n.list(S,h,isN(X.pk.qa)||isN(X.pk.qb)?{a:isN(X.pk.qa)?X.pk.qa:null,b:isN(X.pk.qb)?X.pk.qb:null}:null),boss:()=>n.boss(S,h),shop:()=>n.shop(S,h),miss:()=>n.missions(S,h)}[k]; if(!fn) return;
+  const fn={list:()=>n.list(S,h,isN(X.pk.qa)||isN(X.pk.qb)?{a:isN(X.pk.qa)?X.pk.qa:null,b:isN(X.pk.qb)?X.pk.qb:null}:null),boss:()=>n.boss(S,h),shop:()=>n.shop(S,h),miss:()=>n.missions(S,h),
+    help:()=>{ const M=GB(); return M&&helpOn()?M.loadHelp(S,h):null; }}[k]; if(!fn) return;   /* help: quadro de pedidos de ajuda (Sys.guildBoss.loadHelp; a tela lê do view) */
   const tok=X.d[k]={st:'load'}; let pr=null; try{ pr=fn(); }catch(e){ pr=null; }
-  const end=r=>{ if(X.d[k]!==tok) return; X.d[k]=r&&r.ok?{st:'ok',d:r}:{st:'err',why:why(r&&r.reason)}; redraw(); };
+  const end=r=>{ if(X.d[k]!==tok) return; X.d[k]=r&&r.ok?{st:'ok',d:r}:{st:'err',why:why(r&&r.reason)}; if(k==='boss'&&r&&r.ok) gbBoss(r,false); redraw(); };
   Promise.resolve(pr).then(end,()=>end(null)); }
 function sec(k){ if(!X.d[k]) loadSec(k); return X.d[k]||{st:'load'}; }
 const arr=r=>Array.isArray(r)?r:r&&Array.isArray(r.data)?r.data:r&&Array.isArray(r.list)?r.list:r&&Array.isArray(r.items)?r.items:[];
@@ -355,7 +364,8 @@ function cardHtml(o){ const G=GM(), mine=mineNow()||{}, g=mine.guild||{}, n=Arra
     +'<div class="gd2-bar" role="progressbar" aria-label="XP da guilda" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(c01(xb.frac)*100)+'"><i style="width:'+(c01(xb.frac)*100).toFixed(1)+'%"></i></div>'
     +'<div class="gd2-prog"><span>'+(xb.max?'Nível máximo da guilda':'XP da guilda '+nT(xb.into)+'/'+nT(xb.need))+'</span><span>'+(xb.max?'':'próximo nível: mais vagas e teto maior')+'</span></div>'
     +'<div class="gd2-chips">'+(si!=null?'<span class="gd2-chip">Estilo <b>'+esc2(G.styleOf(si))+'</b></span>':'')+'<span class="gd2-chip g">ATQ <b>+'+dec(b.atk)+'%</b></span><span class="gd2-chip g">Vida <b>+'+dec(b.hp)+'%</b></span><span class="gd2-chip g">Defesa <b>+'+dec(b.def)+'%</b></span><span class="gd2-chip">Ouro <b>+'+dec(pk.goldPct)+'%</b></span><span class="gd2-chip">XP <b>+'+dec(pk.xpPct)+'%</b></span><span class="gd2-chip">Itens <b>+'+dec(pk.dropPct)+'%</b></span></div></div>'; }
-const tabsHtml=()=>'<div class="gd2-tabs" role="tablist" aria-label="Seções da guilda">'+TABS.concat(fireOn()?[['fire','Fogueira']]:[]).map(t=>'<button class="gd2-tab" role="tab" data-x="tab" data-t="'+t[0]+'" aria-selected="'+(X.tab===t[0])+'">'+t[1]+'</button>').join('')+'</div>';
+const tabsHtml=()=>'<div class="gd2-tabs" role="tablist" aria-label="Seções da guilda">'+TABS.concat(helpOn()?[['help','Ajuda']]:[],fireOn()?[['fire','Fogueira']]:[]).map(t=>{ const dot=t[0]==='help'&&helpDot();   /* selo vermelho: há pedido para ajudar ou o meu pedido cheio espera o resgate */
+  return '<button class="gd2-tab" role="tab" data-x="tab" data-t="'+t[0]+'" aria-selected="'+(X.tab===t[0])+'"'+(dot?' aria-label="Ajuda: há ajuda para dar ou prêmio para resgatar"':'')+'>'+t[1]+(dot?'<i class="gd2-dot" aria-hidden="true"></i>':'')+'</button>'; }).join('')+'</div>';
 
 /* ----- Membros ----- */
 function memList(){ const m=mineNow(), L=m&&Array.isArray(m.members)?m.members.filter(x=>x&&x.id!=null):[], ord={leader:0,officer:1,member:2};
@@ -506,7 +516,47 @@ function pFire(o){ let v=null; try{ v=fireOn()?GF().view(S,host()):null; }catch(
   if(nx) h+=secH(v.max?'Próximo baú extra':'Baú do nível '+nT(v.next.level),'para cada membro')
     +'<div class="gd2-row"><span class="ic">'+img(IC.chest,28)+'</span><span class="mi"><b>'+kfT(nx.gold)+' de ouro · '+nT(nx.stones)+' pedras de forja · '+nT(nx.food)+' de ração</b><small>Chega sozinho pelo correio quando a guilda sobe de nível</small></span></div>';
   return h+'<p class="gd2-hint">As Brasas vêm só de jogar (a sua Fogueira). Nada aqui se compra. O baú vai para quem já estava na guilda quando o nível subiu.</p>'; }
-const BODY={members:pMembers,donate:pDonate,bless:pBless,boss:pBoss,shop:pShop,miss:pMiss,terr:pTerr,fire:pFire};
+/* ----- Ajuda (aba extra; Sys.guildBoss, js/sys/guildboss.js; docs/LIGACOES_LOM_B.md seção 3) — ATRÁS DA CHAVE DO MÓDULO (Sys.guildBoss.DATA.on, desligada) -----
+   Aparece só com a chave do módulo ligada e o online da guilda iniciado (e, como toda aba, só para quem está numa guilda). NENHUM número aqui: tipos, ajudas para
+   encher, prêmio, limite do dia e o que cada ajuda dá vêm do Sys.guildBoss (view e DATA). O servidor decide tudo (rotas /guild/help, chave GUILDHELP_ON no servidor);
+   a tela espelha: X.d.help guarda só o estado da leitura ('load' | 'ok' | 'err'), o conteúdo é sempre o view() do módulo. Nada aqui se compra. */
+const GB=()=>{ const M=window.Sys&&Sys.guildBoss; return M&&typeof M.on==='function'&&typeof M.view==='function'?M:null; };
+function helpOn(){ try{ const M=GB(); return !!(M&&M.on()===true&&online()); }catch(e){ return false; } }
+function helpView(){ try{ const v=helpOn()?GB().view(S,host()):null; return v&&v.on===true?v:null; }catch(e){ return null; } }
+const helpFull=r=>!!r&&(r.full===true||(num(r.need)>0&&num(r.got)>=num(r.need)));
+function helpDot(){ const v=helpView(); return !!(v&&(num(v.helpAll)>0||(v.mine&&helpFull(v.mine)&&v.mine.claimed!==true))); }
+function helpSig(){ const v=helpView(); if(!v) return ''; const m=v.mine; return [v.helpAll,v.helpsLeft,m?m.kind+':'+m.got+':'+(m.claimed?1:0):'',(Array.isArray(v.requests)?v.requests:[]).map(r=>r.id+':'+r.got+':'+(r.helpedByMe?1:0)).join(',')].join('/'); }
+const helpKind=(v,k)=>(Array.isArray(v.kinds)?v.kinds:[]).find(x=>x&&x.kind===k)||{kind:k,name:String(k||''),txt:'',need:0};
+const helpIc=k=>k==='boss'?SV.atk:k==='forge'?img(IC.forge,28):SV.food;
+const helpBar=(got,need,lab)=>{ const f=num(need)>0?c01(num(got)/num(need)):0; return '<span class="gd2-bar grn" role="progressbar" aria-label="'+esc2(lab)+'" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(f*100)+'"><i style="width:'+(f*100).toFixed(1)+'%"></i></span>'; };
+/* Brasões que uma resposta de ajuda rendeu: o coin do servidor; sem ele, pedidos ajudados × o valor por ajuda do módulo */
+function helpCoin(r){ const q=num(r&&r.coin); if(q>0) return q; let per=0; try{ per=num(GB().DATA.perHelp.coin); }catch(e){} return (r&&Array.isArray(r.helped)?r.helped.length:0)*per; }
+/* espelho da barra do chefe na batalha (js/guildbosshud.js): a leitura do chefe (GET /guild/boss) e a resposta do golpe passam pelo Sys.guildBoss.applyBoss.
+   merge = resposta do golpe: completa com o que o espelho já tinha (o applyBoss troca o espelho inteiro). hp vem de hpLeft e killed de down quando o servidor
+   responde no formato antigo do contrato 10.5. Com a chave desligada, nada acontece. */
+function gbBoss(r,merge){ try{ const M=GB(); if(!M||M.on()!==true||typeof M.applyBoss!=='function'||!r||typeof r!=='object') return; let cur=null; if(merge){ try{ cur=M.ensure(S).boss; }catch(e){ cur=null; } }
+    const d=Object.assign({},cur||{},r); delete d.ok; if(!isN(r.hp)&&isN(r.hpLeft)) d.hp=r.hpLeft; if(typeof r.killed!=='boolean'&&typeof r.down==='boolean') d.killed=r.down; if(merge&&r.killed===true) d.killed=true;
+    M.applyBoss(S,host(),d); if(window.GuildBossHud&&typeof GuildBossHud.update==='function') GuildBossHud.update(true); }catch(e){} }
+function pHelp(o){ const v=helpView(); if(!v) return '<div class="gd2-help">'+rule('A ajuda da guilda abre com o online.')+'</div>';
+  const z=sec('help'); if(z.st!=='ok') return '<div class="gd2-help">'+secHtml(z,'help')+'</div>';
+  let D={}; try{ D=GB().DATA||{}; }catch(e){} const per=D.perHelp||{};
+  const n=Math.max(0,Math.round(num(v.helpAll))), left=Math.max(0,num(v.helpsLeft)), L=(Array.isArray(v.requests)?v.requests:[]).filter(r=>r&&r.id!=null), m=v.mine, K=Array.isArray(v.kinds)?v.kinds:[];
+  let h='<div class="gd2-help"><button class="gd2-bt wide'+(n>0?'':' off')+'" data-x="hall" aria-label="'+esc2('Ajudar todos: '+(n===1?'1 pedido':nT(n)+' pedidos'))+'">Ajudar todos ('+nT(n)+')</button>'
+    +'<p class="gd2-hint">Cada ajuda dá <b>+'+nT(num(per.coin))+' '+esc2(coinName(num(per.coin)))+'</b> e +'+nT(num(per.contrib))+' de contribuição. Ajudas de hoje: <b>'+nT(left)+'/'+nT(num(v.helpsMax))+'</b>.</p>'
+    +secH('Meu pedido',nT(num(D.requestsPerDay))+' por dia');
+  if(!m) for(const k of K){ if(!k||!k.kind) continue;
+    h+='<div class="gd2-row"><span class="ic">'+helpIc(k.kind)+'</span><span class="mi"><b>'+esc2(k.name)+'</b><small>'+esc2(k.txt)+' · enche com '+nT(k.need)+' ajudas</small></span><button class="gd2-bt" data-x="hreq" data-k="'+esc2(k.kind)+'" aria-label="'+esc2('Pedir: '+k.name)+'">Pedir</button></div>'; }
+  else { const k=helpKind(v,m.kind), full=helpFull(m), cl=m.claimed===true;
+    h+='<div class="gd2-row me"><span class="ic">'+helpIc(m.kind)+'</span><span class="mi"><b>'+esc2(k.name)+' <span>'+nT(m.got)+'/'+nT(m.need)+'</span></b>'+helpBar(m.got,m.need,'Ajudas no meu pedido')
+      +'<small>'+(cl?'Prêmio resgatado: '+esc2(k.txt):full?'Cheio. Resgate: '+esc2(k.txt):'Quando encher: '+esc2(k.txt))+'</small></span>'
+      +(cl?'<span class="gd2-pill on">Resgatado</span>':full?'<button class="gd2-bt" data-x="hclaim">Resgatar</button>':'<span class="gd2-pill off">Esperando ajuda</span>')+'</div>'; }
+  h+=secH('Pedidos da guilda',nT(L.length));
+  if(!L.length) h+='<div class="gd2-note" role="status">Nenhum pedido aberto agora.</div>';
+  for(const r of L){ const k=helpKind(v,r.kind), full=helpFull(r), nm=String(r.name||'?');
+    h+='<div class="gd2-row"><span class="ic">'+helpIc(r.kind)+'</span><span class="mi"><b>'+esc2(nm)+' <span>'+nT(r.got)+'/'+nT(r.need)+'</span></b><small>'+esc2(k.name)+'</small>'+helpBar(r.got,r.need,'Ajudas no pedido de '+nm)+'</span>'
+      +(r.helpedByMe===true?'<span class="gd2-pill on">Ajudado</span>':full?'<span class="gd2-pill off">Cheio</span>':'<button class="gd2-bt'+(left>0?'':' off')+'" data-x="hone" data-id="'+esc2(r.id)+'" aria-label="'+esc2('Ajudar '+nm)+'">Ajudar</button>')+'</div>'; }
+  return h+'<p class="gd2-hint">Não dá para ajudar o próprio pedido nem o mesmo pedido duas vezes. Os pedidos vencem à meia-noite de Brasília. Nada aqui se compra.</p></div>'; }
+const BODY={members:pMembers,donate:pDonate,bless:pBless,boss:pBoss,shop:pShop,miss:pMiss,terr:pTerr,fire:pFire,help:pHelp};
 
 /* ----- faixa de confirmação (2º toque), dentro da tela ----- */
 function confHtml(){ const c=X.conf; if(!c) return '';
@@ -522,7 +572,7 @@ function draw(){
   const Hh=+d.H||0, small=!!(Hh&&Hh<620), SH=small?150:176; toastTop=SH+8;
   let card='', tabs='', body='';
   if(M.m==='closed') body=pClosed(M); else if(M.m==='out') body=pNone(M);
-  else { X.lv=M.o.level|0; if(!BODY[X.tab]||(X.tab==='fire'&&!fireOn())) X.tab='members'; card=cardHtml(M.o); tabs=tabsHtml(); body=BODY[X.tab](M.o); }
+  else { X.lv=M.o.level|0; if(!BODY[X.tab]||(X.tab==='fire'&&!fireOn())||(X.tab==='help'&&!helpOn())) X.tab='members'; card=cardHtml(M.o); tabs=tabsHtml(); body=BODY[X.tab](M.o); }
   const fc=myFc(), boss=M.m==='in'&&X.tab==='boss';
   const alt=heroName()+' com a arma na mão e o pet na frente, ao lado '+(boss?'do chefe da guilda':'do estandarte da guilda');
   V.innerHTML=xWrap(d,'','<div class="gd2'+(X.anim?' gd2-in':'')+'">'+bgHtml()
@@ -534,14 +584,14 @@ function draw(){
   X.plk=X.open; X.anim=false; X.top=false; X.sig=sig(); loopStart();
 }
 /* o que muda por fora (resposta do servidor, nível, herói): o tick redesenha só quando muda */
-function sig(){ try{ const M=mode(), z=netSt()||{}, o=M.o||{}; return [M.m,M.st&&M.st.reason,o.id,o.level,o.coin,o.role,o.xp,o.name,o.nameA,o.nameB,o.styleIdx,z.at,z.started,heroId()].join('|'); }catch(e){ return ''; } }
+function sig(){ try{ const M=mode(), z=netSt()||{}, o=M.o||{}; return [M.m,M.st&&M.st.reason,o.id,o.level,o.coin,o.role,o.xp,o.name,o.nameA,o.nameB,o.styleIdx,z.at,z.started,heroId(),helpSig()].join('|'); }catch(e){ return ''; } }
 
 /* ================= toques (cada data-x da tela tem uma entrada aqui) ================= */
 const memName=id=>{ const m=memList().find(x=>String(x.id)===String(id)); return m?String(m.name||'?'):''; };
 const ask=(k,id,txt,yes)=>{ X.conf={k:k,id:id,txt:txt,yes:yes}; redraw(); };
 const ACT={
   back(){ sfx('ui_tap'); try{ if(window.Screens&&typeof Screens.close==='function') Screens.close(); }catch(e){} },
-  tab(b){ const t=String(b.dataset.t||''); if(!BODY[t]||t===X.tab) return; sfx('ui_tap'); X.tab=t; X.sel=''; X.conf=null; X.top=true; redraw();
+  tab(b){ const t=String(b.dataset.t||''); if(!BODY[t]||t===X.tab) return; sfx('ui_tap'); if(t==='help') delete X.d.help;   /* Ajuda: relê o quadro a cada entrada na aba (os outros membros ajudam enquanto a tela está aberta) */ X.tab=t; X.sel=''; X.conf=null; X.top=true; redraw();
     if(t==='fire'){ try{ const Nn=GFN(); if(Nn&&typeof Nn.refresh==='function') Promise.resolve(Nn.refresh(S,host())).then(redraw,()=>{}); }catch(e){} } },
   sel(b){ const id=String(b.dataset.id||''); sfx('ui_tap'); X.sel=X.sel===id?'':id; X.conf=null; redraw(); },
   retry(b){ const k=String(b.dataset.k||''); sfx('ui_tap'); delete X.d[k]; redraw(); },
@@ -570,7 +620,20 @@ const ACT={
   /* contrato 10.5: o golpe volta {damage, seed, log, timeout, killed, band, hitsLeft, hpLeft, hpMax}; band = a faixa de prêmio que o golpe alcançou */
   hit(){ const z=X.d.boss, d=z&&z.st==='ok'?z.d:null, n=GN(); if(!d) return; sfx('ui_tap');
     if(bossDown(d)) return say(why('boss_down')); if(pick(d,'hitsLeft')===0) return say('Você já usou os golpes de hoje. Eles voltam à meia-noite de Brasília');
-    run('Atacando o chefe…',()=>n.bossHit(S,host()),r=>(r.killed===true?'Chefe derrubado! ':'')+'Golpe no chefe: '+kfT(num(r.damage))+' de dano',r=>{ X.hit={damage:num(r.damage),band:r.band&&typeof r.band==='object'&&isN(r.band.coin)?r.band:null,t:X.t}; fx('-'+kfT(num(r.damage)),'#ff9f9f',1); delete X.d.boss; }); },
+    run('Atacando o chefe…',()=>n.bossHit(S,host()),r=>(r.killed===true?'Chefe derrubado! ':'')+'Golpe no chefe: '+kfT(num(r.damage))+' de dano',r=>{ X.hit={damage:num(r.damage),band:r.band&&typeof r.band==='object'&&isN(r.band.coin)?r.band:null,t:X.t}; fx('-'+kfT(num(r.damage)),'#ff9f9f',1); delete X.d.boss; gbBoss(r,true); }); },   /* gbBoss: a faixa do chefe na batalha atualiza na hora (Sys.guildBoss.applyBoss; chave desligada = nada) */
+  /* Ajuda (Sys.guildBoss): Ajudar todos, ajudar um, abrir o meu pedido e resgatar. O servidor decide; depois de cada resposta o módulo relê o quadro sozinho */
+  hall(){ const M=GB(), v=helpView(); if(!M||!v) return say('A ajuda da guilda abre com o online'); sfx('ui_tap');
+    if(!(num(v.helpAll)>0)) return say(num(v.helpsLeft)>0?'Nenhum pedido para ajudar agora':why('limit'));
+    const txt=r=>{ const c=helpCoin(r); return c>0?'+'+nT(c)+' '+coinName(c):'Nenhum pedido para ajudar agora'; };
+    run('Ajudando todos',()=>M.helpAll(S,host()),txt,r=>{ if(helpCoin(r)>0) fx(txt(r),'#5ee7ff'); }); },
+  hone(b){ const id=String(b.dataset.id||''), M=GB(), v=helpView(); if(!M||!v||!id) return; const q=(Array.isArray(v.requests)?v.requests:[]).find(x=>x&&String(x.id)===id); sfx('ui_tap');
+    if(!q) return say(why('request')); if(q.helpedByMe===true) return say(why('helped')); if(helpFull(q)) return say(why('full')); if(!(num(v.helpsLeft)>0)) return say(why('limit'));
+    const txt=r=>{ const c=helpCoin(r); return c>0?'+'+nT(c)+' '+coinName(c):'Ajuda enviada'; };
+    run('Ajudando',()=>M.help(S,host(),id),txt,r=>{ if(helpCoin(r)>0) fx(txt(r),'#5ee7ff'); }); },
+  hreq(b){ const k=String(b.dataset.k||''), M=GB(), v=helpView(); if(!M||!v) return; sfx('ui_tap'); let c={ok:false}; try{ c=M.canRequest(S,host(),k)||c; }catch(e){} if(!c.ok) return say(why(c.reason));
+    run('Abrindo o pedido',()=>M.request(S,host(),k),'Pedido aberto: '+helpKind(v,k).name); },
+  hclaim(){ const M=GB(), v=helpView(), m=v&&v.mine; if(!M||!m) return; sfx('ui_tap'); if(m.claimed===true) return say(why('claimed')); if(!helpFull(m)) return say(why('not_full'));
+    run('Resgatando',()=>M.claim(S,host()),'Resgatado: '+helpKind(v,m.kind).txt,()=>{ delete X.d.boss; X.glow=1.2; }); },   /* o golpe extra muda os golpes do chefe: a aba Chefe relê */
   buy(b){ const id=String(b.dataset.id||''), it=shopItems().find(x=>x.id===id), o=GM().ensure(S); if(!it) return; sfx('ui_tap');
     if(shopLock(it,o)) return say(shopLockTxt(it,o)); if(it.left!=null&&it.left<=0) return say('Limite desta semana atingido'); if(shopCoin(o)<it.cost) return say('Faltam '+coinName(2)+': custa '+nT(it.cost));
     ask('buy',id,'Trocar <b>'+nT(it.cost)+' '+esc2(coinName(it.cost))+'</b> por <b>'+esc2(it.name)+'</b>?','Trocar'); },
@@ -642,10 +705,12 @@ const def=Panels.add(N,{title:'Guilda',actions:Object.keys(ACT),urls:urls,
   tick(){ if(!isOn()) return; if(X.toast&&Date.now()-X.toastT>2600){ X.toast=''; try{ const el=document.getElementById('gd2_toast'); if(el) el.innerHTML=''; }catch(e){} }
     if(X.busy) return; X.tk=(X.tk+1)%4; if(X.tk===0&&X.sig&&X.sig!=='x'&&sig()!==X.sig) redraw(); },
   busy(){ return !!X.busy; },
-  onOpen(){ loopStop(); X.tab='members'; X.sel=''; X.conf=null; X.busy=''; X.toast=''; X.anim=true; X.top=true; X.sig=''; X.tk=0; X.d={}; X.hit=null; X.fx=[]; X.glow=0; X.open=''; X.plk=''; X.ren=false; X.pk.qa=null; X.pk.qb=null;
+  onOpen(o){ loopStop(); X.tab=(o&&typeof o.tab==='string'&&Object.prototype.hasOwnProperty.call(BODY,o.tab))?o.tab:'members';   /* {tab:'boss'}: a faixa do chefe na batalha (js/guildbosshud.js) abre direto na aba Chefe */ X.sel=''; X.conf=null; X.busy=''; X.toast=''; X.anim=true; X.top=true; X.sig=''; X.tk=0; X.d={}; X.hit=null; X.fx=[]; X.glow=0; X.open=''; X.plk=''; X.ren=false; X.pk.qa=null; X.pk.qb=null;
     try{ if(typeof pwLoad==='function') pwLoad(urls()); }catch(e){}   /* pede a carga das imagens já na abertura */
     /* contrato 12.1: ao abrir a tela de guilda, o jogo refaz a leitura da guilda no servidor */
-    try{ const n=GN(); if(n&&online()&&typeof n.refresh==='function') Promise.resolve(n.refresh(S,host())).then(redraw,()=>{}); }catch(e){} },
+    try{ const n=GN(); if(n&&online()&&typeof n.refresh==='function') Promise.resolve(n.refresh(S,host())).then(redraw,()=>{}); }catch(e){}
+    /* Ajuda (Sys.guildBoss, chave desligada = nada): ao abrir a guilda lê o quadro de pedidos, para o selo vermelho da aba */
+    try{ const G=GM(); if(helpOn()&&G&&G.ensure(S).id) loadSec('help'); }catch(e){} },
   onClose(){ loopStop(); X.conf=null; X.toast=''; X.busy=''; } });
 /* para o teste de fumaça e para conferir no console (somente leitura por convenção) */
 window.Guild2={X:X,def:def,urls:urls,why:why,whyR:whyR};
