@@ -87,7 +87,7 @@ const CSS = `
 @keyframes fgxk1{40%{transform:scale(1.16)}}@keyframes fgxk2{40%{transform:scale(1.16)}}
 @keyframes fgxin{from{opacity:0}}
 @keyframes fgxup{from{transform:translateY(30px);opacity:.3}}
-.fgx-c{position:absolute;left:64px;top:var(--fgct,236px);width:262px;border-radius:16px;background:rgba(29,22,17,.95);border:1.5px solid var(--rc,#6a5a48);padding:8px 9px 9px;box-shadow:0 10px 26px rgba(0,0,0,.5);animation:fgxin .2s ease-out}
+.fgx-c{position:absolute;left:70px;top:var(--fgct,236px);width:254px;border-radius:16px;background:rgba(29,22,17,.95);border:1.5px solid var(--rc,#6a5a48);padding:8px 9px 9px;box-shadow:0 10px 26px rgba(0,0,0,.5);animation:fgxin .2s ease-out}
 .fgx-c.st{padding:8px 10px;text-align:center;font-size:12px;font-weight:900;line-height:1.3;color:#f6ecdf}
 .fgx-r{display:flex;align-items:center;gap:8px;min-width:0}
 .fgx-ic{flex:none;width:46px;height:46px;border-radius:12px;border:2px solid var(--rc,#6a5a48);background:rgba(0,0,0,.45);display:grid;place-items:center}
@@ -292,7 +292,7 @@ function sheetHtml(){ const b = BF(), h = host(), v = b.view(S, h), D = b.DATA, 
 <div class="fgx-tb">${v.odds.map((p, r) => `<div class="${p > 0 ? '' : 'z'}" style="--rc:${rarC(h, r)}"><b>${p > 0 ? pct(p) : '0%'}</b><small>${esc(rarN(h, r))}</small></div>`).join('')}</div>
 <div class="fgx-se"><span>Mochila ${bagOf(h).length}/${bagMaxOf(h)}</span><span>${all.length > bag.length ? 'as ' + bag.length + ' mais novas' : ''}</span></div>
 <div class="fgx-qd">${qb('worse', 'worse', null, 'Desmontar as piores que a sua')}${[1, 2].map(r => qb('below' + r, 'below', r, 'Abaixo de ' + rarN(h, r))).join('')}</div>
-<div class="fgx-bg">${bag.map(it => { const dd = deltaOf(h, it), lk = b.isLocked(S, it), nm = nameOf(h, it); return `<button class="fgx-bi ${lk ? 'locked' : ''}" style="--rc:${rarC(h, it.r)}" data-fg="open" data-v="${esc(it.id)}" aria-label="Ver ${esc(nm)}${lk ? ', trancada' : ''}"><img src="${esc(thumbOf(h, it))}" alt=""><small class="${dd > 0 ? 'du' : 'dd'}">${dd > 0 ? '+' : '−'}${esc(fcTxt(Math.abs(dd)))}</small>${lk ? LOCK : ''}</button>`; }).join('') || '<p class="fgx-nt">Vazia.</p>'}</div>
+<div class="fgx-bg">${bag.map(it => { const dd = deltaOf(h, it), lk = b.isLocked(S, it), nm = nameOf(h, it); return `<button class="fgx-bi ${lk ? 'locked' : ''}" style="--rc:${rarC(h, it.r)}" data-fg="open" data-v="${esc(it.id)}" aria-label="Ver ${esc(nm)}${lk ? ', trancada' : ''}"><img src="${esc(thumbOf(h, it))}" alt=""><small class="${dd > 0 ? 'du' : dd < 0 ? 'dd' : ''}">${dd > 0 ? '+' : dd < 0 ? '−' : '+'}${esc(fcTxt(Math.abs(dd)))}</small>${lk ? LOCK : ''}</button>`; }).join('') || '<p class="fgx-nt">Vazia.</p>'}</div>
 ${rec.length ? `<div class="fgx-se"><span>Recuperar (últimas ${D.keep.n}, por ${Math.round(D.keep.ms / 60000)} min)</span><span>${rec.length}</span></div><div class="fgx-bg">${rec.map(x => `<button class="fgx-bi" style="--rc:${rarC(h, x.item.r)}" data-fg="rec" data-v="${esc(x.item.id)}" aria-label="Recuperar ${esc(nameOf(h, x.item))}"><img src="${esc(thumbOf(h, x.item))}" alt=""><small>${esc(rarN(h, x.item.r))}</small></button>`).join('')}</div>` : ''}</div>`; }
 function renderSheet(){ if (!M) return; let h = ''; if (SHEET){ try { h = sheetHtml(); } catch (e) { h = ''; SHEET = false; try { console.error('Fogueira: painel', e); } catch (e2) {} } }
   if (M.sheet.innerHTML === h) return; let sc = 0; const old = gid('fgx_sh'); if (old) sc = old.scrollTop || 0; M.sheet.innerHTML = h; const nw = gid('fgx_sh'); if (nw && sc) nw.scrollTop = sc; }
