@@ -73,7 +73,8 @@ function mount(hostEl){ if(ST.root) return true; try{ if(typeof document==='unde
     h.appendChild(r); ST.root=r; ST.sig=''; ST.t=0; update(true); return true; }catch(e){ return false; } }
 function unmount(){ const r=ST.root; ST.root=null; ST.sig=''; ST.tip=false; try{ if(r){ if(typeof r.remove==='function') r.remove(); else if(r.parentNode) r.parentNode.removeChild(r); } }catch(e){} }
 /* chamar no fbTick: refaz o HTML só quando o texto muda (no máximo 2 leituras do módulo por segundo; force = agora) */
-function update(force){ const r=ST.root; if(!r) return false; const now=Date.now(); if(!force&&now-ST.t<500) return r.style.display!=='none'; ST.t=now;
+function update(force){ const r=ST.root; if(!r) return false; { const tp=(POS.top+(typeof window!=='undefined'?(window.DFH_EXTRA|0):0))+'px'; if(r.style.top!==tp) r.style.top=tp; }   /* desce quando o chip "FC recomendada" está em alerta (maior) */
+  const now=Date.now(); if(!force&&now-ST.t<500) return r.style.display!=='none'; ST.t=now;
   const I=info(); if(!I){ ST.tip=false; if(ST.sig!=='off'){ ST.sig='off'; r.innerHTML=''; r.style.display='none'; } return false; }
   if(I.era!==ST.era){ ST.era=I.era; ST.tip=false; }   /* mudou de era: a explicação aberta era da outra */
   const sig=I.tone+'|'+I.txt+'|'+(ST.tip?1:0); if(sig!==ST.sig){ ST.sig=sig; r.innerHTML=html(); r.style.display=''; } return true; }

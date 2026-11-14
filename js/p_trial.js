@@ -295,7 +295,7 @@ function urls(){ const u=[IC.coin]; try{ const bg=typeof xEraBgUrl==='function'?
 /* ================= na batalha: selo "Teto Nv X" e faixa da regra ================= */
 const hudOn=()=>{ try{ return ok()&&!!(window.Panels&&typeof Panels.on==='function'&&Panels.on(N)); }catch(e){ return false; } };
 /* topo da faixa: logo abaixo da barra da fase (y 122 do protótipo); com o selo "Fraco contra" (js/weakseal.js) na tela, desce para baixo dele */
-function bandTop(){ try{ const w=document.getElementById('wsl_root'); if(w&&w.style&&w.style.display!=='none'){ const h=Math.round(num(w.offsetHeight))||24; return 122+h+6; } }catch(e){} return 122; }
+function bandTop(){ try{ const w=document.getElementById('wsl_root'); if(w&&w.style&&w.style.display!=='none'){ const h=Math.round(num(w.offsetHeight))||24; return (Math.round(num(w.offsetTop))||122)+h+6; } }catch(e){} return 122; }
 function hudHtml(o){ o=o||{}; if(!hudOn()) return '';
   if(X.run){ if(X.left==null) return ''; const sp=X.run.spec||{}, ru=sp.rule||{}, tot=Math.max(1,num(sp.sec)), left=Math.max(0,Math.min(tot,num(X.left)));
     return '<div class="pt-band" role="status" style="top:'+(o.bandTop!=null?+o.bandTop:bandTop())+'px" aria-label="Provação do Mestre, regra '+esc(ru.name)+', faltam '+mmss(left)+'">'+ruleIc(ru.id)
